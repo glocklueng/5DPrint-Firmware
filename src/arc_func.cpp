@@ -109,8 +109,8 @@ void mc_arc(float *position, float *target, float *offset, uint8_t axis_0, uint8
     
     if((count == 10) || (count == 15))
     {
-	  //Read the next two Commands while arc is calculating
-      check_buffer_while_arc();
+      //Read the next two Commands while arc is calculating
+      //check_buffer_while_arc();
     }
 
     if (count < N_ARC_CORRECTION)  //25 pieces

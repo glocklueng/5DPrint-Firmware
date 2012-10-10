@@ -47,6 +47,8 @@ extern "C" {
   void loop();
 }
 
+void read_command();
+void process_command(const char *cmdstr);
 void execute_gcode(struct command *cmd);
 void execute_mcode(struct command *cmd);
 void get_coordinates(struct command *cmd);
@@ -181,18 +183,12 @@ float offset[3] = {0.0, 0.0, 0.0};
 #endif
 
 // comm variables and Commandbuffer
-// BUFSIZE is reduced from 8 to 6 to free more RAM for the PLANNER
 // MAX_CMD_SIZE does not include the trailing \0 that terminates the string.
 #define MAX_CMD_SIZE 95
-#define BUFSIZE 6
-char cmdbuf[BUFSIZE][MAX_CMD_SIZE+1];
-
-unsigned char bufindr = 0;
-unsigned char bufindw = 0;
-unsigned char buflen = 0;
+char cmdbuf[MAX_CMD_SIZE+1];
 unsigned char bufpos = 0;
 long cmdseqnbr = 0;
-char *curcmd;
+uint8_t cmdready = 0;
 
 //Send Temperature in °C to Host
 int hotendtC = 0, bedtempC = 0;
@@ -486,11 +482,8 @@ void setup()
 //------------------------------------------------
 void loop()
 {
-  // First, empty the UART buffer.
-  cmdbuf_read_serial();
-
-  // If we have any commands, process the first one.
-  cmdbuf_process();
+  // Read a command from the UART and process it.
+  read_command();
 
   // Manage the heater and fan.
   manage_heater();
@@ -502,60 +495,37 @@ void loop()
 
 
 //------------------------------------------------
-//Check Uart buffer while arc function ist calc a circle
-//------------------------------------------------
-
-void check_buffer_while_arc()
-{
-  cmdbuf_read_serial();
-}
-
-//------------------------------------------------
-//FILL COMMAND BUFFER FROM UART
+//READ COMMAND
 //
 //  This function reads characters from the UART and
-//  places them in the command buffer.  Commands are
-//  split on newline (either \r or \n), but no other
-//  parsing is done.
+//  places them in the command buffer.  The first    
+//  newline (either \r or \n) terminates the command.
 //
-//  If a command exceeds MAX_CMD_SIZE, it is silently
+//  If a command exceeds MAX_CMD_SIZE, it is simply
 //  truncated.
 //
-//  The position in the current command buffer slot
-//  is tracked in the 'bufpos' global.
-//
 //  TODO:  recognize ';' comments and ignore them?
-//------------------------------------------------
-void cmdbuf_read_serial() 
+//
+void read_command() 
 { 
   while (serial_can_read())
   {
-    char ch;
-    if (buflen >= BUFSIZE)
-    {
-        break;
-    }
-    if (bufpos >= MAX_CMD_SIZE)
-    {
-        // TODO:  can we do something more intelligent than
-        // just silently truncating the command?
-        bufpos = MAX_CMD_SIZE - 1;
-    }
-    ch = serial_read();
-    cmdbuf[bufindw][bufpos] = ch;
-    bufpos++;
+    char ch = serial_read();
     if (ch == '\n' || ch == '\r')
     {
       // Newline marks end of this command;  terminate
-      // string and move to the next buffer slot.
-      cmdbuf[bufindw][bufpos] = '\0';
-      bufindw++;
-      buflen++;
+      // string and process it.
+      cmdbuf[bufpos] = '\0';
+      process_command(cmdbuf);
       bufpos = 0;
-      if (bufindw == BUFSIZE)
-      {
-        bufindw = 0;
-      }
+      break;
+    }
+    cmdbuf[bufpos++] = ch;
+    if (bufpos > MAX_CMD_SIZE)
+    {
+        // TODO:  can we do something more intelligent than
+        // just silently truncating the command?
+        bufpos--;
     }
   }
 }
@@ -620,40 +590,22 @@ int parse_float(const char *cmd, char word, float *value)
 //
 //      N<seqnbr> G<code> [params...] *0000
 //      N<seqnbr> M<code> [params...] *0000
-//
-//  TODO:  once there is a validation error (resp
-//  "!!") refuse to accept additional commands until
-//  a reset.
 //------------------------------------------------
-void cmdbuf_process() 
-{ 
-  // Get current command, and set the bufindr pointer to the next cmdbuf slot.
-  if (buflen < 1)
-  {
-    return;
-  }
-  unsigned long start_parse = millis();
-  curcmd = cmdbuf[bufindr];
-  buflen--;
-  bufindr++;
-  if (bufindr == BUFSIZE)
-  {
-    bufindr = 0;
-  }
-
+void process_command(const char *cmdstr)
+{
   // Validate the command's checksum, if provided.
   int32_t checksum = -1;
   uint16_t calculated_checksum = 0;
-  if (parse_int(curcmd, '*', &checksum))
+  if (parse_int(cmdstr, '*', &checksum))
   {
     if (checksum < 0 || checksum > 0xFFFF)
     {
       serial_send("rs %ld (checksum out of range)\r\n", cmdseqnbr + 1);
       return;
     }
-    for (int i = 0; i < MAX_CMD_SIZE && curcmd[i] != '*'; i++)
+    for (int i = 0; i < MAX_CMD_SIZE && cmdstr[i] != '*'; i++)
     {
-      _crc_xmodem_update(calculated_checksum, curcmd[i]);
+      _crc_xmodem_update(calculated_checksum, cmdstr[i]);
     }
     if (calculated_checksum != (uint16_t)checksum)
     {
@@ -664,7 +616,7 @@ void cmdbuf_process()
 
   // Validate the command's sequence number, if provided.
   int32_t seqnbr;
-  if (parse_int(curcmd, 'N', &seqnbr) && seqnbr != cmdseqnbr + 1)
+  if (parse_int(cmdstr, 'N', &seqnbr) && seqnbr != cmdseqnbr + 1)
   {
     serial_send("rs %ld (incorrect seqnbr)\r\n", cmdseqnbr + 1);
     return;
@@ -674,8 +626,8 @@ void cmdbuf_process()
   int has_gcode;
   int has_mcode;
   int32_t code = -1;
-  has_gcode = parse_int(curcmd, 'G', &code);
-  has_mcode = parse_int(curcmd, 'M', &code);
+  has_gcode = parse_int(cmdstr, 'G', &code);
+  has_mcode = parse_int(cmdstr, 'M', &code);
   if (has_gcode && has_mcode)
   {
     serial_send("rs %ld (multiple command codes)\r\n", cmdseqnbr + 1);
@@ -697,16 +649,16 @@ void cmdbuf_process()
   cmd.seqnbr = seqnbr;
   cmd.type = has_gcode ? 'G' : 'M';
   cmd.code = code;
-  cmd.has_X = parse_float(curcmd, 'X', &cmd.X);
-  cmd.has_Y = parse_float(curcmd, 'Y', &cmd.Y);
-  cmd.has_Z = parse_float(curcmd, 'Z', &cmd.Z);
-  cmd.has_E = parse_float(curcmd, 'E', &cmd.E);
-  cmd.has_F = parse_float(curcmd, 'F', &cmd.F);
-  cmd.has_I = parse_float(curcmd, 'I', &cmd.I);
-  cmd.has_J = parse_float(curcmd, 'J', &cmd.J);
-  cmd.has_P = parse_int(curcmd, 'P', &cmd.P);
-  cmd.has_S = parse_int(curcmd, 'S', &cmd.S);
-  cmd.has_T = parse_int(curcmd, 'T', &cmd.T);
+  cmd.has_X = parse_float(cmdstr, 'X', &cmd.X);
+  cmd.has_Y = parse_float(cmdstr, 'Y', &cmd.Y);
+  cmd.has_Z = parse_float(cmdstr, 'Z', &cmd.Z);
+  cmd.has_E = parse_float(cmdstr, 'E', &cmd.E);
+  cmd.has_F = parse_float(cmdstr, 'F', &cmd.F);
+  cmd.has_I = parse_float(cmdstr, 'I', &cmd.I);
+  cmd.has_J = parse_float(cmdstr, 'J', &cmd.J);
+  cmd.has_P = parse_int(cmdstr, 'P', &cmd.P);
+  cmd.has_S = parse_int(cmdstr, 'S', &cmd.S);
+  cmd.has_T = parse_int(cmdstr, 'T', &cmd.T);
 
   // Dispatch command.
   unsigned long start_tm, end_tm;
@@ -718,8 +670,8 @@ void cmdbuf_process()
   case 'M':  execute_mcode(&cmd);  break;
   }
   end_tm = millis();
-  serial_send("ok %ld (%lums parse / %lums execute)\r\n", 
-    cmdseqnbr, start_tm - start_parse, end_tm - start_tm);
+  serial_send("ok %ld (%lums execute)\r\n", 
+    cmdseqnbr, end_tm - start_tm);
   previous_millis_cmd = end_tm;
 }
 

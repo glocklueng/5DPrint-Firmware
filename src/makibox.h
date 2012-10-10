@@ -18,6 +18,7 @@ extern "C" void __cxa_pure_virtual();
 #define  FORCE_INLINE __attribute__((always_inline)) inline
 
 
+#define NUM_AXIS 4
 #define X_AXIS 0
 #define Y_AXIS 1
 #define Z_AXIS 2

@@ -40,7 +40,6 @@ extern float minimumfeedrate;
 extern float max_xy_jerk;
 extern float max_z_jerk;
 extern float max_e_jerk;
-extern unsigned long min_seg_time;
 
 #define axis_steps_per_unit_address (EEPROM_OFFSET + 4*sizeof(char))
 #define max_feedrate_address (axis_steps_per_unit_address + 4*sizeof(float))
@@ -52,8 +51,7 @@ extern unsigned long min_seg_time;
 #define max_xy_jerk_address (minimumfeedrate_address + sizeof(float))
 #define max_z_jerk_address (max_xy_jerk_address + sizeof(float))
 #define max_e_jerk_address (max_z_jerk_address + sizeof(float))
-#define min_seg_time_address (max_e_jerk_address + sizeof(float))
-#define Kp_address (min_seg_time_address + sizeof(unsigned long))
+#define Kp_address (max_e_jerk_address + sizeof(unsigned long))
 #define Ki_address (Kp_address + sizeof(unsigned int))
 #define Kd_address (Ki_address + sizeof(unsigned int))
 

@@ -125,7 +125,6 @@ void execute_m201(struct command *cmd);
 static const char VERSION_TEXT[] = "1.3.22T / 20.08.2012";
 
 //Stepper Movement Variables
-char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
 float axis_steps_per_unit[4] = _AXIS_STEP_PER_UNIT; 
 
 float max_feedrate[4] = _MAX_FEEDRATE;
@@ -137,27 +136,17 @@ float retract_acceleration = _RETRACT_ACCELERATION; // Normal acceleration mm/s^
 float max_xy_jerk = _MAX_XY_JERK;
 float max_z_jerk = _MAX_Z_JERK;
 float max_e_jerk = _MAX_E_JERK;
-unsigned long min_seg_time = _MIN_SEG_TIME;
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
 #endif
 
-long  max_acceleration_units_per_sq_second[4] = _MAX_ACCELERATION_UNITS_PER_SQ_SECOND; // X, Y, Z and E max acceleration in mm/s^2 for printing moves or retracts
-
-//float max_start_speed_units_per_second[] = _MAX_START_SPEED_UNITS_PER_SECOND;
-//long  max_travel_acceleration_units_per_sq_second[] = _MAX_TRAVEL_ACCELERATION_UNITS_PER_SQ_SECOND; // X, Y, Z max acceleration in mm/s^2 for travel moves
+// X, Y, Z and E max acceleration in mm/s^2 for printing moves or retracts
+long  max_acceleration_units_per_sq_second[4] = _MAX_ACCELERATION_UNITS_PER_SQ_SECOND;
 
 float mintravelfeedrate = DEFAULT_MINTRAVELFEEDRATE;
 float minimumfeedrate = DEFAULT_MINIMUMFEEDRATE;
 
 unsigned long axis_steps_per_sqr_second[NUM_AXIS];
-unsigned long plateau_steps;  
-
-//unsigned long axis_max_interval[NUM_AXIS];
-//unsigned long axis_travel_steps_per_sqr_second[NUM_AXIS];
-//unsigned long max_interval;
-//unsigned long steps_per_sqr_second;
-
 
 //adjustable feed factor for online tuning printer speed
 volatile int feedmultiply=100; //100->original / 200 -> Factor 2 / 50 -> Factor 0.5
@@ -165,8 +154,6 @@ int saved_feedmultiply;
 volatile bool feedmultiplychanged=false;
 volatile int extrudemultiply=100; //100->1 200->2
 
-//boolean acceleration_enabled = false, accelerating = false;
-//unsigned long interval;
 float destination[NUM_AXIS] = {0.0, 0.0, 0.0, 0.0};
 float current_position[NUM_AXIS] = {0.0, 0.0, 0.0, 0.0};
 float add_homing[3]={0,0,0};
@@ -180,34 +167,11 @@ bool home_all_axis = true;
 int feedrate = 1500, next_feedrate, saved_feedrate;
 
 bool relative_mode = false;  //Determines Absolute or Relative Coordinates
-
-//unsigned long steps_taken[NUM_AXIS];
-//long axis_interval[NUM_AXIS]; // for speed delay
-//float time_for_move;
-//bool relative_mode_e = false;  //Determines Absolute or Relative E Codes while in Absolute Coordinates mode. E is always relative in Relative Coordinates mode.
-//long timediff = 0;
-
 bool is_homing = false;
-
-//experimental feedrate calc
-//float d = 0;
-//float axis_diff[NUM_AXIS] = {0, 0, 0, 0};
-
 
 #ifdef USE_ARC_FUNCTION
 //For arc center point coordinates, sent by commands G2/G3
 float offset[3] = {0.0, 0.0, 0.0};
-#endif
-
-#ifdef STEP_DELAY_RATIO
-  long long_step_delay_ratio = STEP_DELAY_RATIO * 100;
-#endif
-
-///oscillation reduction
-#ifdef RAPID_OSCILLATION_REDUCTION
-  float cumm_wait_time_in_dir[NUM_AXIS]={0.0,0.0,0.0,0.0};
-  bool prev_move_direction[NUM_AXIS]={1,1,1,1};
-  float osc_wait_remainder = 0.0;
 #endif
 
 #if (MINIMUM_FAN_START_SPEED > 0)
@@ -229,7 +193,6 @@ unsigned char buflen = 0;
 unsigned char bufpos = 0;
 long cmdseqnbr = 0;
 char *curcmd;
-char *strchr_pointer; // just a pointer to find chars in the cmd string like X, Y, Z, E, etc
 
 //Send Temperature in °C to Host
 int hotendtC = 0, bedtempC = 0;
@@ -468,14 +431,6 @@ void setup()
     SET_OUTPUT(E_STEP_PIN);
   #endif  
 
-  
-
-//  for(int i=0; i < NUM_AXIS; i++){
-//      axis_max_interval[i] = 100000000.0 / (max_start_speed_units_per_second[i] * axis_steps_per_unit[i]);
-//      axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
-//      axis_travel_steps_per_sqr_second[i] = max_travel_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
-//  }
-    
 #ifdef HEATER_USES_MAX6675
   SET_OUTPUT(SCK_PIN);
   WRITE(SCK_PIN,0);
@@ -1171,15 +1126,6 @@ void execute_mcode(struct command *cmd) {
       case 92: // M92
         execute_m92(cmd);
         break;
-          // Update start speed intervals and axis order. TODO: refactor axis_max_interval[] calculation into a function, as it
-          // should also be used in setup() as well
-//        long temp_max_intervals[NUM_AXIS];
-//        for(int i=0; i < NUM_AXIS; i++) 
-//        {
-//          axis_max_interval[i] = 100000000.0 / (max_start_speed_units_per_second[i] * axis_steps_per_unit[i]);//TODO: do this for
-//          all steps_per_unit related variables
-//        }
-        break;
       case 93: // M93 show current axis steps.
         serial_send("ok X%f Y%f Z%f E%f\r\n",
           axis_steps_per_unit[0],
@@ -1225,14 +1171,6 @@ void execute_mcode(struct command *cmd) {
       case 201: // M201  Set maximum acceleration in units/s^2 for print moves (M201 X1000 Y1000)
         execute_m201(cmd);
         break;
-      #if 0 // Not used for Sprinter/grbl gen6
-      case 202: // M202
-        for(int i=0; i < NUM_AXIS; i++) 
-        {
-          if(code_seen(axis_codes[i])) axis_travel_steps_per_sqr_second[i] = code_value() * axis_steps_per_unit[i];
-        }
-        break;
-      #else  
       case 202: // M202 max feedrate mm/sec
         if (cmd->has_X)
           max_feedrate[X_AXIS] = cmd->X;
@@ -1243,7 +1181,6 @@ void execute_mcode(struct command *cmd) {
         if (cmd->has_E)
           max_feedrate[E_AXIS] = cmd->E;
       break;
-      #endif
       case 203: // M203 Temperature monitor
           if (cmd->has_S)
             manage_monitor = cmd->S;

@@ -65,7 +65,6 @@ void EEPROM_StoreSettings()
   EEPROM_write_setting(retract_acceleration_address, retract_acceleration);
   EEPROM_write_setting(minimumfeedrate_address, minimumfeedrate);
   EEPROM_write_setting(mintravelfeedrate_address, mintravelfeedrate);
-  EEPROM_write_setting(min_seg_time_address, min_seg_time);  //Min Segment Time, not used yet
   EEPROM_write_setting(max_xy_jerk_address, max_xy_jerk);
   EEPROM_write_setting(max_z_jerk_address, max_z_jerk);
   EEPROM_write_setting(max_e_jerk_address, max_e_jerk);
@@ -151,7 +150,6 @@ void EEPROM_RetrieveSettings(bool def, bool printout)
       EEPROM_read_setting(retract_acceleration_address, retract_acceleration);
       EEPROM_read_setting(minimumfeedrate_address, minimumfeedrate);
       EEPROM_read_setting(mintravelfeedrate_address, mintravelfeedrate);
-      EEPROM_read_setting(min_seg_time_address, min_seg_time);  //min Segmenttime --> not used yet
       EEPROM_read_setting(max_xy_jerk_address, max_xy_jerk);
       EEPROM_read_setting(max_z_jerk_address, max_z_jerk);
       EEPROM_read_setting(max_e_jerk_address, max_e_jerk);
@@ -183,7 +181,6 @@ void EEPROM_RetrieveSettings(bool def, bool printout)
       max_xy_jerk=_MAX_XY_JERK;
       max_z_jerk=_MAX_Z_JERK;
       max_e_jerk=_MAX_E_JERK;
-      min_seg_time=_MIN_SEG_TIME;
       
       #ifdef PIDTEMP
        PID_Kp = PID_PGAIN;

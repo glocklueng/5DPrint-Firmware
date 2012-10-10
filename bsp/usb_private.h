@@ -15,8 +15,8 @@ extern "C"{
 
 // You can change these to give your code its own name.  On Windows,
 // these are only used before an INF file (driver install) is loaded.
-#define STR_MANUFACTURER        L"Teensyduino"
-#define STR_PRODUCT             L"USB Serial"
+#define STR_MANUFACTURER        L"Makible"
+#define STR_PRODUCT             L"Makibox A6"
 
 // All USB serial devices are supposed to have a serial number
 // (according to Microsoft).  On windows, a new COM port is created
@@ -33,14 +33,14 @@ extern "C"{
 // Udev rules (in /etc/udev/rules.d) can define persistent device
 // names linked to this serial number, as well as permissions, owner
 // and group settings.
-#define STR_SERIAL_NUMBER       L"12345"
+#define STR_SERIAL_NUMBER       L"001"
 
 // Mac OS-X and Linux automatically load the correct drivers.  On
 // Windows, even though the driver is supplied by Microsoft, an
 // INF file is needed to load the driver.  These numbers need to
 // match the INF file.
-#define VENDOR_ID               0x16C0
-#define PRODUCT_ID              0x0483
+#define VENDOR_ID               0x1D50
+#define PRODUCT_ID              0x604C
 
 // When you write data, it goes into a USB endpoint buffer, which
 // is transmitted to the PC when it becomes full, or after a timeout

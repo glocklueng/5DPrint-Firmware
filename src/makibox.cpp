@@ -32,6 +32,7 @@
 #include "speed_lookuptable.h"
 #include "heater.h"
 #include "serial.h"
+#include "command.h"
 
 #ifdef USE_ARC_FUNCTION
   #include "arc_func.h"
@@ -45,6 +46,13 @@ extern "C" {
   void setup();
   void loop();
 }
+
+void execute_gcode(struct command *cmd);
+void execute_mcode(struct command *cmd);
+void get_coordinates(struct command *cmd);
+void get_arc_coordinates(struct command *cmd);
+void execute_m92(struct command *cmd);
+void execute_m201(struct command *cmd);
 
 #ifndef CRITICAL_SECTION_START
 #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli()
@@ -219,7 +227,7 @@ unsigned char bufindr = 0;
 unsigned char bufindw = 0;
 unsigned char buflen = 0;
 unsigned char bufpos = 0;
-long cmdseqnbr;
+long cmdseqnbr = 0;
 char *curcmd;
 char *strchr_pointer; // just a pointer to find chars in the cmd string like X, Y, Z, E, etc
 
@@ -331,8 +339,6 @@ void setup()
 { 
   serial_init(); 
   serial_send("// Makibox %s started.\r\n", VERSION_TEXT);
-  cmdseqnbr = 0;
-
   
   //Initialize Dir Pins
   #if X_DIR_PIN > -1
@@ -562,6 +568,8 @@ void check_buffer_while_arc()
 //
 //  The position in the current command buffer slot
 //  is tracked in the 'bufpos' global.
+//
+//  TODO:  recognize ';' comments and ignore them?
 //------------------------------------------------
 void cmdbuf_read_serial() 
 { 
@@ -598,6 +606,55 @@ void cmdbuf_read_serial()
 }
 
 //------------------------------------------------
+//PARSE COMMAND
+//
+//  These functions parse "words" (parameter name and
+//  int/float value) from the command string.
+//------------------------------------------------
+int16_t find_word(const char *cmd, char word)
+{
+  char ch;
+  int16_t pos = -1;
+  int16_t first = -1;
+  int16_t last = -1;
+
+  while ((ch = cmd[++pos]) != '\0')
+  {
+    if (ch == word)
+    {
+      if (first == -1) first = pos;
+      last = pos;
+    }
+  }
+  if (first == -1) return -1;
+  if (first != last) return -1;
+  if (first >= 0 && cmd[pos+1] == ' ') return -1;
+  return first;
+}
+
+int parse_int(const char *cmd, char word, int32_t *value)
+{
+  // Parse the value.
+  // TODO:  check errno, check for no whitespace
+  int16_t pos = find_word(cmd, word);
+  if (pos < 0)
+    return 0;
+  *value = strtoul(&cmd[pos+1], NULL, 10);
+  return 1;
+}
+
+int parse_float(const char *cmd, char word, float *value)
+{
+  // Parse the value.
+  // TODO:  check errno, check for no whitespace
+  int16_t pos = find_word(cmd, word);
+  if (pos < 0)
+    return 0;
+  *value = strtod(&cmd[pos+1], NULL);
+  return 1;
+}
+
+//------------------------------------------------
 //PROCESS COMMAND
 //
 //  This function is responsible for validating the
@@ -615,18 +672,12 @@ void cmdbuf_read_serial()
 //------------------------------------------------
 void cmdbuf_process() 
 { 
-  char *curcmd_lineno;
-  char *curcmd_checksum;
-  char *curcmd_gcode;
-  char *curcmd_mcode;
-  uint16_t crc;
-  long seqnbr;
-
   // Get current command, and set the bufindr pointer to the next cmdbuf slot.
   if (buflen < 1)
   {
     return;
   }
+  unsigned long start_parse = millis();
   curcmd = cmdbuf[bufindr];
   buflen--;
   bufindr++;
@@ -635,59 +686,83 @@ void cmdbuf_process()
     bufindr = 0;
   }
 
-  // Validate the command's checksum.
-  curcmd_checksum = strrchr(curcmd, '*');
-  crc = 0;
-  if (!curcmd_checksum)
+  // Validate the command's checksum, if provided.
+  int32_t checksum = -1;
+  uint16_t calculated_checksum = 0;
+  if (parse_int(curcmd, '*', &checksum) && (checksum < 0 || checksum > 0xFFFF))
   {
-    serial_send("!! Invalid command - no checksum.\r\n");
+    serial_send("rs %ld (checksum out of range)\r\n", cmdseqnbr + 1);
     return;
   }
-  for (int i = 0; curcmd[i] != '*' && i < MAX_CMD_SIZE; i++)
+  for (int i = 0; curcmd[i] != '*'; i++)
   {
-    _crc_xmodem_update(crc, curcmd[i++]);
+    _crc_xmodem_update(calculated_checksum, curcmd[i++]);
   }
-  if (crc != strtoul(curcmd_checksum + 1, NULL, 16))
+  if (checksum >= 0 && calculated_checksum != (uint16_t)checksum)
   {
-    serial_send("!! Invalid command - bad checksum.\r\n");
+    serial_send("rs %ld (incorrect checksum)\r\n", cmdseqnbr + 1);
     return;
   }
 
-  // Validate the command's sequence number.
-  // TODO:  provide a way to reset the sequence number?
-  curcmd_lineno = strchr(curcmd, 'N');
-  if (!curcmd_lineno)
+  // Validate the command's sequence number, if provided.
+  int32_t seqnbr;
+  if (parse_int(curcmd, 'N', &seqnbr) && seqnbr != cmdseqnbr + 1)
   {
-    serial_send("!! Invalid command - no line number.\r\n");
+    serial_send("rs %ld (incorrect seqnbr)\r\n", cmdseqnbr + 1);
     return;
   }
-  seqnbr = strtoul(curcmd_lineno + 1, NULL, 10);
-  if (seqnbr != cmdseqnbr + 1)
-  {
-    serial_send("rs %ld\r\n", cmdseqnbr + 1);
-    return;
-  }
-  cmdseqnbr = seqnbr;
 
   // Validate that the command has a single G or M code.
-  curcmd_gcode = strchr(curcmd, 'G');
-  curcmd_mcode = strchr(curcmd, 'M');
-  if (curcmd_gcode && curcmd_mcode)
+  int has_gcode;
+  int has_mcode;
+  int32_t code = -1;
+  has_gcode = parse_int(curcmd, 'G', &code);
+  has_mcode = parse_int(curcmd, 'M', &code);
+  if (has_gcode && has_mcode)
   {
-    serial_send("!! cannot have both G and M code\r\n");
+    serial_send("rs %ld (multiple command codes)\r\n", cmdseqnbr + 1);
     return;
   }
-  if (!curcmd_gcode && !curcmd_mcode)
+  if (!has_gcode && !has_mcode)
   {
-    serial_send("!! command did not have G or M code\r\n");
+    serial_send("rs %ld (command code missing)\r\n", cmdseqnbr + 1);
     return;
   }
+  if (code < 1 || code > 999)
+  {
+    serial_send("rs %ld (command code out of range)\r\n", cmdseqnbr + 1);
+    return;
+  }
+
+  // Create the 'struct command'.
+  struct command cmd;
+  cmd.seqnbr = seqnbr;
+  cmd.type = has_gcode ? 'G' : 'M';
+  cmd.code = code;
+  cmd.has_X = parse_float(curcmd, 'X', &cmd.X);
+  cmd.has_Y = parse_float(curcmd, 'Y', &cmd.Y);
+  cmd.has_Z = parse_float(curcmd, 'Z', &cmd.Z);
+  cmd.has_E = parse_float(curcmd, 'E', &cmd.E);
+  cmd.has_F = parse_float(curcmd, 'F', &cmd.F);
+  cmd.has_I = parse_float(curcmd, 'I', &cmd.I);
+  cmd.has_J = parse_float(curcmd, 'J', &cmd.J);
+  cmd.has_P = parse_int(curcmd, 'P', &cmd.P);
+  cmd.has_S = parse_int(curcmd, 'S', &cmd.S);
+  cmd.has_T = parse_int(curcmd, 'T', &cmd.T);
 
   // Dispatch command.
-  serial_send("go %ld\r\n", cmdseqnbr);
-  execute_command();
-  previous_millis_cmd = millis();
-  serial_send("ok %ld\r\n", cmdseqnbr);
+  unsigned long start_tm, end_tm;
+  cmdseqnbr++;
+  serial_send("go %ld (executing %c%d)\r\n", cmdseqnbr, cmd.type, cmd.code);
+  start_tm = millis();
+  switch (cmd.type) {
+  case 'G':  execute_gcode(&cmd);  break;
+  case 'M':  execute_mcode(&cmd);  break;
+  }
+  end_tm = millis();
+  serial_send("ok %ld (%lums parse / %lums execute)\r\n", 
+    cmdseqnbr, start_tm - start_parse, end_tm - start_tm);
+  previous_millis_cmd = end_tm;
 }
 
 
@@ -696,16 +771,6 @@ static bool check_endstops = true;
 void enable_endstops(bool check)
 {
   check_endstops = check;
-}
-
-FORCE_INLINE float code_value() { return (strtod(strchr_pointer + 1, NULL)); }
-FORCE_INLINE long code_value_long() { return (strtol(strchr_pointer + 1, NULL, 10)); }
-FORCE_INLINE bool code_seen(char code_string[]) { return (strstr(curcmd, code_string) != NULL); }  //Return True if the string was found
-
-FORCE_INLINE bool code_seen(char code)
-{
-  strchr_pointer = strchr(curcmd, code);
-  return (strchr_pointer != NULL);  //Return True if a character was found
 }
 
 FORCE_INLINE void homing_routine(unsigned char axis)
@@ -772,56 +837,29 @@ FORCE_INLINE void homing_routine(unsigned char axis)
 //------------------------------------------------
 // CHECK COMMAND AND CONVERT VALUES
 //------------------------------------------------
-void execute_command()
+void execute_gcode(struct command *cmd)
 {
   unsigned long codenum; //throw away variable
-  int code_G = -1;
-  int code_M = -1;
-
-  if (code_seen('G'))
-  {
-    code_G = (int)code_value();
-  }
-  if (code_seen('M'))
-  {
-    code_M = (int)code_value();
-  }
-
-  if (code_G < 0 && code_M < 0)
-  {
-    serial_send("-- Unknown command.\r\n");
-    return;
-  }
-
-  if (code_G >= 0 && code_M >= 0)
-  {
-    serial_send("-- Error, both G and M codes given.\r\n");
-    return;
-  }
-
-  if (code_G >= 0)
-  {
-    switch(code_G)
-    {
+  switch(cmd->code) {
       case 0: // G0 -> G1
       case 1: // G1
         #if (defined DISABLE_CHECK_DURING_ACC) || (defined DISABLE_CHECK_DURING_MOVE) || (defined DISABLE_CHECK_DURING_TRAVEL)
           manage_heater();
         #endif
-        get_coordinates(); // For X Y Z E F
+        get_coordinates(cmd); // For X Y Z E F
         prepare_move();
         previous_millis_cmd = millis();
         return;
         //break;
       #ifdef USE_ARC_FUNCTION
       case 2: // G2  - CW ARC
-        get_arc_coordinates();
+        get_arc_coordinates(cmd);
         prepare_arc_move(true);
         previous_millis_cmd = millis();
         //break;
         return;
       case 3: // G3  - CCW ARC
-        get_arc_coordinates();
+        get_arc_coordinates(cmd);
         prepare_arc_move(false);
         previous_millis_cmd = millis();
         //break;
@@ -829,8 +867,8 @@ void execute_command()
       #endif  
       case 4: // G4 dwell
         codenum = 0;
-        if(code_seen('P')) codenum = code_value(); // milliseconds to wait
-        if(code_seen('S')) codenum = code_value() * 1000; // seconds to wait
+        if(cmd->has_P) codenum += cmd->P; // milliseconds to wait
+        if(cmd->has_S) codenum += cmd->S * 1000; // seconds to wait
         serial_send("-- delaying %lums\r\n", codenum);
         codenum += millis();  // keep track of when we started waiting
         st_synchronize();  // wait for all movements to finish
@@ -854,15 +892,15 @@ void execute_command()
         feedrate = 0;
         is_homing = true;
 
-        home_all_axis = !((code_seen(axis_codes[0])) || (code_seen(axis_codes[1])) || (code_seen(axis_codes[2])));
+        home_all_axis = !(cmd->has_X || cmd->has_Y || cmd->has_Z);
 
-        if((home_all_axis) || (code_seen(axis_codes[X_AXIS]))) 
+        if((home_all_axis) || cmd->has_X)
           homing_routine(X_AXIS);
 
-        if((home_all_axis) || (code_seen(axis_codes[Y_AXIS]))) 
+        if((home_all_axis) || cmd->has_Y)
           homing_routine(Y_AXIS);
 
-        if((home_all_axis) || (code_seen(axis_codes[Z_AXIS]))) 
+        if((home_all_axis) || cmd->has_Z)
           homing_routine(Z_AXIS);
         
         #ifdef ENDSTOPS_ONLY_FOR_HOMING
@@ -882,31 +920,30 @@ void execute_command()
         relative_mode = true;
         break;
       case 92: // G92
-        if(!code_seen(axis_codes[E_AXIS])) 
+        if(!cmd->has_E)
           st_synchronize();
           
-        for(int i=0; i < NUM_AXIS; i++)
-        {
-          if(code_seen(axis_codes[i])) current_position[i] = code_value();  
-        }
+        if (cmd->has_X) current_position[X_AXIS] = cmd->X;
+        if (cmd->has_Y) current_position[Y_AXIS] = cmd->Y;
+        if (cmd->has_Z) current_position[Z_AXIS] = cmd->Z;
+        if (cmd->has_E) current_position[E_AXIS] = cmd->E;
         plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
         break;
       default:
-        serial_send("-- Unknown code G%d.\r\n", code_G);
-      break;
-    }
+        serial_send("-- Unknown code G%d.\r\n", cmd->code);
+        break;
   }
+}
 
-  else if(code_seen('M'))
-  {
-    
-    switch( (int)code_value() ) 
-    {
+
+void execute_mcode(struct command *cmd) {
+    unsigned long codenum; //throw away variable
+    switch(cmd->code) {
       case 104: // M104
 #ifdef CHAIN_OF_COMMAND
           st_synchronize(); // wait for all movements to finish
 #endif
-        if (code_seen('S')) target_raw = temp2analogh(target_temp = code_value());
+        if (cmd->has_S) target_raw = temp2analogh(target_temp = cmd->S);
         #ifdef WATCHPERIOD
             if(target_raw > current_raw)
             {
@@ -924,7 +961,7 @@ void execute_command()
           st_synchronize(); // wait for all movements to finish
 #endif
         #if TEMP_1_PIN > -1 || defined BED_USES_AD595
-            if (code_seen('S')) target_bed_raw = temp2analogBed(code_value());
+            if (cmd->has_S) target_bed_raw = temp2analogBed(cmd->S);
         #endif
         break;
       case 105: // M105
@@ -960,7 +997,7 @@ void execute_command()
 #ifdef CHAIN_OF_COMMAND
           st_synchronize(); // wait for all movements to finish
 #endif
-        if (code_seen('S')) target_raw = temp2analogh(target_temp = code_value());
+        if (cmd->has_S) target_raw = temp2analogh(target_temp = cmd->S);
         #ifdef WATCHPERIOD
             if(target_raw>current_raw)
             {
@@ -1013,7 +1050,7 @@ void execute_command()
           st_synchronize(); // wait for all movements to finish
 #endif
       #if TEMP_1_PIN > -1
-        if (code_seen('S')) target_bed_raw = temp2analogBed(code_value());
+        if (cmd->has_S) target_bed_raw = temp2analogBed(cmd->S);
         codenum = millis(); 
         while(current_bed_raw < target_bed_raw) 
         {
@@ -1035,9 +1072,9 @@ void execute_command()
 #ifdef CHAIN_OF_COMMAND
           st_synchronize(); // wait for all movements to finish
 #endif
-        if (code_seen('S'))
+        if (cmd->has_S)
         {
-            unsigned char l_fan_code_val = CONSTRAIN(code_value(),0,255);
+            unsigned char l_fan_code_val = CONSTRAIN(cmd->S,0,255);
             
             #if (MINIMUM_FAN_START_SPEED > 0)
               if(l_fan_code_val > 0 && fan_last_speed == 0)
@@ -1103,11 +1140,11 @@ void execute_command()
         break;
       case 84:
         st_synchronize(); // wait for all movements to finish
-        if(code_seen('S'))
+        if(cmd->has_S)
         {
-          stepper_inactive_time = code_value() * 1000; 
+          stepper_inactive_time = cmd->S * 1000; 
         }
-        else if(code_seen('T'))
+        else if(cmd->has_T)
         {
           enable_x(); 
           enable_y(); 
@@ -1123,19 +1160,17 @@ void execute_command()
         }
         break;
       case 85: // M85
-        code_seen('S');
-        max_inactive_time = code_value() * 1000; 
+        if (cmd->has_S)
+	{
+          max_inactive_time = cmd->S * 1000; 
+        } else 
+        {
+          serial_send("!! S param required.\r\n");
+        }
         break;
       case 92: // M92
-        for(int i=0; i < NUM_AXIS; i++) 
-        {
-          if(code_seen(axis_codes[i])) 
-          {
-            axis_steps_per_unit[i] = code_value();
-            axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
-          }
-        }
-        
+        execute_m92(cmd);
+        break;
           // Update start speed intervals and axis order. TODO: refactor axis_max_interval[] calculation into a function, as it
           // should also be used in setup() as well
 //        long temp_max_intervals[NUM_AXIS];
@@ -1188,15 +1223,7 @@ void execute_command()
         serial_send("\r\n"); 
       	break;
       case 201: // M201  Set maximum acceleration in units/s^2 for print moves (M201 X1000 Y1000)
-
-        for(int8_t i=0; i < NUM_AXIS; i++) 
-        {
-          if(code_seen(axis_codes[i]))
-          {
-            max_acceleration_units_per_sq_second[i] = code_value();
-            axis_steps_per_sqr_second[i] = code_value() * axis_steps_per_unit[i];
-          }
-        }
+        execute_m201(cmd);
         break;
       #if 0 // Not used for Sprinter/grbl gen6
       case 202: // M202
@@ -1207,65 +1234,63 @@ void execute_command()
         break;
       #else  
       case 202: // M202 max feedrate mm/sec
-        for(int8_t i=0; i < NUM_AXIS; i++) 
-        {
-          if(code_seen(axis_codes[i])) max_feedrate[i] = code_value();
-        }
+        if (cmd->has_X)
+          max_feedrate[X_AXIS] = cmd->X;
+        if (cmd->has_Y)
+          max_feedrate[Y_AXIS] = cmd->Y;
+        if (cmd->has_Z)
+          max_feedrate[Z_AXIS] = cmd->Z;
+        if (cmd->has_E)
+          max_feedrate[E_AXIS] = cmd->E;
       break;
       #endif
       case 203: // M203 Temperature monitor
-          if(code_seen('S')) manage_monitor = code_value();
+          if (cmd->has_S)
+            manage_monitor = cmd->S;
           if(manage_monitor==100) manage_monitor=1; // Set 100 to heated bed
       break;
       case 204: // M204 acceleration S normal moves T filmanent only moves
-          if(code_seen('S')) move_acceleration = code_value() ;
-          if(code_seen('T')) retract_acceleration = code_value() ;
+          if (cmd->has_S)
+            move_acceleration = cmd->S;
+          if (cmd->has_T)
+            retract_acceleration = cmd->T;
       break;
       case 205: //M205 advanced settings:  minimum travel speed S=while printing T=travel only,  B=minimum segment time X= maximum xy jerk, Z=maximum Z jerk, E= max E jerk
-        if(code_seen('S')) minimumfeedrate = code_value();
-        if(code_seen('T')) mintravelfeedrate = code_value();
-      //if(code_seen('B')) minsegmenttime = code_value() ;
-        if(code_seen('X')) max_xy_jerk = code_value() ;
-        if(code_seen('Z')) max_z_jerk = code_value() ;
-        if(code_seen('E')) max_e_jerk = code_value() ;
+        if (cmd->has_S) minimumfeedrate = cmd->S;
+        if (cmd->has_T) mintravelfeedrate = cmd->T;
+      //if (cmd->has_B) minsegmenttime = cmd->B;
+        if (cmd->has_X) max_xy_jerk = cmd->X;
+        if (cmd->has_Z) max_z_jerk = cmd->Z;
+        if (cmd->has_E) max_e_jerk = cmd->E;
       break;
       case 206: // M206 additional homing offset
-        if(code_seen('D'))
-        {
-          serial_send("// Addhome X:%f Y:%f Z:%f\r\n", add_homing[0], add_homing[1], add_homing[2]);
-        }
-
-        for(int8_t cnt_i=0; cnt_i < 3; cnt_i++) 
-        {
-          if(code_seen(axis_codes[cnt_i])) add_homing[cnt_i] = code_value();
-        }
+        serial_send("// M206 Addhome X:%f Y:%f Z:%f\r\n", add_homing[0], add_homing[1], add_homing[2]);
+        if (cmd->has_X) add_homing[X_AXIS] = cmd->X;
+        if (cmd->has_Y) add_homing[Y_AXIS] = cmd->Y;
+        if (cmd->has_Z) add_homing[Z_AXIS] = cmd->Z;
       break;  
       case 220: // M220 S<factor in percent>- set speed factor override percentage
       {
-        if(code_seen('S')) 
+        if(cmd->has_S) 
         {
-          feedmultiply = code_value() ;
-          feedmultiply = CONSTRAIN(feedmultiply, 20, 200);
+          feedmultiply = CONSTRAIN(cmd->S, 20, 200);
           feedmultiplychanged=true;
         }
       }
       break;
       case 221: // M221 S<factor in percent>- set extrude factor override percentage
       {
-        if(code_seen('S')) 
-        {
-          extrudemultiply = code_value() ;
-          extrudemultiply = CONSTRAIN(extrudemultiply, 40, 200);
-        }
+        if(cmd->has_S) 
+          extrudemultiply = CONSTRAIN(cmd->S, 40, 200);
       }
       break;
 #ifdef PIDTEMP
       case 301: // M301
       {
-        if(code_seen('P')) PID_Kp = code_value();
-        if(code_seen('I')) PID_Ki = code_value();
-        if(code_seen('D')) PID_Kd = code_value();
-        updatePID();
+        //if(code_seen('P')) PID_Kp = code_value();
+        //if(code_seen('I')) PID_Ki = code_value();
+        //if(code_seen('D')) PID_Kd = code_value();
+        //updatePID();
       }
       break;
 #endif //PIDTEMP      
@@ -1273,7 +1298,7 @@ void execute_command()
       case 303: // M303 PID autotune
       {
         float help_temp = 150.0;
-        if (code_seen('S')) help_temp=code_value();
+        if (cmd->has_S) help_temp=cmd->S;
         PID_autotune(help_temp);
       }
       break;
@@ -1317,46 +1342,73 @@ void execute_command()
             serial_send("// Free Ram: %d\r\n", FreeRam1());
       break;
       default:
-            serial_send("-- Unknown code M%d.\r\n", code_M);
+            serial_send("-- Unknown code M%d.\r\n", cmd->code);
       break;
 
     }
-    
-  }
 }
 
-
-FORCE_INLINE void get_coordinates()
+void update_axis_steps(int axis, float steps_per_unit)
 {
-  for(int i=0; i < NUM_AXIS; i++)
-  {
-    if(code_seen(axis_codes[i])) destination[i] = (float)code_value() + (axis_relative_modes[i] || relative_mode)*current_position[i];
-    else destination[i] = current_position[i];                                                       //Are these else lines really needed?
-  }
-  
-  if(code_seen('F'))
-  {
-    next_feedrate = code_value();
-    if(next_feedrate > 0.0) feedrate = next_feedrate;
-  }
+  axis_steps_per_unit[axis] = steps_per_unit;
+  axis_steps_per_sqr_second[axis] = 
+    max_acceleration_units_per_sq_second[axis] * steps_per_unit;
+}
+
+void update_max_acceleration(int axis, float units_per_sq_second)
+{
+  max_acceleration_units_per_sq_second[axis] = units_per_sq_second;
+  axis_steps_per_sqr_second[axis] = 
+    units_per_sq_second * axis_steps_per_unit[axis];
+}
+
+void execute_m92(struct command *cmd)
+{
+  if (cmd->has_X)
+    update_axis_steps(X_AXIS, cmd->X);
+  if (cmd->has_Y)
+    update_axis_steps(Y_AXIS, cmd->Y);
+  if (cmd->has_Z)
+    update_axis_steps(Z_AXIS, cmd->Z);
+  if (cmd->has_E)
+    update_axis_steps(E_AXIS, cmd->E);
+}
+
+void execute_m201(struct command *cmd)
+{
+  if (cmd->has_X)
+    update_max_acceleration(X_AXIS, cmd->X);
+  if (cmd->has_Y)
+    update_max_acceleration(Y_AXIS, cmd->Y);
+  if (cmd->has_Z)
+    update_max_acceleration(Z_AXIS, cmd->Z);
+  if (cmd->has_E)
+    update_max_acceleration(E_AXIS, cmd->E);
+}
+
+void update_axis_pos(int axis, float pos)
+{
+  destination[axis] = pos + (axis_relative_modes[axis] || relative_mode)*current_position[axis];
+}
+
+void get_coordinates(struct command *cmd)
+{
+  if (cmd->has_X)
+    update_axis_pos(X_AXIS, cmd->has_X ? cmd->X : current_position[X_AXIS]);
+  if (cmd->has_Y)
+    update_axis_pos(Y_AXIS, cmd->has_Y ? cmd->Y : current_position[Y_AXIS]);
+  if (cmd->has_Z)
+    update_axis_pos(Z_AXIS, cmd->has_Z ? cmd->Z : current_position[Z_AXIS]);
+  if (cmd->has_F && cmd->F > 0.0)
+    feedrate = cmd->F;
 }
 
 #ifdef USE_ARC_FUNCTION
-void get_arc_coordinates()
+void get_arc_coordinates(struct command *cmd)
 {
-   get_coordinates();
-   if(code_seen('I')) {
-     offset[0] = code_value();
-   } 
-   else {
-     offset[0] = 0.0;
-   }
-   if(code_seen('J')) {
-     offset[1] = code_value();
-   }
-   else {
-     offset[1] = 0.0;
-   }
+   get_coordinates(cmd);
+   offset[0] = cmd->has_I ? cmd->I : 0.0;
+   offset[1] = cmd->has_J ? cmd->J : 0.0;
 }
 #endif
 

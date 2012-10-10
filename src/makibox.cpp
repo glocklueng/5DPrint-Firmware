@@ -644,19 +644,22 @@ void cmdbuf_process()
   // Validate the command's checksum, if provided.
   int32_t checksum = -1;
   uint16_t calculated_checksum = 0;
-  if (parse_int(curcmd, '*', &checksum) && (checksum < 0 || checksum > 0xFFFF))
+  if (parse_int(curcmd, '*', &checksum))
   {
-    serial_send("rs %ld (checksum out of range)\r\n", cmdseqnbr + 1);
-    return;
-  }
-  for (int i = 0; curcmd[i] != '*'; i++)
-  {
-    _crc_xmodem_update(calculated_checksum, curcmd[i++]);
-  }
-  if (checksum >= 0 && calculated_checksum != (uint16_t)checksum)
-  {
-    serial_send("rs %ld (incorrect checksum)\r\n", cmdseqnbr + 1);
-    return;
+    if (checksum < 0 || checksum > 0xFFFF)
+    {
+      serial_send("rs %ld (checksum out of range)\r\n", cmdseqnbr + 1);
+      return;
+    }
+    for (int i = 0; i < MAX_CMD_SIZE && curcmd[i] != '*'; i++)
+    {
+      _crc_xmodem_update(calculated_checksum, curcmd[i]);
+    }
+    if (calculated_checksum != (uint16_t)checksum)
+    {
+      serial_send("rs %ld (incorrect checksum)\r\n", cmdseqnbr + 1);
+      return;
+    }
   }
 
   // Validate the command's sequence number, if provided.

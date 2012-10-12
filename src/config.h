@@ -29,9 +29,9 @@
 // The pullups are needed if you directly connect a mechanical endswitch between the signal and ground pins.
 //If your axes are only moving in one direction, make sure the endstops are connected properly.
 //If your axes move in one direction ONLY when the endstops are triggered, set [XYZ]_ENDSTOP_INVERT to true here:
-const bool X_ENDSTOP_INVERT = false;
-const bool Y_ENDSTOP_INVERT = false;
-const bool Z_ENDSTOP_INVERT = false;
+#define X_ENDSTOP_INVERT 0
+#define Y_ENDSTOP_INVERT 0
+#define Z_ENDSTOP_INVERT 0
 
 //-----------------------------------------------------------------------
 //// STORE SETTINGS TO EEPROM
@@ -69,18 +69,18 @@ const bool Z_ENDSTOP_INVERT = false;
 //-----------------------------------------------------------------------
 // Disables axis when it's not being used.
 //-----------------------------------------------------------------------
-const bool DISABLE_X = false;
-const bool DISABLE_Y = false;
-const bool DISABLE_Z = true;
-const bool DISABLE_E = false;
+#define DISABLE_X 0
+#define DISABLE_Y 0
+#define DISABLE_Z 1
+#define DISABLE_E 0
 
 //-----------------------------------------------------------------------
 // Inverting axis direction
 //-----------------------------------------------------------------------
-const bool INVERT_X_DIR = false;
-const bool INVERT_Y_DIR = false;
-const bool INVERT_Z_DIR = false;
-const bool INVERT_E_DIR = false;
+#define INVERT_X_DIR 0
+#define INVERT_Y_DIR 0
+#define INVERT_Z_DIR 0
+#define INVERT_E_DIR 0
 
 //-----------------------------------------------------------------------
 //// ENDSTOP SETTINGS:
@@ -92,8 +92,10 @@ const bool INVERT_E_DIR = false;
 
 //#define ENDSTOPS_ONLY_FOR_HOMING // If defined the endstops will only be used for homing
 
-const bool min_software_endstops = false; //If true, axis won't move to coordinates less than zero.
-const bool max_software_endstops = true; //If true, axis won't move to coordinates greater than the defined lengths below.
+// If true, axis won't move to coordinates less than zero.
+#define MIN_SOFTWARE_ENDSTOPS 0
+// If true, axis won't move to coordinates greater than the defined lengths below.
+#define MAX_SOFTWARE_ENDSTOPS 1
 
 
 //-----------------------------------------------------------------------
@@ -108,7 +110,7 @@ const int Z_MAX_LENGTH = 100;
 //-----------------------------------------------------------------------
 #define _MAX_FEEDRATE {800, 400, 2, 45}       // (mm/sec)    
 #define _HOMING_FEEDRATE {1500,1500,120}      // (mm/min) !!
-#define _AXIS_RELATIVE_MODES {false, false, false, false}
+#define _AXIS_RELATIVE_MODES {0, 0, 0, 0}
 
 #define MAX_STEP_FREQUENCY 30000 // Max step frequency
 

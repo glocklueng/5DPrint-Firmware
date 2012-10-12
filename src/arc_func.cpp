@@ -24,6 +24,7 @@
 
 #include "config.h"
 #include "makibox.h"
+#include "planner.h"
 
 #ifdef USE_ARC_FUNCTION
 // The arc is approximated by generating a huge number of tiny, linear segments. The length of each 

@@ -1,7 +1,3 @@
-// Tonokip RepRap firmware rewrite based off of Hydra-mmm firmware.
-// Licence: GPL
-
-
 // A bug in avr-gcc causes spurious warnings when printing a float value:
 //   warning: format ‘%f’ expects type ‘double’, but argument 2 has type ‘float’
 // (This is because the '%f' format is actually defined to take a double.)
@@ -11,79 +7,27 @@
 // identical, we can simply #define away all our worries:
 #define float double
 
-
-
-extern "C" void __cxa_pure_virtual();
-
-#define  FORCE_INLINE __attribute__((always_inline)) inline
-
-
 #define NUM_AXIS 4
 #define X_AXIS 0
 #define Y_AXIS 1
 #define Z_AXIS 2
 #define E_AXIS 3
 
-
-// This struct is used when buffering the setup for each linear movement "nominal" values are as specified in 
-// the source g-code and may never actually be reached if acceleration management is active.
-typedef struct {
-  // Fields used by the bresenham algorithm for tracing the line
-  long steps_x, steps_y, steps_z, steps_e;  // Step count along each axis
-
-  unsigned long step_event_count;                    // The number of step events required to complete this block
-  long accelerate_until;           // The index of the step event on which to stop acceleration
-  long decelerate_after;           // The index of the step event on which to start decelerating
-  long acceleration_rate;          // The acceleration rate used for acceleration calculation
-  unsigned char direction_bits;             // The direction bit set for this block (refers to *_DIRECTION_BIT in config.h)
-
-  // Fields used by the motion planner to manage acceleration
-//  float speed_x, speed_y, speed_z, speed_e;          // Nominal mm/minute for each axis
-  float nominal_speed;                               // The nominal speed for this block in mm/min  
-  float entry_speed;                                 // Entry speed at previous-current junction in mm/min
-  float max_entry_speed;                             // Maximum allowable junction entry speed in mm/min
-  float millimeters;                                 // The total travel of this block in mm
-  float acceleration;                                // acceleration mm/sec^2
-  unsigned char recalculate_flag;                    // Planner flag to recalculate trapezoids on entry junction
-  unsigned char nominal_length_flag;                 // Planner flag for nominal speed always reached
-
-
-  // Settings for the trapezoid generator
-  long nominal_rate;                                 // The nominal step rate for this block in step_events/sec 
-  long initial_rate;                        // The jerk-adjusted step rate at start of block  
-  long final_rate;                          // The minimal rate at exit
-  long acceleration_st;                              // acceleration steps/sec^2
-  volatile char busy;
-} block_t;
-
-
-void analogWrite_check(uint8_t check_pin, int val);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void manage_inactivity(unsigned char debug);
 
-void cmdbuf_read_serial();
-void cmdbuf_process();
-void execute_command();
+void enable_x();
+void enable_y();
+void enable_z();
+void enable_e();
+void disable_x();
+void disable_y();
+void disable_z();
+void disable_e();
 
-void get_coordinates();
-void prepare_move();
-void prepare_arc_move(char isclockwise);
-#ifdef USE_ARC_FUNCTION
-  FORCE_INLINE void get_arc_coordinates();
-#endif
-
-void kill();
-
-void check_axes_activity();
-void plan_init();
-void st_init();
-void tp_init();
-void plan_buffer_line(float x, float y, float z, float e, float feed_rate);
-void plan_set_position(float x, float y, float z, float e);
-void st_wake_up();
-void st_synchronize();
-void st_set_position(const long &x, const long &y, const long &z, const long &e);
-
-#if (MINIMUM_FAN_START_SPEED > 0)
-void manage_fan_start_speed(void);
+#ifdef __cplusplus
+}
 #endif

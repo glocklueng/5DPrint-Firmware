@@ -686,8 +686,9 @@ void process_command(const char *cmdstr)
   case 'M':  execute_mcode(&cmd);  break;
   }
   end_tm = millis();
-  serial_send("ok %ld (%lums execute)\r\n", 
-    cmdseqnbr, end_tm - start_tm);
+  uint8_t qfree = blocks_available();
+  serial_send("ok %ld Q%d (%lums execute)\r\n", 
+    cmdseqnbr, qfree, end_tm - start_tm);
   previous_millis_cmd = end_tm;
 }
 

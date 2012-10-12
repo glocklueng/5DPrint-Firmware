@@ -41,7 +41,8 @@ extern unsigned long axis_steps_per_sqr_second[NUM_AXIS];
 
 void enable_endstops(uint8_t check);
 
-int blocks_queued();
+uint8_t blocks_queued();
+uint8_t blocks_available();
 
 void check_axes_activity();
 

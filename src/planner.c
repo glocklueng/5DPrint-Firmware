@@ -30,7 +30,7 @@
 #include "makibox.h"
 #include "board_io.h"
 #include "speed_lookuptable.h"
-//#include "serial.h"
+#include "serial.h"
 #include "planner.h"
 
 #ifdef USE_ARC_FUNCTION
@@ -417,16 +417,30 @@ block_t *plan_get_current_block() {
   return(block);
 }
 
-// Gets the current block. Returns NULL if buffer empty
-int blocks_queued() 
+uint8_t blocks_queued() 
 {
-  if (block_buffer_head == block_buffer_tail) { 
-    return 0; 
+  uint8_t head;	    // where we insert new blocks
+  uint8_t tail;	    // where we remove old blocks
+
+  CRITICAL_SECTION_START;
+  head = block_buffer_head;
+  tail = block_buffer_tail;
+  CRITICAL_SECTION_END;
+
+  serial_send("// blocks_queued:  tail=%03d  head=%03d\r\n", tail, head);
+  if (head > tail) {
+    return head - tail;
+  } else if (head < tail) {
+    return head + (BLOCK_BUFFER_SIZE - tail);
+  } else {
+    return 0;
   }
-  else
-    return 1;
 }
 
+uint8_t blocks_available()
+{
+  return BLOCK_BUFFER_SIZE - blocks_queued();
+}
 
 float junction_deviation = 0.1;
 float max_E_feedrate_calc = MAX_RETRACT_FEEDRATE;

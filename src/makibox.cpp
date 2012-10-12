@@ -605,11 +605,11 @@ void process_command(const char *cmdstr)
     }
     for (int i = 0; i < MAX_CMD_SIZE && cmdstr[i] != '*'; i++)
     {
-      _crc_xmodem_update(calculated_checksum, cmdstr[i]);
+      calculated_checksum = _crc_xmodem_update(calculated_checksum, cmdstr[i]);
     }
     if (calculated_checksum != (uint16_t)checksum)
     {
-      serial_send("rs %ld (incorrect checksum)\r\n", cmdseqnbr + 1);
+      serial_send("rs %ld (incorrect checksum - should be %u)\r\n", cmdseqnbr + 1, calculated_checksum);
       return;
     }
   }

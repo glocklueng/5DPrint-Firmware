@@ -1614,9 +1614,9 @@ void planner_reverse_pass() {
   unsigned char tail = block_buffer_tail;
   CRITICAL_SECTION_END;
   
-  if(((block_buffer_head-tail + BLOCK_BUFFER_SIZE) & (BLOCK_BUFFER_SIZE - 1)) > 3) 
+  if(((block_buffer_head-tail + BLOCK_BUFFER_SIZE) & BLOCK_BUFFER_MASK) > 3) 
   {
-    block_index = (block_buffer_head - 3) & (BLOCK_BUFFER_SIZE - 1);
+    block_index = (block_buffer_head - 3) & BLOCK_BUFFER_MASK; 
     block_t *block[3] = { NULL, NULL, NULL };
     while(block_index != tail) { 
       block_index = prev_block_index(block_index); 
@@ -1773,7 +1773,7 @@ void check_axes_activity() {
       if(block->steps_y != 0) y_active++;
       if(block->steps_z != 0) z_active++;
       if(block->steps_e != 0) e_active++;
-      block_index = (block_index+1) & (BLOCK_BUFFER_SIZE - 1);
+      block_index = (block_index+1) & BLOCK_BUFFER_MASK;
     }
   }
   if((DISABLE_X) && (x_active == 0)) disable_x();
@@ -1895,7 +1895,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   } 
 
   // slow down when the buffer starts to empty, rather than wait at the corner for a buffer refill
-  int moves_queued=(block_buffer_head-block_buffer_tail + BLOCK_BUFFER_SIZE) & (BLOCK_BUFFER_SIZE - 1);
+  int moves_queued=(block_buffer_head-block_buffer_tail + BLOCK_BUFFER_SIZE) & BLOCK_BUFFER_MASK;
 #ifdef SLOWDOWN  
   if(moves_queued < (BLOCK_BUFFER_SIZE * 0.5) && moves_queued > 1) feed_rate = feed_rate*moves_queued / (BLOCK_BUFFER_SIZE * 0.5); 
 #endif
@@ -2103,7 +2103,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
 
 int calc_plannerpuffer_fill(void)
 {
-  int moves_queued=(block_buffer_head-block_buffer_tail + BLOCK_BUFFER_SIZE) & (BLOCK_BUFFER_SIZE - 1);
+  int moves_queued=(block_buffer_head-block_buffer_tail + BLOCK_BUFFER_SIZE) & BLOCK_BUFFER_MASK;
   return(moves_queued);
 }
 
@@ -2150,7 +2150,7 @@ void getHighESpeed()
         high=se;
       }
     }
-    block_index = (block_index+1) & (BLOCK_BUFFER_SIZE - 1);
+    block_index = (block_index+1) & BLOCK_BUFFER_MASK;
   }
    
   float t=autotemp_min+high*autotemp_factor;

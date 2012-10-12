@@ -148,12 +148,20 @@ const int Z_MAX_LENGTH = 100;
 
 
 //-----------------------------------------------------------------------
-//// Planner buffer Size
+// Planner buffer Size
 //-----------------------------------------------------------------------
-
-// The number of linear motions that can be in the plan at any give time
-#define BLOCK_BUFFER_SIZE 16  
-#define BLOCK_BUFFER_MASK 0x0f
+// The number of linear motions that can be in the plan at any give time.
+// This must be a power-of-two!  Currently, sizeof(struct block) is 72 
+// bytes.
+// 
+//    SIZE    MASK    RAM (bytes)
+//    8	      0x07    576
+//    16      0x0F    1152
+//    32      0x1F    2304
+//    64      0x3F    4608
+//    128     0x7F    9216
+#define BLOCK_BUFFER_SIZE 32
+#define BLOCK_BUFFER_MASK 0x1F
 
 //-----------------------------------------------------------------------
 //// SETTINGS FOR ARC FUNCTION (Command G2/G2)

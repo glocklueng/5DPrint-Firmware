@@ -184,7 +184,7 @@ float offset[3] = {0.0, 0.0, 0.0};
 #define MAX_CMD_SIZE 95
 char cmdbuf[MAX_CMD_SIZE+1];
 unsigned char bufpos = 0;
-long cmdseqnbr = 0;
+uint32_t cmdseqnbr = 0;
 uint8_t cmdready = 0;
 
 //Send Temperature in °C to Host
@@ -580,7 +580,29 @@ int parse_int(const char *cmd, char word, int32_t *value)
   int16_t pos = find_word(cmd, word);
   if (pos < 0)
     return 0;
+  *value = strtol(&cmd[pos+1], NULL, 10);
+  return 1;
+}
+
+int parse_uint(const char *cmd, char word, uint32_t *value)
+{
+  // Parse the value.
+  // TODO:  check errno, check for no whitespace
+  int16_t pos = find_word(cmd, word);
+  if (pos < 0)
+    return 0;
   *value = strtoul(&cmd[pos+1], NULL, 10);
+  return 1;
+}
+
+int parse_hex(const char *cmd, char word, uint32_t *value)
+{
+  // Parse the value.
+  // TODO:  check errno, check for no whitespace
+  int16_t pos = find_word(cmd, word);
+  if (pos < 0)
+    return 0;
+  *value = strtoul(&cmd[pos+1], NULL, 16);
   return 1;
 }
 
@@ -602,61 +624,87 @@ int parse_float(const char *cmd, char word, float *value)
 //  command checksum, ensuring that the sequence
 //  number is correct, and dispatching the command.
 //
-//  The protocol is quite strict:
+//  The protocol is currently fairly tolerant about
+//  the order of words, but the recommended format is:
 //
-//      N<seqnbr> G<code> [params...] *0000
-//      N<seqnbr> M<code> [params...] *0000
+//      [G|M]<code> [params...] N<seqnbr>*123
+//      [G|M]<code> [params...] N<seqnbr>;1A04
+//
+//  The '*ddd' checksum is a simple 8-bit XOR of the
+//  message characters (not including the '*'), while
+//  the ';xxxx' checksum is the far more robust 16-bit
+//  XMODEM CRC.
 //------------------------------------------------
 void process_command(const char *cmdstr)
 {
   // Validate the command's checksum, if provided.
-  int32_t checksum = -1;
-  uint16_t calculated_checksum = 0;
-  if (parse_int(cmdstr, '*', &checksum))
-  {
-    if (checksum < 0 || checksum > 0xFFFF)
+  uint32_t checksum = -1;
+  if (parse_hex(cmdstr, ';', &checksum)) {
+    // 16-bit XMODEM cyclic redundancy check.
+    uint16_t calculated_checksum = 0;
+    if (checksum < 0x0000 || checksum > 0xFFFF)
     {
-      serial_send("rs %ld (checksum out of range)\r\n", cmdseqnbr + 1);
+      serial_send("rs %ld (checksum out of range)\r\n", cmdseqnbr);
       return;
     }
-    for (int i = 0; i < MAX_CMD_SIZE && cmdstr[i] != '*'; i++)
+    for (int i = 0; i < MAX_CMD_SIZE && cmdstr[i] != ';'; i++)
     {
       calculated_checksum = _crc_xmodem_update(calculated_checksum, cmdstr[i]);
     }
     if (calculated_checksum != (uint16_t)checksum)
     {
-      serial_send("rs %ld (incorrect checksum - should be %u)\r\n", cmdseqnbr + 1, calculated_checksum);
+      serial_send("rs %ld (incorrect checksum - should be %u)\r\n", cmdseqnbr, calculated_checksum);
+      return;
+    }
+  } else if (parse_uint(cmdstr, '*', &checksum)) {
+    // 8-bit XOR checksum.
+    uint8_t calculated_checksum = 0;
+    if (checksum < 0 || checksum > 255)
+    {
+      serial_send("rs %ld (checksum out of range)\r\n", cmdseqnbr);
+      return;
+    }
+    for (int i = 0; i < MAX_CMD_SIZE && cmdstr[i] != '*'; i++)
+    {
+      calculated_checksum ^= cmdstr[i];
+    }
+    if (calculated_checksum != (uint8_t)checksum)
+    {
+      serial_send("rs %ld (incorrect checksum - should be %u)\r\n", cmdseqnbr, calculated_checksum);
       return;
     }
   }
 
   // Validate the command's sequence number, if provided.
-  int32_t seqnbr;
-  if (parse_int(cmdstr, 'N', &seqnbr) && seqnbr != cmdseqnbr + 1)
+  uint32_t seqnbr;
+  if (parse_uint(cmdstr, 'N', &seqnbr))
   {
-    serial_send("rs %ld (incorrect seqnbr)\r\n", cmdseqnbr + 1);
-    return;
+    if (seqnbr == 0) cmdseqnbr = 0;
+    if (seqnbr != cmdseqnbr) {
+      serial_send("rs %ld (incorrect seqnbr)\r\n", cmdseqnbr);
+      return;
+    }
   }
 
   // Validate that the command has a single G or M code.
   int has_gcode;
   int has_mcode;
-  int32_t code = -1;
-  has_gcode = parse_int(cmdstr, 'G', &code);
-  has_mcode = parse_int(cmdstr, 'M', &code);
+  uint32_t code = -1;
+  has_gcode = parse_uint(cmdstr, 'G', &code);
+  has_mcode = parse_uint(cmdstr, 'M', &code);
   if (has_gcode && has_mcode)
   {
-    serial_send("rs %ld (multiple command codes)\r\n", cmdseqnbr + 1);
+    serial_send("rs %ld (multiple command codes)\r\n", cmdseqnbr);
     return;
   }
   if (!has_gcode && !has_mcode)
   {
-    serial_send("rs %ld (command code missing)\r\n", cmdseqnbr + 1);
+    serial_send("rs %ld (command code missing)\r\n", cmdseqnbr);
     return;
   }
   if (code < 1 || code > 999)
   {
-    serial_send("rs %ld (command code out of range)\r\n", cmdseqnbr + 1);
+    serial_send("rs %ld (command code out of range)\r\n", cmdseqnbr);
     return;
   }
 
@@ -678,7 +726,6 @@ void process_command(const char *cmdstr)
 
   // Dispatch command.
   unsigned long start_tm, end_tm;
-  cmdseqnbr++;
   serial_send("go %ld (executing %c%d)\r\n", cmdseqnbr, cmd.type, cmd.code);
   start_tm = millis();
   switch (cmd.type) {
@@ -689,6 +736,7 @@ void process_command(const char *cmdstr)
   uint8_t qfree = blocks_available();
   serial_send("ok %ld Q%d (%lums execute)\r\n", 
     cmdseqnbr, qfree, end_tm - start_tm);
+  cmdseqnbr++;
   previous_millis_cmd = end_tm;
 }
 

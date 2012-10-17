@@ -16,7 +16,7 @@
 */
 
 #include <avr/eeprom.h>
-#include <bsp/pgmspace.h>
+#include "pgmspace.h"
 #include <inttypes.h>
 #include <string.h>
 

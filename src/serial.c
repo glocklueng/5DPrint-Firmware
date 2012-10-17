@@ -1,10 +1,10 @@
 
 
-#include <bsp/pgmspace.h>
+#include "pgmspace.h"
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <bsp/usb.h>
+#include "usb.h"
 
 
 void serial_init()

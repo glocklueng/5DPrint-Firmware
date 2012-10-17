@@ -3,9 +3,9 @@
 MCU=at90usb1286
 F_CPU=16000000
 
-BSP_OBJS       = main.o pins_teensy.o usb.o
 
-MAKIBOX_OBJS   = arc_func.o heater.o makibox.o planner.o serial.o store_eeprom.o
+MAKIBOX_OBJS   = arc_func.o heater.o main.o makibox.o pins_teensy.o \
+                 planner.o serial.o store_eeprom.o usb.o
 
 
 CC=avr-gcc
@@ -13,7 +13,7 @@ CXX=avr-g++
 OBJCOPY=avr-objcopy
 
 
-CPPFLAGS       = -mmcu=$(MCU) -I. -DF_CPU=$(F_CPU)L -Os \
+CPPFLAGS       = -mmcu=$(MCU) -DF_CPU=$(F_CPU)L -Os \
                  -ffunction-sections -fdata-sections -g \
                  -Wall -Wformat=2 -Werror
 CFLAGS         = -std=gnu99
@@ -27,22 +27,19 @@ LDFLAGS        = -mmcu=$(MCU) -Wl,--gc-sections -Os
 %.o: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-BSP_OBJS:=$(addprefix bsp/, $(BSP_OBJS))
 MAKIBOX_OBJS:=$(addprefix src/, $(MAKIBOX_OBJS))
 
 
 all: makibox.hex
 
 clean:
-	rm -f $(BSP_OBJS)
 	rm -f $(MAKIBOX_OBJS)
 	rm -f makibox.elf
 	rm -f makibox.hex
 
-bsp: $(BSP_OBJS)
 makibox: $(MAKIBOX_OBJS)
 
-makibox.elf: $(BSP_OBJS) $(MAKIBOX_OBJS)
+makibox.elf: $(MAKIBOX_OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ -lc -lm
 	@(printf "Program size:\n")
 	@(printf "  .text  %8d bytes\n" 0x$$(readelf -S $@ | grep '\.text' | cut -c 58-63))

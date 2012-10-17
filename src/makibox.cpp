@@ -20,7 +20,7 @@
 
 
 #include <avr/interrupt.h>
-#include <bsp/pgmspace.h>
+#include "pgmspace.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>

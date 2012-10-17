@@ -8,7 +8,7 @@
 
 #include	<avr/io.h>
 #include    "pins.h"
-#include    <bsp/pins_teensy.h>
+#include    "pins_teensy.h"
 
 
 

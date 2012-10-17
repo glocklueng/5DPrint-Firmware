@@ -1,8 +1,4 @@
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 
 struct block;
 typedef struct block block_t;
@@ -45,7 +41,3 @@ uint8_t blocks_queued();
 uint8_t blocks_available();
 
 void check_axes_activity();
-
-#ifdef __cplusplus
-}
-#endif

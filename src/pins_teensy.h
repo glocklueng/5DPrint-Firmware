@@ -398,10 +398,6 @@
 #define CORE_PINREG(pin) CORE_PIN_CONCATENATE(pin, PINREG)
 #define CORE_PIN_CONCATENATE(pin, reg) (CORE_PIN ## pin ## _ ## reg)
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 
 extern void _digitalWrite(void);
 extern void _digitalWrite_HIGH(void);
@@ -1566,7 +1562,4 @@ static inline void delayMicroseconds(uint16_t usec)
 
 
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
 #endif

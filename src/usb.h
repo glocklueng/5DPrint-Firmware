@@ -3,11 +3,6 @@
 #include "pgmspace.h"
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 void usb_init();
 void usb_shutdown();
 void usb_serial_begin();
@@ -55,8 +50,3 @@ void inline __dummy_usb_serial_printf(const char *fmt, ...) { return; }
         __dummy_usb_serial_printf((fmt), ##args);   \
         usb_serial_printf_P(__c, ##args);           \
     } while(0)
-
-
-#ifdef __cplusplus
-}
-#endif

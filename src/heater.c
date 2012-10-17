@@ -31,6 +31,7 @@
 #include "makibox.h"
 #include "usb.h"
 
+#include "heater_table.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -86,7 +87,7 @@ unsigned long previous_millis_heater, previous_millis_bed_heater, previous_milli
     float autotemp_min=AUTO_TEMP_MIN;
     float autotemp_factor=AUTO_TEMP_FACTOR;
     int   autotemp_setpoint=0;
-    bool autotemp_enabled=true;
+    int   autotemp_enabled=1;
 #endif
 
 #ifndef HEATER_CURRENT
@@ -103,11 +104,11 @@ unsigned long previous_millis_heater, previous_millis_bed_heater, previous_milli
 #endif
 
 #ifdef MINTEMP
-  int minttemp = temp2analogh(MINTEMP);
+  int minttemp; /* = temp2analogh(MINTEMP); */
 #endif
 
 #ifdef MAXTEMP
-  int maxttemp = temp2analogh(MAXTEMP);
+  int maxttemp; /* = temp2analogh(MAXTEMP); */
 #endif
 
 
@@ -323,7 +324,7 @@ void PID_autotune(int PIDAT_test_temp)
   unsigned char PIDAT_PWM_val = HEATER_CURRENT;
   
   unsigned char PIDAT_cycles=0;
-  bool PIDAT_heating = true;
+  int PIDAT_heating = 1;
 
   unsigned long PIDAT_temp_millis = millis();
   unsigned long PIDAT_t1=PIDAT_temp_millis;
@@ -395,11 +396,11 @@ void PID_autotune(int PIDAT_test_temp)
       PIDAT_max=fmax(PIDAT_max,PIDAT_input);
       PIDAT_min=fmin(PIDAT_min,PIDAT_input);
       
-      if(PIDAT_heating == true && PIDAT_input > PIDAT_test_temp) 
+      if(PIDAT_heating && PIDAT_input > PIDAT_test_temp) 
       {
         if(millis() - PIDAT_t2 > 5000) 
         { 
-          PIDAT_heating = false;
+          PIDAT_heating = 0;
           PIDAT_PWM_val = (PIDAT_bias - PIDAT_d);
           PIDAT_t1 = millis();
           PIDAT_t_high = PIDAT_t1 - PIDAT_t2;
@@ -407,11 +408,11 @@ void PID_autotune(int PIDAT_test_temp)
         }
       }
       
-      if(PIDAT_heating == false && PIDAT_input < PIDAT_test_temp) 
+      if(!PIDAT_heating && PIDAT_input < PIDAT_test_temp) 
       {
         if(millis() - PIDAT_t1 > 5000) 
         {
-          PIDAT_heating = true;
+          PIDAT_heating = 1;
           PIDAT_t2 = millis();
           PIDAT_t_low = PIDAT_t2 - PIDAT_t1;
           
@@ -545,7 +546,6 @@ void PID_autotune(int PIDAT_test_temp)
           #endif
         #endif
       }
-      #if THERMISTORBED!=0
       else
       {
         serial_send(" %d %d ", analog2tempBed(current_bed_raw), analog2tempBed(target_bed_raw));
@@ -558,8 +558,6 @@ void PID_autotune(int PIDAT_test_temp)
           serial_send("0\r\n");
         #endif  
       }
-      #endif
-      
     }
   
   }

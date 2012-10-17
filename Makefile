@@ -9,7 +9,6 @@ MAKIBOX_OBJS   = arc_func.o heater.o main.o makibox.o pins_teensy.o \
 
 
 CC=avr-gcc
-CXX=avr-g++
 OBJCOPY=avr-objcopy
 
 
@@ -17,15 +16,12 @@ CPPFLAGS       = -mmcu=$(MCU) -DF_CPU=$(F_CPU)L -Os \
                  -ffunction-sections -fdata-sections -g \
                  -Wall -Wformat=2 -Werror
 CFLAGS         = -std=gnu99
-CXXFLAGS       = -fno-exceptions
 LDFLAGS        = -mmcu=$(MCU) -Wl,--gc-sections -Os
 
 
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-%.o: %.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 MAKIBOX_OBJS:=$(addprefix src/, $(MAKIBOX_OBJS))
 

@@ -42,7 +42,6 @@
   #include "store_eeprom.h"
 #endif
 
-extern "C" void __cxa_pure_virtual();
 
 #define  FORCE_INLINE __attribute__((always_inline)) inline
 
@@ -61,11 +60,6 @@ void kill();
 #if (MINIMUM_FAN_START_SPEED > 0)
 void manage_fan_start_speed(void);
 #endif
-
-extern "C" {
-  void setup();
-  void loop();
-}
 
 void read_command();
 void process_command(const char *cmdstr);
@@ -156,17 +150,17 @@ long  max_acceleration_units_per_sq_second[4] = _MAX_ACCELERATION_UNITS_PER_SQ_S
 //adjustable feed factor for online tuning printer speed
 volatile int feedmultiply=100; //100->original / 200 -> Factor 2 / 50 -> Factor 0.5
 int saved_feedmultiply;
-volatile bool feedmultiplychanged=false;
+volatile int feedmultiplychanged=0;
 
 float destination[NUM_AXIS] = {0.0, 0.0, 0.0, 0.0};
 float current_position[NUM_AXIS] = {0.0, 0.0, 0.0, 0.0};
 float add_homing[3]={0,0,0};
 
-bool home_all_axis = true;
+int home_all_axis = 1;
 //unsigned ?? ToDo: Check
 int feedrate = 1500, next_feedrate, saved_feedrate;
 
-bool relative_mode = false;  //Determines Absolute or Relative Coordinates
+int relative_mode = 0;  //Determines Absolute or Relative Coordinates
 
 #ifdef USE_ARC_FUNCTION
 //For arc center point coordinates, sent by commands G2/G3
@@ -260,15 +254,15 @@ int FreeRam1(void)
   extern int* __brkval;
   int free_memory;
 
-  if (reinterpret_cast<int>(__brkval) == 0)
+  if ((int)(__brkval) == 0)
   {
     // if no heap use from end of bss section
-    free_memory = reinterpret_cast<int>(&free_memory) - reinterpret_cast<int>(&__bss_end);
+    free_memory = (int)(&free_memory) - (int)(&__bss_end);
   }
   else
   {
     // use from top of stack to heap
-    free_memory = reinterpret_cast<int>(&free_memory) - reinterpret_cast<int>(__brkval);
+    free_memory = (int)(&free_memory) - (int)(__brkval);
   }
   
   return free_memory;
@@ -472,7 +466,7 @@ void setup()
   #ifdef USE_EEPROM_SETTINGS
   //first Value --> Init with default
   //second value --> Print settings to UART
-  EEPROM_RetrieveSettings(false,false);
+  EEPROM_RetrieveSettings(0, 0);
   #endif
   
   #ifdef PIDTEMP
@@ -832,13 +826,13 @@ void execute_gcode(struct command *cmd)
       #ifdef USE_ARC_FUNCTION
       case 2: // G2  - CW ARC
         get_arc_coordinates(cmd);
-        prepare_arc_move(true);
+        prepare_arc_move(1);
         previous_millis_cmd = millis();
         //break;
         return;
       case 3: // G3  - CCW ARC
         get_arc_coordinates(cmd);
-        prepare_arc_move(false);
+        prepare_arc_move(0);
         previous_millis_cmd = millis();
         //break;
         return;  
@@ -861,14 +855,14 @@ void execute_gcode(struct command *cmd)
         
         feedmultiply = 100;    
       
-        enable_endstops(true);
+        enable_endstops(1);
       
         for(int i=0; i < NUM_AXIS; i++) 
         {
           destination[i] = current_position[i];
         }
         feedrate = 0;
-        is_homing = true;
+        is_homing = 1;
 
         home_all_axis = !(cmd->has_X || cmd->has_Y || cmd->has_Z);
 
@@ -882,20 +876,20 @@ void execute_gcode(struct command *cmd)
           homing_routine(Z_AXIS);
         
         #ifdef ENDSTOPS_ONLY_FOR_HOMING
-            enable_endstops(false);
+            enable_endstops(0);
       	#endif
       
-        is_homing = false;
+        is_homing = 0;
         feedrate = saved_feedrate;
         feedmultiply = saved_feedmultiply;
       
         previous_millis_cmd = millis();
         break;
       case 90: // G90
-        relative_mode = false;
+        relative_mode = 0;
         break;
       case 91: // G91
-        relative_mode = true;
+        relative_mode = 1;
         break;
       case 92: // G92
         if(!cmd->has_E)
@@ -990,7 +984,7 @@ void execute_mcode(struct command *cmd) {
         codenum = millis(); 
         
         /* See if we are heating up or cooling down */
-        bool target_direction = (current_raw < target_raw);  // true if heating, false if cooling
+        int target_direction = !!(current_raw < target_raw);  // true if heating, false if cooling
         
       #ifdef TEMP_RESIDENCY_TIME
         long residencyStart;
@@ -1111,10 +1105,10 @@ void execute_mcode(struct command *cmd) {
         break;
       #endif
       case 82:
-        axis_relative_modes[3] = false;
+        axis_relative_modes[3] = 0;
         break;
       case 83:
-        axis_relative_modes[3] = true;
+        axis_relative_modes[3] = 1;
         break;
       case 84:
         st_synchronize(); // wait for all movements to finish
@@ -1234,7 +1228,7 @@ void execute_mcode(struct command *cmd) {
         if(cmd->has_S) 
         {
           feedmultiply = CONSTRAIN(cmd->S, 20, 200);
-          feedmultiplychanged=true;
+          feedmultiplychanged=1;
         }
       }
       break;
@@ -1276,7 +1270,7 @@ void execute_mcode(struct command *cmd) {
       break;
       case 501: // Read settings from EEPROM
       {
-        EEPROM_RetrieveSettings(false,true);
+        EEPROM_RetrieveSettings(0, 1);
         for(int8_t i=0; i < NUM_AXIS; i++)
         {
           axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
@@ -1285,7 +1279,7 @@ void execute_mcode(struct command *cmd) {
       break;
       case 502: // Revert to default settings
       {
-        EEPROM_RetrieveSettings(true,true);
+        EEPROM_RetrieveSettings(1, 1);
         for(int8_t i=0; i < NUM_AXIS; i++)
         {
           axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];

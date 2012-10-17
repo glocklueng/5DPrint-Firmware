@@ -34,6 +34,7 @@
 
 //======================================================================================
 //========================= Read / Write EEPROM =======================================
+#if 0
 template <class T> int EEPROM_write_setting(int address, const T& value)
 {
   const unsigned char *p = (const unsigned char *)(const void*)&value;
@@ -51,11 +52,13 @@ template <class T> int EEPROM_read_setting(int address, T& value)
     *p++ = eeprom_read_byte((unsigned char *)address++);
   return i;
 }
+#endif
 //======================================================================================
 
 
 void EEPROM_StoreSettings() 
 {
+#if 0
   char ver[4]= "000";
   EEPROM_write_setting(EEPROM_OFFSET, ver); // invalidate data first
   EEPROM_write_setting(axis_steps_per_unit_address, axis_steps_per_unit);
@@ -83,6 +86,7 @@ void EEPROM_StoreSettings()
 
   char ver2[4]=EEPROM_VERSION;
   EEPROM_write_setting(EEPROM_OFFSET, ver2); // validate data
+#endif
   serial_send("Settings Stored\r\n");
  
 }
@@ -134,9 +138,10 @@ void EEPROM_printSettings()
 } 
 
 
-void EEPROM_RetrieveSettings(bool def, bool printout)
+void EEPROM_RetrieveSettings(int def, int printout)
 {  // if def=true, the default values will be used
 
+#if 0
     char stored_ver[4];
     char ver[4]=EEPROM_VERSION;
     
@@ -163,6 +168,7 @@ void EEPROM_RetrieveSettings(bool def, bool printout)
       serial_send("Stored settings retreived\r\n");
     }
     else 
+#endif
     {
 
       float tmp1[]=_AXIS_STEP_PER_UNIT;

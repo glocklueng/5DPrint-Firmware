@@ -22,7 +22,13 @@
 
 
 #include "config.h"
-#include "thermistortables.h"
+
+
+#define NUMTEMPS      61
+#define BNUMTEMPS     61
+#define bedtemptable  temptable
+extern const short temptable[NUMTEMPS][2];
+
 
 #if defined HEATER_USES_THERMISTOR
 #define temp2analogh( c ) temp2analog_thermistor(c,temptable,NUMTEMPS)

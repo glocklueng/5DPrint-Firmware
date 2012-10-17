@@ -13,10 +13,6 @@
 #define Z_AXIS 2
 #define E_AXIS 3
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void manage_inactivity(unsigned char debug);
 
 void enable_x();
@@ -27,7 +23,3 @@ void disable_x();
 void disable_y();
 void disable_z();
 void disable_e();
-
-#ifdef __cplusplus
-}
-#endif

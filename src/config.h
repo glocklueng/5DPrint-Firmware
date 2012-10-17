@@ -1,18 +1,7 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
-// BASIC SETTINGS: select thermistor type, axis scaling, and endstop configuration
-
-//// Thermistor settings:
-// 1 is 100k thermistor
-// 2 is 200k thermistor
-// 3 is mendel-parts thermistor
-// 4 is 10k thermistor
-// 5 is ParCan supplied 104GT-2 100K
-// 6 is EPCOS 100k
-// 7 is 100k Honeywell thermistor 135-104LAG-J01
-#define THERMISTORHEATER 1
-#define THERMISTORBED 1
+// BASIC SETTINGS: select axis scaling and endstop configuration
 
 //// Calibration variables
 // X, Y, Z, E steps per unit - Metric Prusa Mendel with Wade extruder:
@@ -101,9 +90,9 @@
 //-----------------------------------------------------------------------
 //Max Length for Prusa Mendel, check the ways of your axis and set this Values
 //-----------------------------------------------------------------------
-const int X_MAX_LENGTH = 115;
-const int Y_MAX_LENGTH = 165;
-const int Z_MAX_LENGTH = 100;
+#define X_MAX_LENGTH 115
+#define Y_MAX_LENGTH 165
+#define Z_MAX_LENGTH 100
 
 //-----------------------------------------------------------------------
 //// MOVEMENT SETTINGS

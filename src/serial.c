@@ -4,37 +4,30 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <bsp/usb_api.h>
-
-
-/* This is a mostly-useless definition, since we're using USB serial... */
-#define BAUDRATE 57600
-
-
-extern "C" {
+#include <bsp/usb.h>
 
 
 void serial_init()
 {
-    Serial.begin(BAUDRATE);
+    usb_serial_begin();
 }
 
 
 void serial_flush()
 {
-    Serial.send_now();
+    usb_serial_flush();
 }
 
 
 int serial_can_read()
 {
-    return Serial.available() > 0;
+    return usb_serial_available() > 0;
 }
 
 
 uint8_t serial_read()
 {
-    int ch = Serial.read();
+    int ch = usb_serial_read();
     if (ch < 0 || ch > 255)
     {
         // TODO:  error handling, somehow?
@@ -56,7 +49,7 @@ void serial_printf(const char *fmt, ...)
     if (size < 128)
     {
         // TODO:  error handling when exceeding the 128-byte buffer
-        Serial.write((uint8_t *)buf, size);
+        usb_serial_write((uint8_t *)buf, size);
     }
 }
 
@@ -73,9 +66,6 @@ void __serial_printf_P(PGM_P fmt, ...)
     if (size < 128)
     {
         // TODO:  error handling when exceeding the 128-byte buffer
-        Serial.write((uint8_t *)buf, size);
+        usb_serial_write((uint8_t *)buf, size);
     }
 }
-
-
-}  // extern "C"

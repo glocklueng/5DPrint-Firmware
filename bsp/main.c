@@ -1,10 +1,8 @@
 #include "core_pins.h"
 
 
-extern "C" {
-    void setup();
-    void loop();
-}
+void setup();
+void loop();
 
 
 int main(void)

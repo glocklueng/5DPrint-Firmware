@@ -3,9 +3,7 @@
 MCU=at90usb1286
 F_CPU=16000000
 
-BSP_OBJS       = pins_teensy.o usb.o \
-                 main.o usb_api.o HardwareSerial.o Print.o \
-                 Stream.o
+BSP_OBJS       = main.o pins_teensy.o usb.o
 
 MAKIBOX_OBJS   = arc_func.o heater.o makibox.o planner.o serial.o store_eeprom.o
 

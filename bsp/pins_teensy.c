@@ -27,7 +27,6 @@
 #include <avr/sleep.h>
 #include "wiring_private.h"
 #include "pins_arduino.h"
-#include "usb_private.h"
 #include "core_pins.h"
 
 // this doubles the analog input speed
@@ -82,8 +81,6 @@ void _init_Teensyduino_internal_(void)
 	ADCSRB = DEFAULT_ADCSRB;
 	DIDR0 = 0;
 #endif
-	// initialize USB
-	usb_init();
 	sei();
 }
 

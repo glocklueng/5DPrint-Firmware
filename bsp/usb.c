@@ -22,8 +22,222 @@
  */
 
 
-#include "usb_common.h"
-#include "usb_private.h"
+#include "usb.h"
+#include <stdint.h>
+#include <avr/io.h>
+#include "pgmspace.h"
+#include <avr/interrupt.h>
+#include "core_pins.h"
+
+
+/**************************************************************************
+ *
+ *  Configurable Options
+ *
+ **************************************************************************/
+
+// You can change these to give your code its own name.  On Windows,
+// these are only used before an INF file (driver install) is loaded.
+#define STR_MANUFACTURER        L"Makible"
+#define STR_PRODUCT             L"Makibox A6"
+
+// All USB serial devices are supposed to have a serial number
+// (according to Microsoft).  On windows, a new COM port is created
+// for every unique serial/vendor/product number combination.  If
+// you program 2 identical boards with 2 different serial numbers
+// and they are assigned COM7 and COM8, each will always get the
+// same COM port number because Windows remembers serial numbers.
+//
+// On Mac OS-X, a device file is created automatically which
+// incorperates the serial number, eg, /dev/cu-usbmodem12341
+//
+// Linux by default ignores the serial number, and creates device
+// files named /dev/ttyACM0, /dev/ttyACM1... in the order connected.
+// Udev rules (in /etc/udev/rules.d) can define persistent device
+// names linked to this serial number, as well as permissions, owner
+// and group settings.
+#define STR_SERIAL_NUMBER       L"001"
+
+// Mac OS-X and Linux automatically load the correct drivers.  On
+// Windows, even though the driver is supplied by Microsoft, an
+// INF file is needed to load the driver.  These numbers need to
+// match the INF file.
+#define VENDOR_ID               0x1D50
+#define PRODUCT_ID              0x604C
+
+// When you write data, it goes into a USB endpoint buffer, which
+// is transmitted to the PC when it becomes full, or after a timeout
+// with no more writes.  Even if you write in exactly packet-size
+// increments, this timeout is used to send a "zero length packet"
+// that tells the PC no more data is expected and it should pass
+// any buffered data to the application that may be waiting.  If
+// you want data sent immediately, call usb_serial_flush_output().
+#define TRANSMIT_FLUSH_TIMEOUT  3   /* in milliseconds */
+
+// If the PC is connected but not "listening", this is the length
+// of time before usb_serial_getchar() returns with an error.  This
+// is roughly equivilant to a real UART simply transmitting the
+// bits on a wire where nobody is listening, except you get an error
+// code which you can ignore for serial-like discard of data, or
+// use to know your data wasn't sent.
+#define TRANSMIT_TIMEOUT        15   /* in milliseconds */
+
+
+/**************************************************************************
+ *
+ *  Endpoint Buffer Configuration
+ *
+ **************************************************************************/
+
+// These buffer sizes are best for most applications, but perhaps if you
+// want more buffering on some endpoint at the expense of others, this
+// is where you can make such changes.  The AT90USB162 has only 176 bytes
+// of DPRAM (USB buffers) and only endpoints 3 & 4 can double buffer.
+
+#define ENDPOINT0_SIZE          32
+#define CDC_ACM_ENDPOINT        2
+#define CDC_ACM_SIZE            8
+#define CDC_ACM_BUFFER          EP_SINGLE_BUFFER
+#define CDC_RX_ENDPOINT         3
+#define CDC_RX_BUFFER           EP_DOUBLE_BUFFER
+#define CDC_TX_ENDPOINT         4
+#define CDC_TX_BUFFER           EP_DOUBLE_BUFFER
+
+#if defined(__AVR_AT90USB162__)
+#define CDC_RX_SIZE             32
+#define CDC_TX_SIZE             32
+#elif defined(__AVR_ATmega32U4__) || defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB1286__)
+#define CDC_RX_SIZE             64
+#define CDC_TX_SIZE             64
+#endif
+
+
+#define MAX_ENDPOINT            6
+
+#define LSB(n) (n & 255)
+#define MSB(n) ((n >> 8) & 255)
+
+
+// constants corresponding to the various serial parameters
+#define USB_SERIAL_DTR                  0x01
+#define USB_SERIAL_RTS                  0x02
+#define USB_SERIAL_1_STOP               0
+#define USB_SERIAL_1_5_STOP             1
+#define USB_SERIAL_2_STOP               2
+#define USB_SERIAL_PARITY_NONE          0
+#define USB_SERIAL_PARITY_ODD           1
+#define USB_SERIAL_PARITY_EVEN          2
+#define USB_SERIAL_PARITY_MARK          3
+#define USB_SERIAL_PARITY_SPACE         4
+#define USB_SERIAL_DCD                  0x01
+#define USB_SERIAL_DSR                  0x02
+#define USB_SERIAL_BREAK                0x04
+#define USB_SERIAL_RI                   0x08
+#define USB_SERIAL_FRAME_ERR            0x10
+#define USB_SERIAL_PARITY_ERR           0x20
+#define USB_SERIAL_OVERRUN_ERR          0x40
+
+#define EP_TYPE_CONTROL                 0x00
+#define EP_TYPE_BULK_IN                 0x81
+#define EP_TYPE_BULK_OUT                0x80
+#define EP_TYPE_INTERRUPT_IN            0xC1
+#define EP_TYPE_INTERRUPT_OUT           0xC0
+#define EP_TYPE_ISOCHRONOUS_IN          0x41
+#define EP_TYPE_ISOCHRONOUS_OUT         0x40
+#define EP_SINGLE_BUFFER                0x02
+#define EP_DOUBLE_BUFFER                0x06
+#define EP_SIZE(s)      ((s) == 64 ? 0x30 :     \
+                        ((s) == 32 ? 0x20 :     \
+                        ((s) == 16 ? 0x10 :     \
+                                     0x00)))
+
+#if defined(__AVR_AT90USB162__)
+#define HW_CONFIG() 
+#define PLL_CONFIG() (PLLCSR = ((1<<PLLE)|(1<<PLLP0)))
+#define USB_CONFIG() (USBCON = (1<<USBE))
+#define USB_FREEZE() (USBCON = ((1<<USBE)|(1<<FRZCLK)))
+#elif defined(__AVR_ATmega32U4__)
+#define HW_CONFIG() (UHWCON = 0x01)
+#define PLL_CONFIG() (PLLCSR = 0x12)
+#define USB_CONFIG() (USBCON = ((1<<USBE)|(1<<OTGPADE)))
+#define USB_FREEZE() (USBCON = ((1<<USBE)|(1<<FRZCLK)))
+#elif defined(__AVR_AT90USB646__)
+#define HW_CONFIG() (UHWCON = 0x81)
+#define PLL_CONFIG() (PLLCSR = 0x1A)
+#define USB_CONFIG() (USBCON = ((1<<USBE)|(1<<OTGPADE)))
+#define USB_FREEZE() (USBCON = ((1<<USBE)|(1<<FRZCLK)))
+#elif defined(__AVR_AT90USB1286__)
+#define HW_CONFIG() (UHWCON = 0x81)
+#define PLL_CONFIG() (PLLCSR = 0x16)
+#define USB_CONFIG() (USBCON = ((1<<USBE)|(1<<OTGPADE)))
+#define USB_FREEZE() (USBCON = ((1<<USBE)|(1<<FRZCLK)))
+#endif
+
+// standard control endpoint request types
+#define GET_STATUS                      0
+#define CLEAR_FEATURE                   1
+#define SET_FEATURE                     3
+#define SET_ADDRESS                     5
+#define GET_DESCRIPTOR                  6
+#define GET_CONFIGURATION               8
+#define SET_CONFIGURATION               9
+#define GET_INTERFACE                   10
+#define SET_INTERFACE                   11
+// CDC (communication class device)
+#define CDC_SET_LINE_CODING             0x20
+#define CDC_GET_LINE_CODING             0x21
+#define CDC_SET_CONTROL_LINE_STATE      0x22
+#define CDC_SEND_BREAK                  0x23
+
+
+#define pgm_read_byte_postinc(val, addr) \
+        asm ("lpm  %0, Z+\n" : "=r" (val), "+z" (addr) : )
+#define pgm_read_word_postinc(val, addr) \
+        asm ("lpm  %A0, Z+\n\tlpm  %B0, Z+\n" : "=r" (val), "+z" (addr) : )
+
+#define read_word_lsbfirst(val, reg) \
+        asm volatile( \
+                "lds  %A0, %1\n\tlds  %B0, %1\n" \
+                : "=r" (val) : "M" ((int)(&reg)) )
+#define read_word_msbfirst(val, reg) \
+        asm volatile( \
+                "lds  %B0, %1\n\tlds  %A0, %1\n" \
+                : "=r" (val) : "M" ((int)(&reg)) )
+#define read_dword_lsbfirst(val, reg) \
+        asm volatile( \
+                "lds  %A0, %1\n\tlds  %B0, %1\n\t" \
+                "lds  %C0, %1\n\tlds  %D0, %1\n" \
+                : "=r" (val) : "M" ((int)(&reg)) )
+#define read_dword_msbfirst(val, reg) \
+        asm volatile( \
+                "lds  %D0, %1\n\tlds  %C0, %1\n\t" \
+                "lds  %B0, %1\n\tlds  %A0, %1\n" \
+                : "=r" (val) : "M" ((int)(&reg)) )
+
+#define write_word_lsbfirst(val, reg) \
+        asm volatile( \
+                "sts  %1, %A0\n\tsts  %1, %B0\n" \
+                : : "r" (val) , "M" ((int)(&reg)) )
+#define write_word_msbfirst(val, reg) \
+        asm volatile( \
+                "sts  %1, %B0\n\tsts  %1, %A0\n" \
+                : : "r" (val) , "M" ((int)(&reg)) )
+#define write_dword_lsbfirst(val, reg) \
+        asm volatile( \
+                "sts  %1, %A0\n\tsts  %1, %B0\n\t" \
+                "sts  %1, %C0\n\tsts  %1, %D0\n" \
+                : : "r" (val) , "M" ((int)(&reg)) )
+#define write_dword_msbfirst(val, reg) \
+        asm volatile( \
+                "sts  %1, %D0\n\tsts  %1, %C0\n\t" \
+                "sts  %1, %B0\n\tsts  %1, %A0\n" \
+                : : "r" (val) , "M" ((int)(&reg)) )
+
+#define USBSTATE __attribute__ ((section (".noinit")))
+
+extern void _reboot_Teensyduino_(void) __attribute__((noreturn));
+extern void _restart_Teensyduino_(void) __attribute__((noreturn));
+
 
 
 /**************************************************************************
@@ -217,6 +431,9 @@ uint8_t transmit_previous_timeout=0;
 volatile uint8_t cdc_line_coding[7]={0x00, 0xE1, 0x00, 0x00, 0x00, 0x00, 0x08};
 volatile uint8_t cdc_line_rtsdtr=0;
 
+// "peek buffer" for usb_serial
+int16_t peek_buf;
+
 
 /**************************************************************************
  *
@@ -256,8 +473,286 @@ void usb_shutdown(void)
 	usb_suspended = 1;
 }
 
+void usb_serial_begin(void)
+{
+	// make sure USB is initialized
+	peek_buf = -1;
+	usb_init();
+	uint16_t begin_wait = (uint16_t)millis();
+	while (1) {
+		// wait for the host to finish enumeration
+		if (usb_configuration) {
+			delay(200);  // a little time for host to load a driver
+			return;
+		}
+		// or for suspend mode (powered without USB)
+		if (usb_suspended) {
+			uint16_t begin_suspend = (uint16_t)millis();
+			while (usb_suspended) {
+				// must remain suspended for a while, because
+				// normal USB enumeration causes brief suspend
+				// states, typically under 0.1 second
+				if ((uint16_t)millis() - begin_suspend > 250) {
+					return;
+				}
+			}
+		}
+		// ... or a timout (powered by a USB power adaptor that
+		// wiggles the data lines to keep a USB device charging)
+		if ((uint16_t)millis() - begin_wait > 2500) return;
+	}
+}
 
-// Public API functions moved to usb_api.cpp
+void usb_serial_end(void)
+{
+	usb_shutdown();
+	delay(25);
+}
+
+// number of bytes available in the receive buffer
+int usb_serial_available(void)
+{
+        uint8_t n=0, i, intr_state;
+
+        intr_state = SREG;
+        cli();
+        if (usb_configuration) {
+                UENUM = CDC_RX_ENDPOINT;
+                n = UEBCLX;
+		if (!n) {
+			i = UEINTX;
+			if (i & (1<<RXOUTI) && !(i & (1<<RWAL))) UEINTX = 0x6B;
+		}
+        }
+        SREG = intr_state;
+	if (peek_buf >= 0 && n < 255) n++;
+        return n;
+}
+
+int usb_serial_peek(void)
+{
+	if (peek_buf < 0) peek_buf = usb_serial_read();
+	return peek_buf;
+}
+
+// get the next character, or -1 if nothing received
+int usb_serial_read(void)
+{
+        uint8_t c, intr_state;
+
+	if (peek_buf >= 0) {
+		c = peek_buf;
+		peek_buf = -1;
+		return c;
+	}
+        // interrupts are disabled so these functions can be
+        // used from the main program or interrupt context,
+        // even both in the same program!
+        intr_state = SREG;
+        cli();
+        if (!usb_configuration) {
+                SREG = intr_state;
+                return -1;
+        }
+        UENUM = CDC_RX_ENDPOINT;
+	retry:
+	c = UEINTX;
+        if (!(c & (1<<RWAL))) {
+                // no data in buffer
+		if (c & (1<<RXOUTI)) {
+			UEINTX = 0x6B;
+			goto retry;
+		}
+                SREG = intr_state;
+                return -1;
+        }
+        // take one byte out of the buffer
+        c = UEDATX;
+        // if this drained the buffer, release it
+        if (!(UEINTX & (1<<RWAL))) UEINTX = 0x6B;
+        SREG = intr_state;
+        return c;
+}
+
+// discard any buffered input
+void usb_serial_discard(void)
+{
+        uint8_t intr_state;
+
+        if (usb_configuration) {
+                intr_state = SREG;
+                cli();
+                UENUM = CDC_RX_ENDPOINT;
+                while ((UEINTX & (1<<RWAL))) {
+                        UEINTX = 0x6B;
+                }
+                SREG = intr_state;
+        }
+	peek_buf = -1;
+}
+
+#define setWriteError()
+size_t usb_serial_write(const uint8_t *buffer, uint16_t size)
+{
+	uint8_t timeout, intr_state, write_size;
+	size_t count=0;
+
+	// if we're not online (enumerated and configured), error
+	if (!usb_configuration) {
+		setWriteError();
+		goto end;
+	}
+	// interrupts are disabled so these functions can be
+	// used from the main program or interrupt context,
+	// even both in the same program!
+	intr_state = SREG;
+	cli();
+	UENUM = CDC_TX_ENDPOINT;
+	// if we gave up due to timeout before, don't wait again
+	if (transmit_previous_timeout) {
+		if (!(UEINTX & (1<<RWAL))) {
+			SREG = intr_state;
+			setWriteError();
+			goto end;
+		}
+		transmit_previous_timeout = 0;
+	}
+	// each iteration of this loop transmits a packet
+	while (size) {
+		// wait for the FIFO to be ready to accept data
+		timeout = UDFNUML + TRANSMIT_TIMEOUT;
+		while (1) {
+			// are we ready to transmit?
+			if (UEINTX & (1<<RWAL)) break;
+			SREG = intr_state;
+			// have we waited too long?  This happens if the user
+			// is not running an application that is listening
+			if (UDFNUML == timeout) {
+				transmit_previous_timeout = 1;
+				setWriteError();
+				goto end;
+			}
+			// has the USB gone offline?
+			if (!usb_configuration) {
+				setWriteError();
+				goto end;
+			}
+			// get ready to try checking again
+			intr_state = SREG;
+			cli();
+			UENUM = CDC_TX_ENDPOINT;
+		}
+
+		// compute how many bytes will fit into the next packet
+		write_size = CDC_TX_SIZE - UEBCLX;
+		if (write_size > size) write_size = size;
+		size -= write_size;
+		count += write_size;
+
+#define ASM_COPY1(src, dest, tmp) "ld " tmp ", " src "\n\t" "st " dest ", " tmp "\n\t"
+#define ASM_COPY2(src, dest, tmp) ASM_COPY1(src, dest, tmp) ASM_COPY1(src, dest, tmp)
+#define ASM_COPY4(src, dest, tmp) ASM_COPY2(src, dest, tmp) ASM_COPY2(src, dest, tmp)
+#define ASM_COPY8(src, dest, tmp) ASM_COPY4(src, dest, tmp) ASM_COPY4(src, dest, tmp)
+
+#if 1
+		// write the packet
+		do {
+			uint8_t tmp;
+			asm volatile(
+			"L%=begin:"					"\n\t"
+				"ldi	r30, %4"			"\n\t"
+				"sub	r30, %3"			"\n\t"
+				"cpi	r30, %4"			"\n\t"
+				"brsh	L%=err"				"\n\t"
+				"lsl	r30"				"\n\t"
+				"clr	r31"				"\n\t"
+				"subi	r30, lo8(-(pm(L%=table)))"	"\n\t"
+				"sbci	r31, hi8(-(pm(L%=table)))"	"\n\t"
+				"ijmp"					"\n\t"
+			"L%=err:"					"\n\t"
+				"rjmp	L%=end"				"\n\t"
+			"L%=table:"					"\n\t"
+				#if (CDC_TX_SIZE == 64)
+				ASM_COPY8("Y+", "X", "%1")
+				ASM_COPY8("Y+", "X", "%1")
+				ASM_COPY8("Y+", "X", "%1")
+				ASM_COPY8("Y+", "X", "%1")
+				#endif
+				#if (CDC_TX_SIZE >= 32)
+				ASM_COPY8("Y+", "X", "%1")
+				ASM_COPY8("Y+", "X", "%1")
+				#endif
+				#if (CDC_TX_SIZE >= 16)
+				ASM_COPY8("Y+", "X", "%1")
+				#endif
+				ASM_COPY8("Y+", "X", "%1")
+			"L%=end:"					"\n\t"
+				: "+y" (buffer), "=r" (tmp)
+				: "x" (&UEDATX), "r" (write_size), "M" (CDC_TX_SIZE)
+				: "r30", "r31"
+			);
+		} while (0);
+#endif
+		// if this completed a packet, transmit it now!
+		if (!(UEINTX & (1<<RWAL))) UEINTX = 0x3A;
+		transmit_flush_timer = TRANSMIT_FLUSH_TIMEOUT;
+	}
+	SREG = intr_state;
+end:
+	return count;
+}
+
+// immediately transmit any buffered output.
+// This doesn't actually transmit the data - that is impossible!
+// USB devices only transmit when the host allows, so the best
+// we can do is release the FIFO buffer for when the host wants it
+void usb_serial_flush(void)
+{
+        uint8_t intr_state;
+
+        intr_state = SREG;
+        cli();
+        if (usb_configuration && transmit_flush_timer) {
+                UENUM = CDC_TX_ENDPOINT;
+                UEINTX = 0x3A;
+                transmit_flush_timer = 0;
+        }
+        SREG = intr_state;
+}
+
+uint32_t usb_serial_baud(void)
+{
+    return ((uint32_t)cdc_line_coding[0] << 0) |
+           ((uint32_t)cdc_line_coding[1] << 8) |
+           ((uint32_t)cdc_line_coding[2] << 16) |
+           ((uint32_t)cdc_line_coding[3] << 24);
+}
+
+uint8_t usb_serial_stopbits(void)
+{
+	return cdc_line_coding[4];
+}
+
+uint8_t usb_serial_paritytype(void)
+{
+	return cdc_line_coding[5];
+}
+
+uint8_t usb_serial_numbits(void)
+{
+	return cdc_line_coding[6];
+}
+
+uint8_t usb_serial_dtr(void)
+{
+	return (cdc_line_rtsdtr & USB_SERIAL_DTR) ? 1 : 0;
+}
+
+uint8_t usb_serial_rts(void)
+{
+	return (cdc_line_rtsdtr & USB_SERIAL_RTS) ? 1 : 0;
+}
+
 
 /**************************************************************************
  *

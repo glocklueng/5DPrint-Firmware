@@ -20,6 +20,12 @@ void serial_init()
 }
 
 
+void serial_flush()
+{
+    Serial.send_now();
+}
+
+
 int serial_can_read()
 {
     return Serial.available() > 0;

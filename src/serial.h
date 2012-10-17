@@ -9,6 +9,7 @@ extern "C" {
 void serial_init();
 int serial_can_read();
 char serial_read();
+void serial_flush();
 
 
 // Serial output with printf()-style string formatting.  The version that works

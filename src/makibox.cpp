@@ -490,6 +490,8 @@ void setup()
     axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
   }
 
+  // ensure all our init stuff gets sent
+  serial_flush();
 }
 
 
@@ -534,6 +536,9 @@ void read_command()
       cmdbuf[bufpos] = '\0';
       process_command(cmdbuf);
       bufpos = 0;
+      // Flush any output which may not have been sent 
+      // at the end of command execution.
+      serial_flush();
       break;
     }
     cmdbuf[bufpos++] = ch;

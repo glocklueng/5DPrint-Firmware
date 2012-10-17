@@ -27,7 +27,7 @@
 #include <avr/io.h>
 #include "pgmspace.h"
 #include <avr/interrupt.h>
-#include "core_pins.h"
+#include "pins_teensy.h"
 
 
 /**************************************************************************

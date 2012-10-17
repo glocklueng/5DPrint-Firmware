@@ -1,4 +1,4 @@
-#include "core_pins.h"
+#include "pins_teensy.h"
 
 
 void setup();

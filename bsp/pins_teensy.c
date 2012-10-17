@@ -23,11 +23,259 @@
 
 
 #include <avr/io.h>
-#include "pgmspace.h"
+#include <avr/interrupt.h>
 #include <avr/sleep.h>
-#include "wiring_private.h"
-#include "pins_arduino.h"
-#include "core_pins.h"
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include "pgmspace.h"
+
+
+#include "pins_teensy.h"
+
+
+#ifdef ID
+#undef ID  // ID bit in USBSTA conflicts with user's code
+#endif
+
+
+#if defined(__AVR_ATmega32U4__) || defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB1286__)
+const static uint8_t A0 = CORE_ANALOG0_PIN;
+const static uint8_t A1 = CORE_ANALOG1_PIN;
+const static uint8_t A2 = CORE_ANALOG2_PIN;
+const static uint8_t A3 = CORE_ANALOG3_PIN;
+const static uint8_t A4 = CORE_ANALOG4_PIN;
+const static uint8_t A5 = CORE_ANALOG5_PIN;
+const static uint8_t A6 = CORE_ANALOG6_PIN;
+const static uint8_t A7 = CORE_ANALOG7_PIN;
+#if defined(__AVR_ATmega32U4__)
+const static uint8_t A8 = CORE_ANALOG8_PIN;
+const static uint8_t A9 = CORE_ANALOG9_PIN;
+const static uint8_t A10 = 10;
+const static uint8_t A11 = CORE_ANALOG11_PIN;
+#endif
+#endif
+
+const static uint8_t SS   = CORE_SS0_PIN;
+const static uint8_t MOSI = CORE_MOSI0_PIN;
+const static uint8_t MISO = CORE_MISO0_PIN;
+const static uint8_t SCK  = CORE_SCLK0_PIN;
+const static uint8_t LED_BUILTIN = CORE_LED0_PIN;
+#if defined(CORE_SDA0_PIN)
+const static uint8_t SDA  = CORE_SDA0_PIN;
+#endif
+#if defined(CORE_SCL0_PIN)
+const static uint8_t SCL  = CORE_SCL0_PIN;
+#endif
+
+#define NUM_DIGITAL_PINS                CORE_NUM_TOTAL_PINS
+#define NUM_ANALOG_INPUTS               CORE_NUM_ANALOG
+
+
+// This allows CapSense to work.  Do any libraries
+// depend on these to be zero?
+#define NOT_A_PORT 127
+#define NOT_A_PIN 127
+
+#define digitalPinToPort(P) (P)
+#define portInputRegister(P) ((volatile uint8_t *)((int)pgm_read_byte(digital_pin_table_PGM+(P)*2+1)))
+#define portModeRegister(P) (portInputRegister(P) + 1)
+#define portOutputRegister(P) (portInputRegister(P) + 2)
+#define digitalPinToBitMask(P) (pgm_read_byte(digital_pin_table_PGM+(P)*2))
+extern const uint8_t PROGMEM digital_pin_table_PGM[];
+
+#if defined(__AVR_AT90USB162__)
+#define analogInputToDigitalPin(ch)	(-1)
+#define digitalPinHasPWM(p)		((p) == 0 || (p) == 15 || (p) == 17 || (p) == 18)
+#elif defined(__AVR_ATmega32U4__)
+#define analogInputToDigitalPin(ch)	((ch) <= 10 ? 21 - (ch) : ((ch) == 11 ? 22 : -1))
+#define digitalPinHasPWM(p)		((p) == 4 || (p) == 5 || (p) == 9 || (p) == 10 || (p) == 12 || (p) == 14 || (p) == 15)
+#elif defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB1286__)
+#define analogInputToDigitalPin(ch)	((ch) <= 7 ? (ch) - 38 : -1)
+#define digitalPinHasPWM(p)		(((p) >= 14 && (p) <= 16) || ((p) >= 24 && (p) <= 27) || (p) == 0 || (p) == 1)
+#endif
+
+#if defined(__AVR_AT90USB162__)
+#define digitalPinToPortReg(p) (((p) <= 7) ? &PORTD : (((p) <= 15) ? &PORTB : &PORTC))
+#define digitalPinToBit(p) \
+	(((p) <= 7) ? (p) : (((p) <= 15) ? (p) - 8 : (((p) <= 19) ? 23 - (p) : 2)))
+#define digitalPinToPCICR(p) \
+	((((p) >= 8 && (p) <= 15) || ((p) >= 17 && (p) <= 20) || (p) == 5) ? &PCICR : NULL)
+#define digitalPinToPCICRbit(p) (((p) >= 8 && (p) <= 15) ? 0 : 1)
+#define digitalPinToPCIFR(p) \
+	((((p) >= 8 && (p) <= 15) || ((p) >= 17 && (p) <= 20) || (p) == 5) ? &PCIFR : NULL)
+#define digitalPinToPCIFRbit(p)	(((p) >= 8 && (p) <= 15) ? 0 : 1)
+#define digitalPinToPCMSK(p) \
+	(((p) >= 8 && (p) <= 15) ? &PCMSK0 : ((((p) >= 17 && (p) <= 20) || (p) == 5) ? &PCMSK1 : NULL))
+#define digitalPinToPCMSKbit(p) \
+	(((p) >= 8 && (p) <= 15) ? (p) - 8 : (((p) >= 17 && (p) <= 20) ? (p) - 17 : 4))
+
+#elif defined(__AVR_ATmega32U4__)
+#define digitalPinToPortReg(p) \
+	(((p) <= 4) ? &PORTB : (((p) <= 8) ? &PORTD : (((p) <= 10) ? &PORTC : (((p) <= 12) ? &PORTD : \
+	(((p) <= 15) ? &PORTB : (((p) <= 21) ? &PORTF : (((p) <= 23) ? &PORTD : &PORTE)))))))
+#define digitalPinToBit(p) \
+	(((p) <= 3) ? (p) : (((p) == 4) ? 7 : (((p) <= 8) ? (p) - 5 : (((p) <= 10) ? (p) - 3 : \
+	(((p) <= 12) ? (p) - 5 : (((p) <= 15) ? (p) - 9 : (((p) <= 19) ? 23 - (p) : \
+	(((p) <= 21) ? 21 - (p) : (((p) <= 23) ? (p) - 18 : 6)))))))))
+#define digitalPinToPCICR(p)	((((p) >= 0 && (p) <= 4) || ((p) >= 13 && (p) <= 15)) ? &PCICR : NULL)
+#define digitalPinToPCICRbit(p)	(0)
+#define digitalPinToPCIFR(p)	((((p) >= 0 && (p) <= 4) || ((p) >= 13 && (p) <= 15)) ? &PCIFR : NULL)
+#define digitalPinToPCIFRbit(p)	(0)
+#define digitalPinToPCMSK(p)	((((p) >= 0 && (p) <= 4) || ((p) >= 13 && (p) <= 15)) ? &PCMSK0 : NULL)
+#define digitalPinToPCMSKbit(p) \
+	(((p) >= 0 && (p) <= 3) ? (p) : (((p) >= 13 && (p) <= 15) ? (p) - 9 : 7))
+
+#elif defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB1286__)
+#define digitalPinToPortReg(p) \
+	(((p) >= 0 && (p) <= 7) ? &PORTD : (((p) >= 10 && (p) <= 17) ? &PORTC : \
+	(((p) >= 20 && (p) <= 27) ? &PORTB : (((p) >= 28 && (p) <= 35) ? &PORTA : \
+	(((p) >= 38 && (p) <= 45) ? &PORTF : &PORTE)))))
+#define digitalPinToBit(p) \
+	(((p) <= 7) ? (p) : (((p) <= 9) ? (p) - 8 : (((p) <= 17) ? (p) - 10 : \
+	(((p) <= 19) ? (p) - 12 : (((p) <= 27) ? (p) - 20 : (((p) <= 35) ? (p) - 28 : \
+	(((p) <= 37) ? (p) - 32 : (((p) <= 45) ? (p) - 38 : 2))))))))
+#define digitalPinToPCICR(p)	(((p) >= 20 && (p) <= 27) ? &PCICR : NULL)
+#define digitalPinToPCICRbit(p)	(0)
+#define digitalPinToPCIFR(p)	(((p) >= 20 && (p) <= 27) ? &PCIFR : NULL)
+#define digitalPinToPCIFRbit(p)	(0)
+#define digitalPinToPCMSK(p)	(((p) >= 20 && (p) <= 27) ? &PCMSK0 : NULL)
+#define digitalPinToPCMSKbit(p)	(((p) - 20) & 7)
+#endif
+
+#define NOT_ON_TIMER 0
+static inline uint8_t digitalPinToTimer(uint8_t) __attribute__((always_inline, unused));
+static inline uint8_t digitalPinToTimer(uint8_t pin)
+{
+	switch (pin) {
+	#ifdef CORE_PWM0_PIN
+	case CORE_PWM0_PIN: return 1;
+	#endif
+	#ifdef CORE_PWM1_PIN
+	case CORE_PWM1_PIN: return 2;
+	#endif
+	#ifdef CORE_PWM2_PIN
+	case CORE_PWM2_PIN: return 3;
+	#endif
+	#ifdef CORE_PWM3_PIN
+	case CORE_PWM3_PIN: return 4;
+	#endif
+	#ifdef CORE_PWM4_PIN
+	case CORE_PWM4_PIN: return 5;
+	#endif
+	#ifdef CORE_PWM5_PIN
+	case CORE_PWM5_PIN: return 6;
+	#endif
+	#ifdef CORE_PWM6_PIN
+	case CORE_PWM6_PIN: return 7;
+	#endif
+	#ifdef CORE_PWM7_PIN
+	case CORE_PWM7_PIN: return 8;
+	#endif
+	#ifdef CORE_PWM8_PIN
+	case CORE_PWM8_PIN: return 9;
+	#endif
+	default: return NOT_ON_TIMER;
+	}
+}
+
+
+#define true 1
+#define false 0
+
+#define PI 3.1415926535897932384626433832795
+#define HALF_PI 1.5707963267948966192313216916398
+#define TWO_PI 6.283185307179586476925286766559
+#define DEG_TO_RAD 0.017453292519943295769236907684886
+#define RAD_TO_DEG 57.295779513082320876798154814105
+
+#define SERIAL  0
+#define DISPLAY 1
+
+#define CHANGE 1
+#define FALLING 2
+#define RISING 3
+
+#define INTERNAL 3
+#define INTERNAL2V56 3
+#define DEFAULT 1
+#define EXTERNAL 0
+
+// undefine stdlib's abs if encountered
+#ifdef abs
+#undef abs
+#endif
+
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+#define abs(x) ((x)>0?(x):-(x))
+#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+#define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
+#define radians(deg) ((deg)*DEG_TO_RAD)
+#define degrees(rad) ((rad)*RAD_TO_DEG)
+#define sq(x) ((x)*(x))
+
+#define interrupts() sei()
+#define noInterrupts() cli()
+
+#define clockCyclesPerMicrosecond() ( F_CPU / 1000000L )
+#define clockCyclesToMicroseconds(a) ( (a) / clockCyclesPerMicrosecond() )
+#define microsecondsToClockCycles(a) ( (a) * clockCyclesPerMicrosecond() )
+
+#define lowByte(w) ((uint8_t)((w) & 0xFF))
+#define highByte(w) ((uint8_t)((w) >> 8))
+
+#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
+#define bitSet(value, bit) ((value) |= (1UL << (bit)))
+#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
+#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
+
+typedef unsigned int word;
+
+#define bit(b) (1UL << (b))
+
+typedef uint8_t boolean;
+typedef uint8_t byte;
+
+unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);
+void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, byte val);
+
+void attachInterrupt(uint8_t, void (*)(void), uint8_t mode);
+void detachInterrupt(uint8_t);
+
+void setup(void);
+void loop(void);
+
+
+#if F_CPU == 16000000L
+#define ADC_PRESCALER 0x07
+#define CPU_PRESCALER 0x00
+#elif F_CPU == 8000000L
+#define ADC_PRESCALER 0x06
+#define CPU_PRESCALER 0x01
+#elif F_CPU == 4000000L
+#define ADC_PRESCALER 0x05
+#define CPU_PRESCALER 0x02
+#elif F_CPU == 2000000L
+#define ADC_PRESCALER 0x04
+#define CPU_PRESCALER 0x03
+#elif F_CPU == 1000000L
+#define ADC_PRESCALER 0x03
+#define CPU_PRESCALER 0x04
+#else
+#error "Teensyduino only supports 16, 8, 4, 2, 1 MHz.  Please edit boards.txt"
+#endif
+
+
+#ifndef cbi
+#define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
+#endif
+#ifndef sbi
+#define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
+#endif
+
+typedef void (*voidFuncPtr)(void);
+
 
 // this doubles the analog input speed
 #define USE_ADC_HIGH_SPEED

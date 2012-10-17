@@ -23,11 +23,14 @@
 
 
 #include "usb.h"
+#include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <avr/io.h>
 #include "pgmspace.h"
 #include <avr/interrupt.h>
 #include "pins_teensy.h"
+
 
 
 /**************************************************************************
@@ -700,6 +703,39 @@ size_t usb_serial_write(const uint8_t *buffer, uint16_t size)
 	SREG = intr_state;
 end:
 	return count;
+}
+
+void usb_serial_printf(const char *fmt, ...)
+{
+    char buf[128];
+    int size;
+    va_list args;
+
+    va_start(args, fmt);
+    size = vsnprintf(buf, 128, fmt, args);
+    va_end(args);
+    if (size < 128)
+    {
+        // TODO:  error handling when exceeding the 128-byte buffer
+        usb_serial_write((uint8_t *)buf, size);
+    }
+}
+
+
+void usb_serial_printf_P(PGM_P fmt, ...)
+{
+    char buf[128];
+    int size;
+    va_list args;
+
+    va_start(args, fmt);
+    size = vsnprintf_P(buf, 128, fmt, args);
+    va_end(args);
+    if (size < 128)
+    {
+        // TODO:  error handling when exceeding the 128-byte buffer
+        usb_serial_write((uint8_t *)buf, size);
+    }
 }
 
 // immediately transmit any buffered output.

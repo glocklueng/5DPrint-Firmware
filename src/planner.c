@@ -30,7 +30,7 @@
 #include "makibox.h"
 #include "board_io.h"
 #include "speed_lookuptable.h"
-#include "serial.h"
+#include "usb.h"
 #include "planner.h"
 
 #ifdef USE_ARC_FUNCTION

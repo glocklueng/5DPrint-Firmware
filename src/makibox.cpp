@@ -30,7 +30,7 @@
 #include "board_io.h"
 #include "makibox.h"
 #include "heater.h"
-#include "serial.h"
+#include "usb.h"
 #include "command.h"
 #include "planner.h"
 
@@ -313,7 +313,7 @@ void analogWrite_check(uint8_t check_pin, int val)
 //------------------------------------------------
 void setup()
 { 
-  serial_init(); 
+  usb_serial_begin(); 
   serial_send("// Makibox %s started.\r\n", VERSION_TEXT);
   
   //Initialize Dir Pins
@@ -491,7 +491,7 @@ void setup()
   }
 
   // ensure all our init stuff gets sent
-  serial_flush();
+  usb_serial_flush();
 }
 
 
@@ -526,9 +526,14 @@ void loop()
 //
 void read_command() 
 { 
-  while (serial_can_read())
+  while (usb_serial_available() > 0)
   {
-    char ch = serial_read();
+    int16_t ch = usb_serial_read();
+    if (ch < 0 || ch > 255)
+    {
+      // TODO:  do something?
+      continue;
+    }
     if (ch == '\n' || ch == '\r')
     {
       // Newline marks end of this command;  terminate
@@ -538,10 +543,10 @@ void read_command()
       bufpos = 0;
       // Flush any output which may not have been sent 
       // at the end of command execution.
-      serial_flush();
+      usb_serial_flush();
       break;
     }
-    cmdbuf[bufpos++] = ch;
+    cmdbuf[bufpos++] = (uint8_t)ch;
     if (bufpos > MAX_CMD_SIZE)
     {
         // TODO:  can we do something more intelligent than

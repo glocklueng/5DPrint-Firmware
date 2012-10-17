@@ -29,7 +29,7 @@
 #include "heater.h"
 #include "board_io.h"
 #include "makibox.h"
-#include "serial.h"
+#include "usb.h"
 
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))

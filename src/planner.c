@@ -29,6 +29,8 @@
 #include "config.h"
 #include "makibox.h"
 #include "board_io.h"
+#include "pins.h"
+#include "pins_teensy.h"
 #include "speed_lookuptable.h"
 #include "usb.h"
 #include "planner.h"

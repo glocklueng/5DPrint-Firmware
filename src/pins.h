@@ -38,8 +38,6 @@
 #define TEMP_0_PIN          1  // Extruder
 #define TEMP_1_PIN          0  // Bed
 
-#define SDPOWER            -1
-#define SDSS                2
 #define LED_PIN            -1
 #define PS_ON_PIN          -1
 #define KILL_PIN           -1

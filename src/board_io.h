@@ -3,13 +3,10 @@
 	why double up on these macros? see http://gcc.gnu.org/onlinedocs/cpp/Stringification.html
 */
 
-#ifndef	_FASTIO_H
-#define	_FASTIO_H
-
 #include	<avr/io.h>
-#include    "pins.h"
-#include    "pins_teensy.h"
 
+#define HIGH 0x1
+#define LOW 0x0
 
 
 
@@ -40,11 +37,6 @@
 /// set pin as output
 #define		_SET_OUTPUT(IO)		do {DIO ##  IO ## _DDR |=  MASK(DIO ## IO ## _PIN); } while (0)
 
-/// check if pin is an input
-#define		_GET_INPUT(IO)		((DIO ## IO ## _DDR & MASK(DIO ## IO ## _PIN)) == 0)
-/// check if pin is an output
-#define		_GET_OUTPUT(IO)		((DIO ## IO ## _DDR & MASK(DIO ## IO ## _PIN)) != 0)
-
 //	why double up on these macros? see http://gcc.gnu.org/onlinedocs/cpp/Stringification.html
 
 /// Read a pin wrapper
@@ -59,21 +51,8 @@
 /// set pin as output wrapper
 #define		SET_OUTPUT(IO)		_SET_OUTPUT(IO)
 
-/// check if pin is an input wrapper
-#define		GET_INPUT(IO)			_GET_INPUT(IO)
-/// check if pin is an output wrapper
-#define		GET_OUTPUT(IO)		_GET_OUTPUT(IO)
 
 
-
-// SPI
-#define	SCK					DIO9
-#define	MISO				DIO11
-#define	MOSI				DIO10
-#define	SS					DIO8
-
-// change for your board
-#define	DEBUG_LED		DIO31 /* led D5 red */
 
 /*
 pins
@@ -713,7 +692,3 @@ pins
 #define PF7_WPORT		PORTF
 #define PF7_PWM			NULL
 #define PF7_DDR			DDRF
-
-
-
-#endif /* _FASTIO_H */

@@ -28,6 +28,8 @@
 
 #include "config.h"
 #include "board_io.h"
+#include "pins.h"
+#include "pins_teensy.h"
 #include "makibox.h"
 #include "heater.h"
 #include "usb.h"

@@ -16,6 +16,19 @@
  
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+ ---
+ 
+* History:
+* =======
+*
+* + 	02 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Corrected missing ")" for function call to analogWrite_check()
+*		within function 'execute_mcode'.
+*
+*		Moved function prototype for analogWrite_check() to makibox.h
+*		so that it can be called from heater.c
+ 
 */
 
 
@@ -48,7 +61,7 @@
 #define  FORCE_INLINE __attribute__((always_inline)) inline
 
 
-void analogWrite_check(uint8_t check_pin, int val);
+//void analogWrite_check(uint8_t check_pin, int val);
 void cmdbuf_read_serial();
 void cmdbuf_process();
 void execute_command();
@@ -1072,7 +1085,7 @@ void execute_mcode(struct command *cmd) {
               g_fan_pwm_val = l_fan_code_val;
             #else
               WRITE(FAN_PIN, HIGH);
-              analogWrite_check(FAN_PIN, l_fan_code_val;
+              analogWrite_check(FAN_PIN, l_fan_code_val);
             #endif
             
         }

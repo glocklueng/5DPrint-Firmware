@@ -1,3 +1,13 @@
+/* config.h
+*
+* History:
+* =======
+*
+* + 	02 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Commented out #define FAN_SOFT_PWM and #define PID_SOFT_PWM. This is to free up 
+*		Timer 2. Slightly less processing as the Timer 2 ISRs are no longer called.
+*/
+
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
@@ -170,7 +180,7 @@
 
 //With this option its possible to drive the fan with SOFT PWM (500hz) and use
 //every Digital output for it, main usage for Sanguinololu
-#define FAN_SOFT_PWM
+//#define FAN_SOFT_PWM
 
 //-----------------------------------------------------------------------
 //// MINIMUM START SPEED FOR FAN
@@ -209,7 +219,7 @@
 //Sanguinololu 1.2 and above, the PWM Output Hotend Timer 1 is used for the Hardware PWM
 //but in this Software use Timer1 for the Stepperfunction so it is not possible to use the "analogWrite" function.
 //This Soft PWM use Timer 2 with 400 Hz to drive the PWM for the hotend
-#define PID_SOFT_PWM
+//#define PID_SOFT_PWM
 
 // M303 - PID relay autotune S<temperature> sets the target temperature. 
 // (default target temperature = 150C)

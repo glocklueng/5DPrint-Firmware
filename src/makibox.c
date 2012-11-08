@@ -1072,7 +1072,11 @@ void execute_mcode(struct command *cmd) {
 #endif
         if (cmd->has_S)
         {
-            unsigned char l_fan_code_val = CONSTRAIN(cmd->S,0,255);
+            #if defined(FAN_SOFT_PWM) && (FAN_PIN > -1)
+			 unsigned char l_fan_code_val = CONSTRAIN(cmd->S,0,255);
+			#else
+			 unsigned char l_fan_code_val = CONSTRAIN(cmd->S,0,ICR3);
+			#endif
             
             #if (MINIMUM_FAN_START_SPEED > 0)
               if(l_fan_code_val > 0 && fan_last_speed == 0)
@@ -1106,7 +1110,7 @@ void execute_mcode(struct command *cmd) {
               g_fan_pwm_val = 255;
             #else
               WRITE(FAN_PIN, HIGH);
-              analogWrite(FAN_PIN, 255 );
+              analogWrite(FAN_PIN, ICR3);
             #endif
         }
         break;

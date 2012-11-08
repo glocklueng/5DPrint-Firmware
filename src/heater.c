@@ -26,7 +26,7 @@
 *
 * +		08 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
 *		Added init_Timer3_HW_pwm(void) to initialise Timer 3 for hardware
-*		PWM. 
+*		PWM. Phase correct PWM rate set at 500Hz similar to SOFT_PWM.
 */
 
 
@@ -214,10 +214,15 @@ int read_max6675()
 	{
 		// This is hardware PWM with 500 Hz for Extruder Heating and Fan
 		// We want to have at least 500Hz - equivalent to SOFT_PWM
+		
+		// For phase correct PWM mode:
+		// PWM Freq = Fclk / (2 * prescaler * TOP)
 
 		TIFR3 = (1 << TOV3) | (1 << OCF3A) | (1 << OCF3B);  // clear interrupt and output compare match flags
-		TCCR3B = (1 << CS31) | (1 << CS30);     			// start timer (ck/256 prescalar)
-		TCCR3A = (1 << WGM30); 								// 8 bit phase correct pwm
+		TCCR3B = (1 << CS31) | (1 << CS30) | (1 << WGM33);	// start timer (ck/64 prescalar)
+		TCCR3A = (1 << WGM31); 								// phase correct PWM
+															// 'TOP' set by ICR3
+		ICR3 = 250;											// TOP
 	  
 		#if !( defined(PID_SOFT_PWM) )
 		OCR3B = 0;						// Start with 0% duty

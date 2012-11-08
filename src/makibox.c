@@ -28,6 +28,15 @@
 *
 *		Moved function prototype for analogWrite_check() to makibox.h
 *		so that it can be called from heater.c
+*
+* +		08 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Replaced calls to analogWrite_check(FAN_PIN, l_fan_code_val);
+*		with analogWrite(FAN_PIN, l_fan_code_val);. analogWrite_check()
+*		does not appear to do much - perhaps an issue with the preprocessing
+*		#defines.
+*
+*		Minor correction for missing ")" in function call within 
+*		manage_fan_start_speed().
  
 */
 
@@ -470,6 +479,8 @@ void setup()
   #if defined(PID_SOFT_PWM) || (defined(FAN_SOFT_PWM) && (FAN_PIN > -1))
   serial_send("// Soft PWM Init\r\n");
   init_Timer2_softpwm();
+  #else
+  init_Timer3_HW_pwm();
   #endif
   
   serial_send("// Planner Init\r\n");
@@ -1085,7 +1096,7 @@ void execute_mcode(struct command *cmd) {
               g_fan_pwm_val = l_fan_code_val;
             #else
               WRITE(FAN_PIN, HIGH);
-              analogWrite_check(FAN_PIN, l_fan_code_val);
+			  analogWrite(FAN_PIN, l_fan_code_val);
             #endif
             
         }
@@ -1095,7 +1106,7 @@ void execute_mcode(struct command *cmd) {
               g_fan_pwm_val = 255;
             #else
               WRITE(FAN_PIN, HIGH);
-              analogWrite_check(FAN_PIN, 255 );
+              analogWrite(FAN_PIN, 255 );
             #endif
         }
         break;
@@ -1103,7 +1114,7 @@ void execute_mcode(struct command *cmd) {
           #if defined(FAN_SOFT_PWM) && (FAN_PIN > -1)
             g_fan_pwm_val = 0;
           #else
-            analogWrite_check(FAN_PIN, 0);
+            analogWrite(FAN_PIN, 0);
             WRITE(FAN_PIN, LOW);
           #endif
         break;
@@ -1494,7 +1505,7 @@ void manage_fan_start_speed(void)
            g_fan_pwm_val = fan_org_start_speed;
          #else
            WRITE(FAN_PIN, HIGH);
-           analogWrite_check(FAN_PIN, fan_org_start_speed;
+           analogWrite(FAN_PIN, fan_org_start_speed);
          #endif  
        #endif
        

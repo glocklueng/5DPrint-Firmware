@@ -20,6 +20,15 @@
  
 */
 
+/*
+* History:
+* =======
+*
+* +		08 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Added init_Timer3_HW_pwm(void) to initialise Timer 3 for hardware
+*		PWM. 
+*/
+
 
 #include "config.h"
 
@@ -125,6 +134,10 @@ extern unsigned char manage_monitor;
 
 #if defined(PID_SOFT_PWM) || (defined(FAN_SOFT_PWM) && (FAN_PIN > -1))
  void init_Timer2_softpwm(void);
+#else
+	#if !( defined(PID_SOFT_PWM) ) || ( !( defined(FAN_SOFT_PWM) ) && (FAN_PIN > -1) )
+	 void init_Timer3_HW_pwm(void);
+	#endif
 #endif
 
 #ifdef PID_AUTOTUNE

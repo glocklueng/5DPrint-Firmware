@@ -20,6 +20,16 @@
  big thanks to kliment (https://github.com/kliment/Sprinter)
 */
 
+/*
+* History:
+* =======
+*
+* +		08 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Added init_Timer3_HW_pwm(void) to initialise Timer 3 for hardware
+*		PWM. 
+*/
+
+
 
 #include <avr/interrupt.h>
 #include "pgmspace.h"
@@ -197,6 +207,33 @@ int read_max6675()
   #endif
  
  }
+ 
+#else
+	#if !( defined(PID_SOFT_PWM) ) || ( !( defined(FAN_SOFT_PWM) ) && (FAN_PIN > -1) )
+	void init_Timer3_HW_pwm(void)
+	{
+		// This is hardware PWM with 500 Hz for Extruder Heating and Fan
+		// We want to have at least 500Hz - equivalent to SOFT_PWM
+
+		TIFR3 = (1 << TOV3) | (1 << OCF3A) | (1 << OCF3B);  // clear interrupt and output compare match flags
+		TCCR3B = (1 << CS31) | (1 << CS30);     			// start timer (ck/256 prescalar)
+		TCCR3A = (1 << WGM30); 								// 8 bit phase correct pwm
+	  
+		#if !( defined(PID_SOFT_PWM) )
+		OCR3B = 0;						// Start with 0% duty
+		TCCR3A |= (1 << COM3B1);    	// Compare Output Mode for channel B
+		TIMSK3 &= ~(1 << OCIE3B);    	// Disable Timer 3 output compare match interrupt
+										// (no need for an ISR)
+		#endif
+	  
+		#if ( !( defined(FAN_SOFT_PWM) ) && (FAN_PIN > -1) )
+		OCR3A = 0;						// Start with 0% duty
+		TCCR3A |= (1 << COM3A1);    	// Compare Output Mode for channel A
+		TIMSK3 &= ~(1 << OCIE3A);    	// Disable Timer 3 output compare match interrupt
+										// (no need for an ISR)
+		#endif
+	}
+	#endif
 #endif
 
 #if defined(PID_SOFT_PWM) || (defined(FAN_SOFT_PWM) && (FAN_PIN > -1))
@@ -305,6 +342,8 @@ ISR(TIMER2_OVF_vect)
 
  }  
  #endif
+ 
+
  //--------------------END SOFT PWM---------------------------
 
 //-------------------- START PID AUTOTUNE ---------------------------
@@ -476,7 +515,7 @@ void PID_autotune(int PIDAT_test_temp)
       #ifdef PID_SOFT_PWM
         g_heater_pwm_val = PIDAT_PWM_val;
       #else
-        analogWrite_check(HEATER_0_PIN, PIDAT_PWM_val);
+		analogWrite(HEATER_0_PIN, PIDAT_PWM_val);
         #if LED_PIN>-1
           analogWrite_check(LED_PIN, PIDAT_PWM_val);
         #endif

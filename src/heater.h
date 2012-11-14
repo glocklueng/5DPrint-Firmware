@@ -27,6 +27,9 @@
 * +		08 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
 *		Added init_Timer3_HW_pwm(void) to initialise Timer 3 for hardware
 *		PWM. 
+*
+* +		14 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Added some variales associated with HOT BED PID control. 
 */
 
 
@@ -105,6 +108,25 @@ extern unsigned char manage_monitor;
   extern int heater_duty;
   
   extern unsigned int PID_Kp, PID_Ki, PID_Kd;
+#endif
+
+
+#ifdef BED_PIDTEMP
+  extern volatile unsigned char bed_heater_pwm_val;
+ 
+  //extern unsigned char bed_PWM_off_time;
+  //extern unsigned char bed_PWM_out_on;
+  
+  extern int temp_bed_iState;
+  extern int temp_bed_dState;
+  extern int prev_bed_temp;
+  extern int bed_pTerm;
+  extern int bed_iTerm;
+  extern int bed_dTerm;
+  extern int bed_error;
+  extern int bed_heater_duty;
+  
+  extern unsigned int bed_PID_Kp, bed_PID_Ki, bed_PID_Kd;
 #endif
 
 #if defined(FAN_SOFT_PWM) && (FAN_PIN > -1)

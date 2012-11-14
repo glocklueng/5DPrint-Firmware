@@ -4,8 +4,14 @@
 * =======
 *
 * + 	02 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
-*		Commented out #define FAN_SOFT_PWM and #define PID_SOFT_PWM. This is to free up 
-*		Timer 2. Slightly less processing as the Timer 2 ISRs are no longer called.
+*		Commented out #define FAN_SOFT_PWM and #define PID_SOFT_PWM. This is to 
+*		free up Timer 2. Slightly less processing as the Timer 2 ISRs are no 
+*		longer called.
+*
+* +		14 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Added some defines associated with HOT BED PID control. PID parameters 
+*		have been copied from the extruder heater PID settings. The PID 
+*		parameters will need to be tuned for the hot bed and adjusted here.
 */
 
 #ifndef CONFIGURATION_H
@@ -238,8 +244,8 @@
 #define LED_PWM_FOR_BRIGHTNESS(brightness) ((64*brightness-1384)/(300-brightness))
 #endif
 
-// Change this value (range 30-255) to limit the current to the nozzle
-#define HEATER_CURRENT 255
+// Change this value (range 30-250) to limit the current to the nozzle
+#define HEATER_CURRENT 250
 
 // How often should the heater check for new temp readings, in milliseconds
 #define HEATER_CHECK_INTERVAL 500
@@ -251,6 +257,24 @@
   // Uncomment the following line to disable heat management during moves
   //#define DISABLE_CHECK_DURING_MOVE
 #endif
+
+
+/// Hot Bed PID settings:
+// Uncomment the following line to enable PID support. This is untested and could be disastrous. Be careful.
+#define BED_PIDTEMP 1
+#ifdef BED_PIDTEMP
+
+//Hot Bed PID Controler Settings
+#define BED_PID_INTEGRAL_DRIVE_MAX 80 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
+#define BED_PID_PGAIN 2560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define BED_PID_IGAIN 64 //256 is 1.0  // value of X (e.g 0.25) means that each degree error over 1 sec (2 measurements) changes duty cycle by 2X (=0.5) units (verify?)
+#define BED_PID_DGAIN 4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+
+// Change this value (range 30-250) to limit the current to the HOT BED
+#define BED_HEATER_CURRENT 250
+
+#endif // #ifdef BED_PIDTEMP
+
 
 // Uncomment the following line to disable heat management during travel moves (and extruder-only moves, eg: retracts), strongly recommended if you are missing steps mid print.
 // Probably this should remain commented if are using PID.

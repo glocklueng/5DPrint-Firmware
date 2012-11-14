@@ -168,6 +168,10 @@ static const char VERSION_TEXT[] = "1.3.22T / 20.08.2012";
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
 #endif
 
+#ifdef BED_PIDTEMP
+ unsigned int bed_PID_Kp = BED_PID_PGAIN, bed_PID_Ki = BED_PID_IGAIN, bed_PID_Kd = BED_PID_DGAIN;
+#endif
+
 // X, Y, Z and E max acceleration in mm/s^2 for printing moves or retracts
 long  max_acceleration_units_per_sq_second[4] = _MAX_ACCELERATION_UNITS_PER_SQ_SECOND;
 

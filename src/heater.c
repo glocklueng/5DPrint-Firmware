@@ -27,6 +27,12 @@
 * +		08 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
 *		Added init_Timer3_HW_pwm(void) to initialise Timer 3 for hardware
 *		PWM. Phase correct PWM rate set at 500Hz similar to SOFT_PWM.
+*
+* +		14 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		First attempt to add PWM and PID control for Hot Bed heater. Basically
+*		just replicating PID control code for the extruder heater which is also
+*		within manage_heater(). The code could do with being tidied up some more
+*		when time permits - too many lines of code in one function. 
 */
 
 
@@ -89,6 +95,24 @@ unsigned long previous_millis_heater, previous_millis_bed_heater, previous_milli
   int temp_iState_max = 256L * PID_INTEGRAL_DRIVE_MAX / PID_IGAIN;
 #endif
 
+#ifdef BED_PIDTEMP
+  volatile unsigned char bed_heater_pwm_val = 0;
+ 
+  //unsigned char bed_PWM_off_time = 0;
+  //unsigned char bed_PWM_out_on = 0;
+  
+  int temp_bed_iState = 0;
+  int temp_bed_dState = 0;
+  int prev_bed_temp = 0;
+  int bed_pTerm;
+  int bed_iTerm;
+  int bed_dTerm;
+  int bed_error;
+  int bed_heater_duty = 0;
+  
+  int temp_bed_iState_min = 256L * -BED_PID_INTEGRAL_DRIVE_MAX / BED_PID_IGAIN;
+  int temp_bed_iState_max = 256L * BED_PID_INTEGRAL_DRIVE_MAX / BED_PID_IGAIN;
+#endif
 
 #if defined(FAN_SOFT_PWM) && (FAN_PIN > -1)
   volatile unsigned char g_fan_pwm_val = 0;
@@ -225,16 +249,22 @@ int read_max6675()
 		ICR3 = 250;											// TOP
 	  
 		#if !( defined(PID_SOFT_PWM) )
+		// EXTRUDER HEATER PWM
 		OCR3B = 0;						// Start with 0% duty
 		TCCR3A |= (1 << COM3B1);    	// Compare Output Mode for channel B
-		TIMSK3 &= ~(1 << OCIE3B);    	// Disable Timer 3 output compare match interrupt
+		TIMSK3 &= ~(1 << OCIE3B);    	// Disable Timer 3B output compare match interrupt
+										// (no need for an ISR)
+		// HOT BED HEATER PWM
+		OCR3C = 0;						// Start with 0% duty
+		TCCR3A |= (1 << COM3C1);    	// Compare Output Mode for channel B
+		TIMSK3 &= ~(1 << OCIE3C);    	// Disable Timer 3C output compare match interrupt
 										// (no need for an ISR)
 		#endif
 	  
 		#if ( !( defined(FAN_SOFT_PWM) ) && (FAN_PIN > -1) )
 		OCR3A = 0;						// Start with 0% duty
 		TCCR3A |= (1 << COM3A1);    	// Compare Output Mode for channel A
-		TIMSK3 &= ~(1 << OCIE3A);    	// Disable Timer 3 output compare match interrupt
+		TIMSK3 &= ~(1 << OCIE3A);    	// Disable Timer 3A output compare match interrupt
 										// (no need for an ISR)
 		#endif
 	}
@@ -665,11 +695,13 @@ void PID_autotune(int PIDAT_test_temp)
   //If tmp is lower then MINTEMP stop the Heater
   //or it os better to deaktivate the uutput PIN or PWM ?
   #ifdef MINTEMP
+	minttemp = temp2analogh(MINTEMP);
     if(current_raw <= minttemp)
         target_temp = target_raw = 0;
   #endif
   
   #ifdef MAXTEMP
+	maxttemp = temp2analogh(MAXTEMP);
     if(current_raw >= maxttemp)
     {
         target_temp = target_raw = 0;
@@ -775,37 +807,129 @@ void PID_autotune(int PIDAT_test_temp)
   #ifndef TEMP_1_PIN
     return;
   #endif
-
+  
   #if TEMP_1_PIN == -1
     return;
   #else
   
-  #ifdef BED_USES_THERMISTOR
+	//If tmp is lower then MINTEMP stop the Heater
+	//or it os better to deaktivate the uutput PIN or PWM ?
+	#ifdef MINTEMP
+		minttemp = temp2analogBed(MINTEMP);
+		if(current_bed_raw <= minttemp)
+			target_bed_raw = 0;
+	#endif // #ifdef MINTEMP
   
-    current_bed_raw = analogRead(TEMP_1_PIN);   
+	#ifdef MAXTEMP
+		maxttemp = temp2analogBed(MAXTEMP);
+		if(current_bed_raw >= maxttemp)
+		{
+			target_bed_raw = 0;
+	
+		#if (ALARM_PIN > -1) 
+			WRITE(ALARM_PIN,HIGH);
+		#endif // #if (ALARM_PIN > -1) 
+	}
+	#endif // #ifdef MAXTEMP
   
-    // If using thermistor, when the heater is colder than targer temp, we get a higher analog reading than target, 
-    // this switches it up so that the reading appears lower than target for the control logic.
-    current_bed_raw = 1023 - current_bed_raw;
-  #elif defined BED_USES_AD595
-    current_bed_raw = analogRead(TEMP_1_PIN);                  
+	#ifdef BED_USES_THERMISTOR
+  
+		current_bed_raw = analogRead(TEMP_1_PIN);   
+	  
+		// If using thermistor, when the heater is colder than targer temp, we get a higher analog reading than target, 
+		// this switches it up so that the reading appears lower than target for the control logic.
+		current_bed_raw = 1023 - current_bed_raw;
+	#elif defined BED_USES_AD595
+		current_bed_raw = analogRead(TEMP_1_PIN);                  
+	#endif // #ifdef BED_USES_THERMISTOR
+	  
+	// PID Control for HOT BED
+	#ifdef BED_PIDTEMP
+		int current_bed_temp = analog2tempBed(current_bed_raw);
+		int target_bed_temp = analog2tempBed(target_bed_raw);
+		bed_error = target_bed_temp - current_bed_temp;
+		int delta_bed_temp = current_bed_temp - prev_bed_temp;
+		  
+		prev_bed_temp = current_bed_temp;
+		bed_pTerm = ((long)bed_PID_Kp * bed_error) / 256;
+		H0 = MIN(HEATER_DUTY_FOR_SETPOINT(target_temp),HEATER_CURRENT);
+		bed_heater_duty = H0 + bed_pTerm;
+	  
+		if(bed_error < 30)
+		{
+			temp_bed_iState += bed_error;
+			if (temp_bed_iState < temp_bed_iState_min)
+			  temp_bed_iState = temp_bed_iState_min;
+			if (temp_bed_iState > temp_bed_iState_max)
+			  temp_bed_iState = temp_bed_iState_max;
+			bed_iTerm = ((long)bed_PID_Ki * temp_bed_iState) / 256;
+			bed_heater_duty += bed_iTerm;
+		}
+		  
+		int prev_bed_error = abs(target_bed_temp - prev_bed_temp);
+		/*int*/ log3 = 1; // discrete logarithm base 3, plus 1
+		  
+		if(prev_bed_error > 81){ prev_bed_error /= 81; log3 += 4; }
+		if(prev_bed_error >  9){ prev_bed_error /=  9; log3 += 2; }
+		if(prev_bed_error >  3){ prev_bed_error /=  3; log3 ++;   }
+		  
+		bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) / (256*log3);
+		bed_heater_duty += bed_dTerm;
+		if (bed_heater_duty < 0)
+			bed_heater_duty = 0;
+		if (bed_heater_duty > BED_HEATER_CURRENT)
+			bed_heater_duty = BED_HEATER_CURRENT;
 
-  #endif
-  
-  
-  #ifdef MINTEMP
-    if(current_bed_raw >= target_bed_raw || current_bed_raw < minttemp)
-  #else
-    if(current_bed_raw >= target_bed_raw)
-  #endif
-    {
-      WRITE(HEATER_1_PIN,LOW);
-    }
-    else 
-    {
-      WRITE(HEATER_1_PIN,HIGH);
-    }
-    #endif
+		#ifdef PID_SOFT_PWM
+			// **Additional timer 2 settings and ISR will need to be added in 
+			// order to make this code work under software PWM.
+			//if(target_bed_raw != 0)
+			//	bed_heater_pwm_val = (unsigned char)bed_heater_duty;
+			//else
+			//	bed_heater_pwm_val = 0;
+			
+			// For now, just revert to "bang-bang" control.
+			if(target_bed_raw != 0)
+			{
+				#ifdef MINTEMP
+					if(current_bed_raw >= target_bed_raw || current_bed_raw < minttemp)
+				#else
+					if(current_bed_raw >= target_bed_raw)
+				#endif // #ifdef MINTEMP
+					{
+					  WRITE(HEATER_1_PIN,LOW);
+					}
+					else 
+					{
+					  WRITE(HEATER_1_PIN,HIGH);
+					}
+			}
+			else
+			{
+				WRITE(HEATER_1_PIN,LOW);
+			}
+		#else
+			if(target_bed_raw != 0)
+				analogWrite(HEATER_1_PIN, bed_heater_duty);
+			else
+				analogWrite(HEATER_1_PIN, 0);
+		#endif // #ifdef PID_SOFT_PWM
+	  
+	#else // #ifdef BED_PIDTEMP
+		#ifdef MINTEMP
+			if(current_bed_raw >= target_bed_raw || current_bed_raw < minttemp)
+		#else
+			if(current_bed_raw >= target_bed_raw)
+		#endif // #ifdef MINTEMP
+			{
+			  WRITE(HEATER_1_PIN,LOW);
+			}
+			else 
+			{
+			  WRITE(HEATER_1_PIN,HIGH);
+			}
+	#endif // #ifdef BED_PIDTEMP
+  #endif // #if TEMP_1_PIN == -1
     
 #ifdef CONTROLLERFAN_PIN
   controllerFan(); //Check if fan should be turned on to cool stepper drivers down

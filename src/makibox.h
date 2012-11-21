@@ -24,7 +24,6 @@
 #define E_AXIS 3
 
 void manage_inactivity(unsigned char debug);
-void analogWrite_check(uint8_t check_pin, int val);
 
 void enable_x();
 void enable_y();

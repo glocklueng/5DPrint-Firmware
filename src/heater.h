@@ -1,4 +1,5 @@
 /*
+ Makibox A6 heater functions based on Reprap.
  Reprap heater funtions based on Sprinter
  
  This program is free software: you can redistribute it and/or modify
@@ -30,10 +31,18 @@
 *
 * +		14 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
 *		Added some variales associated with HOT BED PID control. 
+*
+* +		15 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Removed some unused variables and function prototypes. 
 */
 
 
 #include "config.h"
+
+
+#ifndef HEATER_H
+#define HEATER_H
 
 
 #define NUMTEMPS      61
@@ -45,40 +54,17 @@ extern const short temptable[NUMTEMPS][2];
 #if defined HEATER_USES_THERMISTOR
 #define temp2analogh( c ) temp2analog_thermistor(c,temptable,NUMTEMPS)
 #define analog2temp( c ) analog2temp_thermistor(c,temptable,NUMTEMPS)
-#elif defined HEATER_USES_AD595
-#define temp2analogh( c ) temp2analog_ad595(c)
-#define analog2temp( c ) analog2temp_ad595(c)
-#elif defined HEATER_USES_MAX6675
-#define temp2analogh( c ) temp2analog_max6675(c)
-#define analog2temp( c ) analog2temp_max6675(c)
 #endif
 
 #if defined BED_USES_THERMISTOR
 #define temp2analogBed( c ) temp2analog_thermistor((c),bedtemptable,BNUMTEMPS)
 #define analog2tempBed( c ) analog2temp_thermistor((c),bedtemptable,BNUMTEMPS)
-#elif defined BED_USES_AD595
-#define temp2analogBed( c ) temp2analog_ad595(c)
-#define analog2tempBed( c ) analog2temp_ad595(c)
-#elif defined BED_USES_MAX6675
-#define temp2analogBed( c ) temp2analog_max6675(c)
-#define analog2tempBed( c ) analog2temp_max6675(c)
 #endif
 
 #if defined (HEATER_USES_THERMISTOR) || defined (BED_USES_THERMISTOR)
 int temp2analog_thermistor(int celsius, const short table[][2], int numtemps);
 int analog2temp_thermistor(int raw,const short table[][2], int numtemps);
 #endif
-
-#if defined (HEATER_USES_AD595) || defined (BED_USES_AD595)
-int temp2analog_ad595(int celsius);
-int analog2temp_ad595(int raw);
-#endif
-
-#if defined (HEATER_USES_MAX6675) || defined (BED_USES_MAX6675)
-int temp2analog_max6675(int celsius);
-int analog2temp_max6675(int raw);
-#endif
-
 
 extern int target_raw;
 extern int target_temp;
@@ -92,46 +78,33 @@ extern int current_bed_raw;
 extern unsigned long previous_millis_heater, previous_millis_bed_heater;
 extern unsigned char manage_monitor;
 
-#ifdef PIDTEMP
-  extern volatile unsigned char g_heater_pwm_val;
- 
-  extern unsigned char PWM_off_time;
-  extern unsigned char PWM_out_on;
-  
-  extern int temp_iState;
-  extern int temp_dState;
-  extern int prev_temp;
-  extern int pTerm;
-  extern int iTerm;
-  extern int dTerm;
-  extern int error;
-  extern int heater_duty;
-  
-  extern unsigned int PID_Kp, PID_Ki, PID_Kd;
+#if (PIDTEMP > -1)
+	extern int temp_iState;
+	extern int temp_dState;
+	extern int prev_temp;
+	extern int pTerm;
+	extern int iTerm;
+	extern int dTerm;
+	extern int error;
+	extern int heater_duty;
+
+	extern unsigned int PID_Kp, PID_Ki, PID_Kd;
 #endif
 
 
-#ifdef BED_PIDTEMP
-  extern volatile unsigned char bed_heater_pwm_val;
- 
-  //extern unsigned char bed_PWM_off_time;
-  //extern unsigned char bed_PWM_out_on;
-  
-  extern int temp_bed_iState;
-  extern int temp_bed_dState;
-  extern int prev_bed_temp;
-  extern int bed_pTerm;
-  extern int bed_iTerm;
-  extern int bed_dTerm;
-  extern int bed_error;
-  extern int bed_heater_duty;
-  
-  extern unsigned int bed_PID_Kp, bed_PID_Ki, bed_PID_Kd;
+#if (BED_PIDTEMP > -1)
+	extern int temp_bed_iState;
+	extern int temp_bed_dState;
+	extern int prev_bed_temp;
+	extern int bed_pTerm;
+	extern int bed_iTerm;
+	extern int bed_dTerm;
+	extern int bed_error;
+	extern int bed_heater_duty;
+
+	extern unsigned int bed_PID_Kp, bed_PID_Ki, bed_PID_Kd;
 #endif
 
-#if defined(FAN_SOFT_PWM) && (FAN_PIN > -1)
-  extern volatile unsigned char g_fan_pwm_val;
-#endif
 
 #ifdef AUTOTEMP
     extern float autotemp_max;
@@ -143,31 +116,28 @@ extern unsigned char manage_monitor;
 
 
 #ifdef SMOOTHING
-  extern uint32_t nma;
+	extern uint32_t nma;
 #endif
+
 
 #ifdef WATCHPERIOD
-  extern int watch_raw;
-  extern unsigned long watchmillis;
+	extern int watch_raw;
+	extern unsigned long watchmillis;
 #endif
 
-
-
-
-#if defined(PID_SOFT_PWM) || (defined(FAN_SOFT_PWM) && (FAN_PIN > -1))
- void init_Timer2_softpwm(void);
-#else
-	#if !( defined(PID_SOFT_PWM) ) || ( !( defined(FAN_SOFT_PWM) ) && (FAN_PIN > -1) )
-	 void init_Timer3_HW_pwm(void);
-	#endif
-#endif
 
 #ifdef PID_AUTOTUNE
- void PID_autotune(int PIDAT_test_temp);
+	void PID_autotune(int PIDAT_test_temp);
 #endif
 
-#ifdef PIDTEMP
- void updatePID();
+
+#if (PIDTEMP > -1) || (BED_PIDTEMP > -1)
+	void updatePID();
 #endif
 
 void manage_heater();
+void init_Timer3_HW_pwm(void);
+void setHeaterPWMDuty(uint8_t pin, int val);
+void setFanPWMDuty(int val);
+
+#endif // #ifndef HEATER_H

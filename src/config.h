@@ -12,21 +12,36 @@
 *		Added some defines associated with HOT BED PID control. PID parameters 
 *		have been copied from the extruder heater PID settings. The PID 
 *		parameters will need to be tuned for the hot bed and adjusted here.
+*
+* +		15 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Removed controller fan pin defines
+*		Does not map to suitable control pin on PrintRBoard rev B.
+*
+*		Removed extruder fan pin defines.
+*		Does not map to suitable control pin on PrintRBoard rev B.
 */
 
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
-// BASIC SETTINGS: select axis scaling and endstop configuration
+// BASIC SETTINGS: select thermistor type, axis scaling, and endstop configuration
+
+//// Thermistor settings:
+// 1 is 100k thermistor
+// 2 is 200k thermistor
+// 3 is mendel-parts thermistor
+// 4 is 10k thermistor
+// 5 is ParCan supplied 104GT-2 100K
+// 6 is EPCOS 100k
+// 7 is 100k Honeywell thermistor 135-104LAG-J01
+#define THERMISTORHEATER 1
+#define THERMISTORBED 1
 
 //// Calibration variables
-// X, Y, Z, E steps per unit - Metric Prusa Mendel with Wade extruder:
-#define _AXIS_STEP_PER_UNIT {80, 80, 3200/1.25,700}
-// Metric Prusa Mendel with Makergear geared stepper extruder:
-//#define _AXIS_STEP_PER_UNIT {80,80,3200/1.25,1380}
-// MakerGear Hybrid Prusa Mendel:
-// Z axis value is for .9 stepper(if you have 1.8 steppers for Z, you need to use 2272.7272)
-//#define _AXIS_STEP_PER_UNIT {104.987, 104.987, 4545.4544, 1487}
+// X, Y, Z, E steps per unit
+// Makibox A6 has screws which advance 8mm per 200 steps.  25 steps = 1mm.
+#define _AXIS_STEP_PER_UNIT {400, 400, 400, 150} //{25, 25, 25, 700}
 
 
 //// Endstop Settings
@@ -74,8 +89,8 @@
 //-----------------------------------------------------------------------
 // Disables axis when it's not being used.
 //-----------------------------------------------------------------------
-#define DISABLE_X 0
-#define DISABLE_Y 0
+#define DISABLE_X 0 //1
+#define DISABLE_Y 0 //1
 #define DISABLE_Z 1
 #define DISABLE_E 0
 
@@ -98,7 +113,7 @@
 //#define ENDSTOPS_ONLY_FOR_HOMING // If defined the endstops will only be used for homing
 
 // If true, axis won't move to coordinates less than zero.
-#define MIN_SOFTWARE_ENDSTOPS 0
+#define MIN_SOFTWARE_ENDSTOPS 0 //1
 // If true, axis won't move to coordinates greater than the defined lengths below.
 #define MAX_SOFTWARE_ENDSTOPS 1
 
@@ -113,8 +128,8 @@
 //-----------------------------------------------------------------------
 //// MOVEMENT SETTINGS
 //-----------------------------------------------------------------------
-#define _MAX_FEEDRATE {800, 400, 2, 45}       // (mm/sec)    
-#define _HOMING_FEEDRATE {1500,1500,120}      // (mm/min) !!
+#define _MAX_FEEDRATE {800, 400, 2, 45} //{50, 50, 50, 50}       // (mm/sec)    
+#define _HOMING_FEEDRATE {1500,1500,120} //{1500,1500,1500}      // (mm/min) !!
 #define _AXIS_RELATIVE_MODES {0, 0, 0, 0}
 
 #define MAX_STEP_FREQUENCY 30000 // Max step frequency
@@ -146,7 +161,7 @@
 #define DEFAULT_MINTRAVELFEEDRATE     0.0
 
 // If defined the movements slow down when the look ahead buffer is only half full
-#define SLOWDOWN
+//#define SLOWDOWN
 
 
 // everything with less than this number of steps will be ignored as move and
@@ -180,13 +195,7 @@
 //After this count of steps a new SIN / COS caluclation is startet to correct the circle interpolation
 #define N_ARC_CORRECTION 25
 
-//-----------------------------------------------------------------------
-//// FANCONTROL WITH SOFT PWM
-//-----------------------------------------------------------------------
 
-//With this option its possible to drive the fan with SOFT PWM (500hz) and use
-//every Digital output for it, main usage for Sanguinololu
-//#define FAN_SOFT_PWM
 
 //-----------------------------------------------------------------------
 //// MINIMUM START SPEED FOR FAN
@@ -216,16 +225,10 @@
     #define AUTOTEMP_OLDWEIGHT 0.98
 #endif
 
-//// AD595 THERMOCOUPLE SUPPORT UNTESTED... USE WITH CAUTION!!!!
-
 //// PID settings:
 // Uncomment the following line to enable PID support. This is untested and could be disastrous. Be careful.
 #define PIDTEMP 1
 #ifdef PIDTEMP
-//Sanguinololu 1.2 and above, the PWM Output Hotend Timer 1 is used for the Hardware PWM
-//but in this Software use Timer1 for the Stepperfunction so it is not possible to use the "analogWrite" function.
-//This Soft PWM use Timer 2 with 400 Hz to drive the PWM for the hotend
-//#define PID_SOFT_PWM
 
 // M303 - PID relay autotune S<temperature> sets the target temperature. 
 // (default target temperature = 150C)
@@ -306,22 +309,9 @@
 
 // Select one of these only to define how the nozzle temp is read.
 #define HEATER_USES_THERMISTOR
-//#define HEATER_USES_AD595
-//#define HEATER_USES_MAX6675
 
 // Select one of these only to define how the bed temp is read.
 #define BED_USES_THERMISTOR
-//#define BED_USES_AD595
-
-//This is for controlling a fan to cool down the stepper drivers
-//it will turn on when any driver is enabled
-//and turn off after the set amount of seconds from last driver being disabled again
-//#define CONTROLLERFAN_PIN 23 //Pin used for the fan to cool controller, comment out to disable this function
-#define CONTROLLERFAN_SEC 60 //How many seconds, after all motors were disabled, the fan should run
-
-//This is for controlling a fan that will keep the extruder cool.
-//#define EXTRUDERFAN_PIN 66 //Pin used to control the fan, comment out to disable this function
-#define EXTRUDERFAN_DEC 50 //Hotend temperature from where the fan will be turned on
 
 //#define CHAIN_OF_COMMAND 1 //Finish buffered moves before executing M42, fan speed, heater target, and so...
 

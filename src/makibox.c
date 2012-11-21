@@ -70,7 +70,6 @@
 #define  FORCE_INLINE __attribute__((always_inline)) inline
 
 
-//void analogWrite_check(uint8_t check_pin, int val);
 void cmdbuf_read_serial();
 void cmdbuf_process();
 void execute_command();
@@ -296,39 +295,6 @@ int FreeRam1(void)
   return free_memory;
 }
 
-//------------------------------------------------
-//Function the check the Analog OUT pin for not using the Timer1
-//------------------------------------------------
-void analogWrite_check(uint8_t check_pin, int val)
-{
-  #if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) 
-  //Atmega168/328 can't use OCR1A and OCR1B
-  //These are pins PB1/PB2 or on Arduino D9/D10
-    if((check_pin != 9) && (check_pin != 10))
-    {
-        analogWrite(check_pin, val);
-    }
-  #endif
-  
-  #if defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__) 
-  //Atmega664P/1284P can't use OCR1A and OCR1B
-  //These are pins PD4/PD5 or on Arduino D12/D13
-    if((check_pin != 12) && (check_pin != 13))
-    {
-        analogWrite(check_pin, val);
-    }
-  #endif
-
-  #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) 
-  //Atmega1280/2560 can't use OCR1A, OCR1B and OCR1C
-  //These are pins PB5,PB6,PB7 or on Arduino D11,D12 and D13
-    if((check_pin != 11) && (check_pin != 12) && (check_pin != 13))
-    {
-        analogWrite(check_pin, val);
-    }
-  #endif  
-}
-
 
 //------------------------------------------------
 // Init 
@@ -369,14 +335,6 @@ void setup()
   #if (E_ENABLE_PIN > -1)
     SET_OUTPUT(E_ENABLE_PIN);
   if(!E_ENABLE_ON) WRITE(E_ENABLE_PIN,HIGH);
-  #endif
-
-  #ifdef CONTROLLERFAN_PIN
-    SET_OUTPUT(CONTROLLERFAN_PIN); //Set pin used for driver cooling fan
-  #endif
-  
-  #ifdef EXTRUDERFAN_PIN
-    SET_OUTPUT(EXTRUDERFAN_PIN); //Set pin used for extruder cooling fan
   #endif
   
   //endstops and pullups
@@ -480,12 +438,8 @@ void setup()
   WRITE(MAX6675_SS,1);
 #endif  
  
-  #if defined(PID_SOFT_PWM) || (defined(FAN_SOFT_PWM) && (FAN_PIN > -1))
-  serial_send("// Soft PWM Init\r\n");
-  init_Timer2_softpwm();
-  #else
+  // Initialize Timer 3 / PWM for Extruder Heater, Hotbed Heater, and Fan
   init_Timer3_HW_pwm();
-  #endif
   
   serial_send("// Planner Init\r\n");
   plan_init();  // Initialize planner;
@@ -1076,11 +1030,7 @@ void execute_mcode(struct command *cmd) {
 #endif
         if (cmd->has_S)
         {
-            #if defined(FAN_SOFT_PWM) && (FAN_PIN > -1)
-			 unsigned char l_fan_code_val = CONSTRAIN(cmd->S,0,255);
-			#else
 			 unsigned char l_fan_code_val = CONSTRAIN(cmd->S,0,ICR3);
-			#endif
             
             #if (MINIMUM_FAN_START_SPEED > 0)
               if(l_fan_code_val > 0 && fan_last_speed == 0)
@@ -1100,31 +1050,18 @@ void execute_mcode(struct command *cmd) {
               }  
             #endif
           
-            #if defined(FAN_SOFT_PWM) && (FAN_PIN > -1)
-              g_fan_pwm_val = l_fan_code_val;
-            #else
-              WRITE(FAN_PIN, HIGH);
-			  analogWrite(FAN_PIN, l_fan_code_val);
-            #endif
-            
+            //WRITE(FAN_PIN, HIGH);
+			setFanPWMDuty(l_fan_code_val);        
         }
         else 
         {
-            #if defined(FAN_SOFT_PWM) && (FAN_PIN > -1)
-              g_fan_pwm_val = 255;
-            #else
-              WRITE(FAN_PIN, HIGH);
-              analogWrite(FAN_PIN, ICR3);
-            #endif
+            //WRITE(FAN_PIN, HIGH);
+            setFanPWMDuty(ICR3); 
         }
         break;
       case 107: //M107 Fan Off
-          #if defined(FAN_SOFT_PWM) && (FAN_PIN > -1)
-            g_fan_pwm_val = 0;
-          #else
-            analogWrite(FAN_PIN, 0);
+            setFanPWMDuty(0); 
             WRITE(FAN_PIN, LOW);
-          #endif
         break;
       #endif
       #if (PS_ON_PIN > -1)
@@ -1387,6 +1324,8 @@ void get_coordinates(struct command *cmd)
     update_axis_pos(Y_AXIS, cmd->has_Y ? cmd->Y : current_position[Y_AXIS]);
   if (cmd->has_Z)
     update_axis_pos(Z_AXIS, cmd->has_Z ? cmd->Z : current_position[Z_AXIS]);
+  if (cmd->has_E)
+    update_axis_pos(E_AXIS, cmd->has_E ? cmd->E : current_position[E_AXIS]);
   if (cmd->has_F && cmd->F > 0.0)
     feedrate = cmd->F;
 }
@@ -1508,14 +1447,11 @@ void manage_fan_start_speed(void)
   {
      if((millis() - previous_millis_fan_start) > MINIMUM_FAN_START_TIME )
      { 
-       #if FAN_PIN > -1
-         #if defined(FAN_SOFT_PWM)
-           g_fan_pwm_val = fan_org_start_speed;
-         #else
-           WRITE(FAN_PIN, HIGH);
-           analogWrite(FAN_PIN, fan_org_start_speed);
-         #endif  
-       #endif
+       if (FAN_PIN > -1)
+	   {
+			WRITE(FAN_PIN, HIGH);
+			setFanPWMDuty(fan_org_start_speed); 
+       }
        
        fan_org_start_speed = 0;
      }  

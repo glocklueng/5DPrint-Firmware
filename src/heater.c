@@ -400,7 +400,9 @@ void PID_autotune(int PIDAT_test_temp)
   {
     return;
   }
-    
+  
+  PreemptionFlag |= 0x0008;
+
   previous_millis_heater = millis();
   
   #ifdef HEATER_USES_THERMISTOR
@@ -624,7 +626,7 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 		heater_duty = HEATER_CURRENT;
 	}
 
-	if(target_raw != 0)
+	if(target_temp != 0)
 	{
 		setHeaterPWMDuty(HEATER_0_PIN, heater_duty);
 	}
@@ -699,7 +701,7 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 		bed_heater_duty = BED_HEATER_CURRENT;
 	}
 
-	if(target_bed_raw != 0)
+	if(target_bed_temp != 0)
 	{
 		setHeaterPWMDuty(HEATER_1_PIN, bed_heater_duty);
 	}

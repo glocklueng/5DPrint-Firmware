@@ -16,6 +16,36 @@
  
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+
+* History:
+* =======
+*
+* +		28 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		ISR(TIMER1_COMPA_vect) nop instruction added to ensure that pulse width 
+*		generated meets the	minimum requirement for the Allegro A4982 stepper 
+*		motor driver input.
+*		The existing code relies on delays in executing commands between setting
+*		the step high and stepping it low again to meet the A4982's minimum pulse 
+*		width requirement. Some motor drive issues have been seen during 
+*		development testing which may be related to this.
+*		
+*		*** NOTE ***
+*		THIS IS A QUICK AND DIRTY HACK TO GET THINGS WORKING A
+*		BIT BETTER. RECOMMEND THAT THIS ISR IS RE-VISITED AND REFACTORED TO
+*		TO WORK PROPERLY AND GENERATE THE CORRECT PULSE WIDTHS FOR THE A4982
+*		DRIVER IC.
+*
+* +		29 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added some very rough indicators of ISR execution time for 
+*		ISR(TIMER1_COMPA_vect).
+*
+* +		30 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		ISR(TIMER1_COMPA_vect) added another nop loop after the stepper pulse
+*		has been pulled low. This is to ensure that the minimum low pulse width
+*		is met for the A4982.
 */
 
 
@@ -47,6 +77,7 @@
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #define MAX(a,b) ((a)>(b)?(a):(b))
 
+
 static unsigned short virtual_steps_x = 0;
 static unsigned short virtual_steps_y = 0;
 static unsigned short virtual_steps_z = 0;
@@ -64,6 +95,10 @@ volatile int extrudemultiply = 100;
 float mintravelfeedrate = DEFAULT_MINTRAVELFEEDRATE;
 float minimumfeedrate = DEFAULT_MINIMUMFEEDRATE;
 unsigned long axis_steps_per_sqr_second[NUM_AXIS];
+
+uint32_t timer1_compa_isr_exe_micros = 0;
+uint32_t timer1_compa_isr_exe_micros_min = 0xFFFFFFFF;
+uint32_t timer1_compa_isr_exe_micros_max = 0;
 
 uint8_t is_homing = 0;
 
@@ -1042,7 +1077,13 @@ void trapezoid_generator_reset()
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.  
 // It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately. 
 ISR(TIMER1_COMPA_vect)
-{        
+{
+	uint32_t isr_start_micros;
+	
+	PreemptionFlag |= 0x0001;
+	
+	isr_start_micros = micros();
+	
   // If there is no current block, attempt to pop one from the buffer
   if (current_block == NULL) {
     // Anything in the buffer?
@@ -1222,7 +1263,6 @@ ISR(TIMER1_COMPA_vect)
           virtual_steps_x++;
           
         counter_x -= current_block->step_event_count;
-        WRITE(X_STEP_PIN, LOW);
       }
 
       counter_y += current_block->steps_y;
@@ -1238,7 +1278,6 @@ ISR(TIMER1_COMPA_vect)
           virtual_steps_y++;
             
         counter_y -= current_block->step_event_count;
-        WRITE(Y_STEP_PIN, LOW);
       }
 
       counter_z += current_block->steps_z;
@@ -1253,20 +1292,63 @@ ISR(TIMER1_COMPA_vect)
         else
           virtual_steps_z++;
           
-        counter_z -= current_block->step_event_count;
-        WRITE(Z_STEP_PIN, LOW);
+        counter_z -= current_block->step_event_count;        
       }
 
       counter_e += current_block->steps_e;
       if (counter_e > 0) {
         WRITE(E_STEP_PIN, HIGH);
         counter_e -= current_block->step_event_count;
-        WRITE(E_STEP_PIN, LOW);
       }
+	  
+	  // ******************* DIRTY HACK *******************
+	  // *** JTK Wong (XTRONTEC Limited); 28 November 2012;
+	  // nop instruction added to ensure that pulse width generated meets the
+	  // minimum requirement for the Allegro A4982 stepper motor driver input.
+	  // The existing code relies on delays in executing commands between setting
+	  // the step high and stepping it low again to meet the A4982's minimum pulse 
+	  // width requirement. Some motor drive issues have been seen during 
+	  // development testing which may be related to this.
+		
+	  // *** NOTE ***
+	  // THIS IS A QUICK AND DIRTY HACK TO GET THINGS WORKING A
+	  // BIT BETTER. RECOMMEND THAT THIS ISR IS RE-VISITED AND REFACTORED TO
+	  // TO WORK PROPERLY AND GENERATE THE CORRECT PULSE WIDTHS FOR THE A4982
+	  // DRIVER IC.
+	  for(int8_t step_pulse_width=0; step_pulse_width < 8; step_pulse_width++)
+	  {
+	 	asm volatile("nop");
+	  }
+	  // ******************* END OF DIRTY HACK *******************
+        
+	  WRITE(X_STEP_PIN, LOW);
+	  WRITE(Y_STEP_PIN, LOW);
+	  WRITE(Z_STEP_PIN, LOW);
+	  WRITE(E_STEP_PIN, LOW);
 
       step_events_completed += 1;  
       if(step_events_completed >= current_block->step_event_count) break;
-      
+	  
+	  
+	  // ******************* DIRTY HACK *******************
+	  // *** JTK Wong (XTRONTEC Limited); 30 November 2012;
+	  // nop instruction added to ensure that pulse width generated meets the
+	  // minimum requirement for the Allegro A4982 stepper motor driver input.
+	  // The existing code relies on delays in executing commands between setting
+	  // the step high and stepping it low again to meet the A4982's minimum pulse 
+	  // width requirement. Some motor drive issues have been seen during 
+	  // development testing which may be related to this.
+		
+	  // *** NOTE ***
+	  // THIS IS A QUICK AND DIRTY HACK TO GET THINGS WORKING A
+	  // BIT BETTER. RECOMMEND THAT THIS ISR IS RE-VISITED AND REFACTORED TO
+	  // TO WORK PROPERLY AND GENERATE THE CORRECT PULSE WIDTHS FOR THE A4982
+	  // DRIVER IC.
+	  for(int8_t step_pulse_width=0; step_pulse_width < 16; step_pulse_width++)
+	  {
+	 	asm volatile("nop");
+	  }
+	  // ******************* END OF DIRTY HACK *******************
     }
     // Calculare new timer value
     unsigned short timer;
@@ -1313,7 +1395,19 @@ ISR(TIMER1_COMPA_vect)
       current_block = NULL;
       plan_discard_current_block();
     }   
-  } 
+  }
+
+	timer1_compa_isr_exe_micros = (micros() - isr_start_micros);
+	
+	if (timer1_compa_isr_exe_micros > timer1_compa_isr_exe_micros_max)
+	{
+		timer1_compa_isr_exe_micros_max = timer1_compa_isr_exe_micros;
+	}
+	
+	if (timer1_compa_isr_exe_micros < timer1_compa_isr_exe_micros_min)
+	{
+		timer1_compa_isr_exe_micros_min = timer1_compa_isr_exe_micros;
+	}
 }
 
 

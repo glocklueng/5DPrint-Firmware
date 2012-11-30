@@ -803,6 +803,8 @@ uint8_t usb_serial_rts(void)
 ISR(USB_GEN_vect)
 {
 	uint8_t intbits, t;
+	
+	PreemptionFlag |= 0x8000;
 
         intbits = UDINT;
         UDINT = 0;
@@ -906,6 +908,8 @@ ISR(USB_COM_vect)
 	const uint8_t *desc_addr;
 	uint8_t	desc_length;
 
+	PreemptionFlag |= 0x4000;
+	
 	UENUM = 0;
 	intbits = UEINTX;
 	if (intbits & (1<<RXSTPI)) {

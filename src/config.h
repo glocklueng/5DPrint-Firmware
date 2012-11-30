@@ -20,10 +20,18 @@
 *
 *		Removed extruder fan pin defines.
 *		Does not map to suitable control pin on PrintRBoard rev B.
+*
+* +		29 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added global variables for CPU loading calculation.
+*		Added DEBUG #define to enable/disable calculation.
 */
 
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
+
+// Define DEBUG to > -1 to enable CPU loading calculations
+#define DEBUG 1
 
 // BASIC SETTINGS: select thermistor type, axis scaling, and endstop configuration
 
@@ -315,5 +323,13 @@
 
 //#define CHAIN_OF_COMMAND 1 //Finish buffered moves before executing M42, fan speed, heater target, and so...
 
+
+// Global Variables for CPU Loading Calculation
+extern uint16_t PreemptionFlag;
+extern uint32_t previous_bckgnd_task_start_time;
+extern uint32_t bckgnd_task_time;
+extern unsigned char cpu_loading, peak_cpu_load, average_cpu_load;
+extern uint32_t previous_millis_cpu_util;
+extern uint32_t bckgnd_loop_count;
 
 #endif

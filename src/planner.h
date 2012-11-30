@@ -35,6 +35,10 @@ extern float minimumfeedrate;
 extern uint8_t is_homing;
 extern unsigned long axis_steps_per_sqr_second[NUM_AXIS];
 
+extern uint32_t timer1_compa_isr_exe_micros;
+extern uint32_t timer1_compa_isr_exe_micros_min;
+extern uint32_t timer1_compa_isr_exe_micros_max;
+
 void enable_endstops(uint8_t check);
 
 uint8_t blocks_queued();

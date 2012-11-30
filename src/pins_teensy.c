@@ -19,6 +19,14 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ 
+ * History:
+ * =======
+ *
+ * +		16 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+ *												www.xtrontec.com
+ *			Removed analogWrite() function as it is no longer used anywhere.
+ 
  */
 
 
@@ -96,55 +104,6 @@ extern const uint8_t PROGMEM digital_pin_table_PGM[];
 #endif
 
 
-void _analogWrite(uint8_t pin, int val)
-{
-	pinMode(pin, OUTPUT);
-
-	switch (pin) {
-	case CORE_OC0B_PIN:
-		if (val == 0) {
-			CORE_PORTREG(CORE_OC0B_PIN) &= ~CORE_BITMASK(CORE_OC0B_PIN);
-			cbi(TCCR0A, COM0B1);
-		} else {
-			OCR0B = val;
-			sbi(TCCR0A, COM0B1);
-		}
-		break;
-	case CORE_OC1A_PIN: //TIMER1A:
-		OCR1A = val;
-		sbi(TCCR1A, COM1A1);
-		break;
-	case CORE_OC1B_PIN: //TIMER1B:
-		OCR1B = val;
-		sbi(TCCR1A, COM1B1);
-		break;
-	case CORE_OC1C_PIN: //TIMER1C:
-		OCR1C = val;
-		sbi(TCCR1A, COM1C1);
-		break;
-	case CORE_OC2A_PIN: //TIMER2A:
-		OCR2A = val;
-		sbi(TCCR2A, COM2A1);
-		break;
-	case CORE_OC2B_PIN: //TIMER2B:
-		OCR2B = val;
-		sbi(TCCR2A, COM2B1);
-		break;
-	case CORE_OC3A_PIN: //TIMER3A:
-		OCR3A = val;
-		sbi(TCCR3A, COM3A1);
-		break;
-	case CORE_OC3B_PIN: //TIMER3B:
-		OCR3B = val;
-		sbi(TCCR3A, COM3B1);
-		break;
-	case CORE_OC3C_PIN: //TIMER3C:
-		OCR3C = val;
-		sbi(TCCR3A, COM3C1);
-		break;
-	}
-}
-
 uint8_t w_analog_reference = 0x40;
 
 int analogRead(uint8_t pin)
@@ -165,19 +124,6 @@ int analogRead(uint8_t pin)
 	return (high << 8) | low;
 }
 
-
-
-void _pinMode(uint8_t pin, uint8_t mode)
-{
-	if (mode == OUTPUT) {
-		_pinMode_output(pin);
-	} else if (mode == INPUT_PULLUP) {
-		_pinMode_input_pullup(pin);
-	} else {
-		_pinMode_input(pin);
-	}
-}
-
 #define PIN_REG_AND_MASK_LOOKUP(pin, reg, mask) \
 	asm volatile(				\
 		"lsl %2"		"\n\t"	\
@@ -189,18 +135,6 @@ void _pinMode(uint8_t pin, uint8_t mode)
 		: "=z" (reg), "=r" (mask), "+r" (pin)	\
 		: "z" (digital_pin_table_PGM), "2" (pin))
 
-void _pinMode_output(uint8_t pin)
-{
-	volatile uint8_t *reg;
-	uint8_t mask, status;
-
-	if (pin >= CORE_NUM_TOTAL_PINS) return;
-	PIN_REG_AND_MASK_LOOKUP(pin, reg, mask);
-	status = SREG;
-	cli();
-	*(reg + 1) |= mask;
-	SREG = status;
-}
 
 static const uint8_t PROGMEM didr_table_PGM[] = {
 	(int)&DIDR0, ~0x01,
@@ -223,48 +157,6 @@ static const uint8_t PROGMEM didr_table_PGM[] = {
 		"lpm	%1, Z+"			"\n\t"	\
 		: "=x" (didreg), "=r" (didmask)		\
 		: "z" (didr_table_PGM), "r" (pin))
-
-
-void _pinMode_input(uint8_t pin)
-{
-	volatile uint8_t *reg, *didr=0;
-	uint8_t mask, didrmask=0xFF, status;
-
-	if (pin >= CORE_NUM_TOTAL_PINS) return;
-	if (pin >= PIN_F0 && pin <= PIN_F7) {
-		PIN_DIDR_AND_MASK_LOOKUP((uint8_t)(pin - PIN_F0), didr, didrmask);
-	}
-	PIN_REG_AND_MASK_LOOKUP(pin, reg, mask);
-	status = SREG;
-	cli();
-	*(reg + 1) &= ~mask;
-	*(reg + 2) &= ~mask;
-	*didr &= didrmask;
-	SREG = status;
-}
-
-
-void _pinMode_input_pullup(uint8_t pin)
-{
-	volatile uint8_t *reg, *didr=0;
-	uint8_t mask, didrmask=0xFF, status;
-
-	if (pin >= CORE_NUM_TOTAL_PINS) return;
-	if (pin >= PIN_F0 && pin <= PIN_F7) {
-		PIN_DIDR_AND_MASK_LOOKUP((uint8_t)(pin - PIN_F0), didr, didrmask);
-	}
-	PIN_REG_AND_MASK_LOOKUP(pin, reg, mask);
-	status = SREG;
-	cli();
-	*(reg + 1) &= ~mask;
-	*(reg + 2) |= mask;
-	*didr &= didrmask;
-	SREG = status;
-}
-
-
-
-
 
 
 const uint8_t PROGMEM digital_pin_table_PGM[] = {

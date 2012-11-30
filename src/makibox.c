@@ -37,7 +37,18 @@
 *
 *		Minor correction for missing ")" in function call within 
 *		manage_fan_start_speed().
- 
+*
+* +		16 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Removed analogWrite_check() function. Replaced calls to analogWrite 
+*		with calls to setFanPWMDuty() and setHeaterPWMDuty() functions.
+*		A few other edits to remove code and function calls not required.
+*
+* +		30 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added commands to help debug system with information such as CPU loading
+*		and ISR execution times. Rough indicators only. Custom commands M604 to 
+*		M607. 
 */
 
 
@@ -159,6 +170,10 @@ void execute_m201(struct command *cmd);
 // M601 - Show Temp jitter from Extruder (min / max value from Hotend Temperature while printing)
 // M602 - Reset Temp jitter from Extruder (min / max val) --> Don't use it while Printing
 // M603 - Show Free Ram
+// M604 - Show Timer 1 COMPA ISR Execution Time Debug Info
+// M605 - Reset Timer 1 COMPA ISR Execution Time Min / Max Values
+// M606 - Show CPU loading information
+// M607 - Reset Peak and Average CPU load values
 
 
 static const char VERSION_TEXT[] = "1.3.22T / 20.08.2012";
@@ -423,20 +438,6 @@ void setup()
   #if (E_STEP_PIN > -1) 
     SET_OUTPUT(E_STEP_PIN);
   #endif  
-
-#ifdef HEATER_USES_MAX6675
-  SET_OUTPUT(SCK_PIN);
-  WRITE(SCK_PIN,0);
-  
-  SET_OUTPUT(MOSI_PIN);
-  WRITE(MOSI_PIN,1);
-  
-  SET_INPUT(MISO_PIN);
-  WRITE(MISO_PIN,1);
-  
-  SET_OUTPUT(MAX6675_SS);
-  WRITE(MAX6675_SS,1);
-#endif  
  
   // Initialize Timer 3 / PWM for Extruder Heater, Hotbed Heater, and Fan
   init_Timer3_HW_pwm();
@@ -506,13 +507,15 @@ void read_command()
 { 
   while (usb_serial_available() > 0)
   {
+	PreemptionFlag |= 0x0002;
+	
     int16_t ch = usb_serial_read();
     if (ch < 0 || ch > 255)
     {
       // TODO:  do something?
       continue;
     }
-    if (ch == '\n' || ch == '\r')
+    if (ch == '\n' || ch == '\r' || ch == ';')
     {
       // Newline marks end of this command;  terminate
       // string and process it.
@@ -916,18 +919,18 @@ void execute_mcode(struct command *cmd) {
 #ifdef CHAIN_OF_COMMAND
           st_synchronize(); // wait for all movements to finish
 #endif
-        #if TEMP_1_PIN > -1 || defined BED_USES_AD595
+        #if TEMP_1_PIN > -1
             if (cmd->has_S) target_bed_raw = temp2analogBed(cmd->S);
         #endif
         break;
       case 105: // M105
-        #if (TEMP_0_PIN > -1) || defined (HEATER_USES_MAX6675)|| defined HEATER_USES_AD595
+        #if (TEMP_0_PIN > -1)
           hotendtC = analog2temp(current_raw);
         #endif
-        #if TEMP_1_PIN > -1 || defined BED_USES_AD595
+        #if TEMP_1_PIN > -1
           bedtempC = analog2tempBed(current_bed_raw);
         #endif
-        #if (TEMP_0_PIN > -1) || defined (HEATER_USES_MAX6675) || defined HEATER_USES_AD595
+        #if (TEMP_0_PIN > -1)
           serial_send("ok T%d", hotendtC);
           #ifdef PIDTEMP
             serial_send(" D%d", heater_duty);
@@ -940,7 +943,7 @@ void execute_mcode(struct command *cmd) {
               serial_send(" A%d", autotemp_setpoint);
             #endif
           #endif
-          #if TEMP_1_PIN > -1 || defined BED_USES_AD595
+          #if TEMP_1_PIN > -1
             serial_send(" B%d", bedtempC);
           #endif
           serial_send("\r\n");
@@ -1050,18 +1053,15 @@ void execute_mcode(struct command *cmd) {
               }  
             #endif
           
-            //WRITE(FAN_PIN, HIGH);
-			setFanPWMDuty(l_fan_code_val);        
+			setFanPWMDuty(l_fan_code_val);			
         }
         else 
         {
-            //WRITE(FAN_PIN, HIGH);
-            setFanPWMDuty(ICR3); 
+            setFanPWMDuty(ICR3);
         }
         break;
       case 107: //M107 Fan Off
             setFanPWMDuty(0); 
-            WRITE(FAN_PIN, LOW);
         break;
       #endif
       #if (PS_ON_PIN > -1)
@@ -1266,6 +1266,48 @@ void execute_mcode(struct command *cmd) {
       case 603: // M603  Free RAM
             serial_send("// Free Ram: %d\r\n", FreeRam1());
       break;
+	  
+	  case 604:	// M604 Show Timer 1 COMPA ISR Execution Time Debug Info
+			serial_send("Last TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
+												timer1_compa_isr_exe_micros);
+			serial_send("MIN TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
+												timer1_compa_isr_exe_micros_min);
+			serial_send("MAX TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
+												timer1_compa_isr_exe_micros_max);
+	  break;
+	  
+	  case 605:	// M605 Reset Timer 1 COMPA ISR Execution Time Min / Max Values
+			timer1_compa_isr_exe_micros_min = 0xFFFFFFFF;
+			timer1_compa_isr_exe_micros_max = 0;
+			serial_send("TIMER1_COMPA_vect ISR Execution Time MIN / MAX Reset.\r\n");
+	  break;
+	  
+	  case 606: // M606 - Show CPU loading information
+			if (DEBUG > -1)
+			{
+				serial_send("Current CPU Loading:	%d %%\r\n", cpu_loading);
+				serial_send("Peak CPU Load:		%d %%\r\n", peak_cpu_load);
+				serial_send("Average CPU Load: 	%d %%\r\n", average_cpu_load);
+			}
+			else
+			{
+				serial_send("CPU loading info not available in this version of firmware.\r\n");
+			}
+	  break;
+	  
+	  case 607: // M607 - Reset Peak and Average CPU load values
+			if (DEBUG > -1)
+			{
+				peak_cpu_load = 0;
+				average_cpu_load = 0;
+				serial_send("Peak and Average CPU Load Values Reset.\r\n");
+			}
+			else
+			{
+				serial_send("CPU loading info not available in this version of firmware.\r\n");
+			}
+	  break;
+	  
       default:
             serial_send("-- Unknown code M%d.\r\n", cmd->code);
       break;
@@ -1432,6 +1474,7 @@ void manage_inactivity(unsigned char debug)
   
   if( (millis()-previous_millis_cmd) >  stepper_inactive_time ) if(stepper_inactive_time) 
   { 
+	PreemptionFlag |= 0x0004;
     disable_x(); 
     disable_y(); 
     disable_z(); 

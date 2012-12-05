@@ -464,7 +464,6 @@ uint8_t blocks_queued()
   tail = block_buffer_tail;
   CRITICAL_SECTION_END;
 
-  serial_send("// blocks_queued:  tail=%03d  head=%03d\r\n", tail, head);
   if (head > tail) {
     return head - tail;
   } else if (head < tail) {
@@ -1326,10 +1325,6 @@ ISR(TIMER1_COMPA_vect)
 	  WRITE(Z_STEP_PIN, LOW);
 	  WRITE(E_STEP_PIN, LOW);
 
-      step_events_completed += 1;  
-      if(step_events_completed >= current_block->step_event_count) break;
-	  
-	  
 	  // ******************* DIRTY HACK *******************
 	  // *** JTK Wong (XTRONTEC Limited); 30 November 2012;
 	  // nop instruction added to ensure that pulse width generated meets the
@@ -1349,6 +1344,10 @@ ISR(TIMER1_COMPA_vect)
 	 	asm volatile("nop");
 	  }
 	  // ******************* END OF DIRTY HACK *******************
+	  
+	  
+      step_events_completed += 1;  
+      if(step_events_completed >= current_block->step_event_count) break;
     }
     // Calculare new timer value
     unsigned short timer;

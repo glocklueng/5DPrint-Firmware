@@ -30,7 +30,7 @@
 #include "pgmspace.h"
 #include <avr/interrupt.h>
 #include "pins_teensy.h"
-
+#include "config.h"
 
 
 /**************************************************************************

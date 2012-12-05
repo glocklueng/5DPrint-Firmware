@@ -108,7 +108,7 @@
 #define INVERT_X_DIR 0
 #define INVERT_Y_DIR 0
 #define INVERT_Z_DIR 0
-#define INVERT_E_DIR 0
+#define INVERT_E_DIR 1
 
 //-----------------------------------------------------------------------
 //// ENDSTOP SETTINGS:
@@ -136,7 +136,7 @@
 //-----------------------------------------------------------------------
 //// MOVEMENT SETTINGS
 //-----------------------------------------------------------------------
-#define _MAX_FEEDRATE {800, 400, 2, 45} //{50, 50, 50, 50}       // (mm/sec)    
+#define _MAX_FEEDRATE {120, 120, 20, 45} //{50, 50, 50, 50}       // (mm/sec)    
 #define _HOMING_FEEDRATE {1500,1500,120} //{1500,1500,1500}      // (mm/min) !!
 #define _AXIS_RELATIVE_MODES {0, 0, 0, 0}
 
@@ -169,7 +169,7 @@
 #define DEFAULT_MINTRAVELFEEDRATE     0.0
 
 // If defined the movements slow down when the look ahead buffer is only half full
-//#define SLOWDOWN
+#define SLOWDOWN
 
 
 // everything with less than this number of steps will be ignored as move and
@@ -243,10 +243,10 @@
 #define PID_AUTOTUNE
 
 //PID Controler Settings
-#define PID_INTEGRAL_DRIVE_MAX 80 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define PID_PGAIN 2560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
-#define PID_IGAIN 64 //256 is 1.0  // value of X (e.g 0.25) means that each degree error over 1 sec (2 measurements) changes duty cycle by 2X (=0.5) units (verify?)
-#define PID_DGAIN 4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+#define PID_INTEGRAL_DRIVE_MAX 120 //80 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
+#define PID_PGAIN 13037 //2560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define PID_IGAIN 758 //64 //256 is 1.0  // value of X (e.g 0.25) means that each degree error over 1 sec (2 measurements) changes duty cycle by 2X (=0.5) units (verify?)
+#define PID_DGAIN 13998 //4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 // magic formula 1, to get approximate "zero error" PWM duty. Take few measurements with low PWM duty and make linear fit to get the formula
 // for my makergear hot-end: linear fit {50,10},{60,20},{80,30},{105,50},{176,100},{128,64},{208,128}
@@ -276,7 +276,7 @@
 #ifdef BED_PIDTEMP
 
 //Hot Bed PID Controler Settings
-#define BED_PID_INTEGRAL_DRIVE_MAX 80 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
+#define BED_PID_INTEGRAL_DRIVE_MAX 120 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
 #define BED_PID_PGAIN 2560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
 #define BED_PID_IGAIN 64 //256 is 1.0  // value of X (e.g 0.25) means that each degree error over 1 sec (2 measurements) changes duty cycle by 2X (=0.5) units (verify?)
 #define BED_PID_DGAIN 4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate

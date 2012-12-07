@@ -505,17 +505,25 @@ void loop()
 //
 void read_command() 
 { 
+  unsigned char ignore_comments = 0;
+  
   while (usb_serial_available() > 0)
   {
 	PreemptionFlag |= 0x0002;
 	
     int16_t ch = usb_serial_read();
+	
+	if (ch == ';')
+	{
+	  ignore_comments = 1;
+	}
+	
     if (ch < 0 || ch > 255)
     {
       // TODO:  do something?
       continue;
     }
-    if (ch == '\n' || ch == '\r' || ch == ';')
+    if (ch == '\n' || ch == '\r')
     {
       // Newline marks end of this command;  terminate
       // string and process it.
@@ -527,7 +535,12 @@ void read_command()
       usb_serial_flush();
       break;
     }
-    cmdbuf[bufpos++] = (uint8_t)ch;
+	
+	if (!ignore_comments)
+	{
+	   cmdbuf[bufpos++] = (uint8_t)ch;
+	}
+	
     if (bufpos > MAX_CMD_SIZE)
     {
         // TODO:  can we do something more intelligent than
@@ -672,8 +685,9 @@ void process_command(const char *cmdstr)
   {
     if (seqnbr == 0) cmdseqnbr = 0;
     if (seqnbr != cmdseqnbr) {
-      serial_send("rs %ld (incorrect seqnbr)\r\n", cmdseqnbr);
-      return;
+	  //Ignore sequence number errors for now.
+      //serial_send("rs %ld (incorrect seqnbr) -> Expected: %ld, Found: %ld\r\n", cmdseqnbr, cmdseqnbr, seqnbr);
+      //return;
     }
   }
 
@@ -1361,13 +1375,41 @@ void update_axis_pos(int axis, float pos)
 void get_coordinates(struct command *cmd)
 {
   if (cmd->has_X)
+  {
     update_axis_pos(X_AXIS, cmd->has_X ? cmd->X : current_position[X_AXIS]);
+  }
+  else
+  {
+	destination[X_AXIS] = current_position[X_AXIS];
+  }
+  
   if (cmd->has_Y)
+  {
     update_axis_pos(Y_AXIS, cmd->has_Y ? cmd->Y : current_position[Y_AXIS]);
+  }
+  else
+  {
+	destination[Y_AXIS] = current_position[Y_AXIS];
+  }
+	
   if (cmd->has_Z)
+  {
     update_axis_pos(Z_AXIS, cmd->has_Z ? cmd->Z : current_position[Z_AXIS]);
+  }
+  else
+  {
+	destination[Z_AXIS] = current_position[Z_AXIS];
+  }
+  
   if (cmd->has_E)
+  {
     update_axis_pos(E_AXIS, cmd->has_E ? cmd->E : current_position[E_AXIS]);
+  }
+  else
+  {
+	destination[E_AXIS] = current_position[E_AXIS];
+  }
+  
   if (cmd->has_F && cmd->F > 0.0)
     feedrate = cmd->F;
 }

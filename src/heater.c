@@ -80,30 +80,30 @@ int current_bed_raw = 0;
 unsigned long previous_millis_heater, previous_millis_bed_heater, previous_millis_monitor;
 
 #ifdef PIDTEMP
-	int temp_iState = 0;
-	int temp_dState = 0;
-	int prev_temp = 0;
-	int pTerm;
-	int iTerm;
-	int dTerm;
-	int error;
-	int heater_duty = 0;
-	int temp_iState_min = 256L * -PID_INTEGRAL_DRIVE_MAX / PID_IGAIN;
-	int temp_iState_max = 256L * PID_INTEGRAL_DRIVE_MAX / PID_IGAIN;
+  int temp_iState = 0;
+  int temp_dState = 0;
+  int prev_temp = 0;
+  int pTerm;
+  int iTerm;
+  int dTerm;
+  int error;
+  int heater_duty = 0;
+  int temp_iState_min = (int)( 256L * -PID_INTEGRAL_DRIVE_MAX / (float)(PID_IGAIN) );
+  int temp_iState_max = (int)( 256L * PID_INTEGRAL_DRIVE_MAX / (float)(PID_IGAIN) );
 #endif
 
 #ifdef BED_PIDTEMP
-	int temp_bed_iState = 0;
-	int temp_bed_dState = 0;
-	int prev_bed_temp = 0;
-	int bed_pTerm;
-	int bed_iTerm;
-	int bed_dTerm;
-	int bed_error;
-	int bed_heater_duty = 0;
+  int temp_bed_iState = 0;
+  int temp_bed_dState = 0;
+  int prev_bed_temp = 0;
+  int bed_pTerm;
+  int bed_iTerm;
+  int bed_dTerm;
+  int bed_error;
+  int bed_heater_duty = 0;
 
-	int temp_bed_iState_min = 256L * -BED_PID_INTEGRAL_DRIVE_MAX / BED_PID_IGAIN;
-	int temp_bed_iState_max = 256L * BED_PID_INTEGRAL_DRIVE_MAX / BED_PID_IGAIN;
+  int temp_bed_iState_min = (int)( 256L * -BED_PID_INTEGRAL_DRIVE_MAX / (float)(BED_PID_IGAIN) );
+  int temp_bed_iState_max = (int)( 256L * BED_PID_INTEGRAL_DRIVE_MAX / (float)(BED_PID_IGAIN) );
 #endif
 
 
@@ -218,8 +218,8 @@ void PID_autotune(int PIDAT_test_temp)
   long PIDAT_t_high = 0;
   long PIDAT_t_low = 0;
 
-  long PIDAT_bias= HEATER_CURRENT/2;
-  long PIDAT_d  =  HEATER_CURRENT/2;
+  long PIDAT_bias= HEATER_CURRENT/2.0;
+  long PIDAT_d  =  HEATER_CURRENT/2.0;
   
   float PIDAT_Ku, PIDAT_Tu;
   float PIDAT_Kp, PIDAT_Ki, PIDAT_Kd;
@@ -292,7 +292,7 @@ void PID_autotune(int PIDAT_test_temp)
           
           if(PIDAT_cycles > 0) 
           {
-            PIDAT_bias += (PIDAT_d*(PIDAT_t_high - PIDAT_t_low))/(PIDAT_t_low + PIDAT_t_high);
+            PIDAT_bias += (PIDAT_d*(PIDAT_t_high - PIDAT_t_low))/(float)(PIDAT_t_low + PIDAT_t_high);
             if (PIDAT_bias < 20)
             {
               PIDAT_bias = 20;
@@ -301,7 +301,7 @@ void PID_autotune(int PIDAT_test_temp)
             {
               PIDAT_bias = HEATER_CURRENT - 20;
             }
-            if(PIDAT_bias > (HEATER_CURRENT/2)) PIDAT_d = (HEATER_CURRENT - 1) - PIDAT_bias;
+            if(PIDAT_bias > (HEATER_CURRENT/2.0)) PIDAT_d = (HEATER_CURRENT - 1) - PIDAT_bias;
             else PIDAT_d = PIDAT_bias;
 
             serial_send(" bias: %ld d: %ld min: %f max: %f", PIDAT_bias, PIDAT_d, PIDAT_min, PIDAT_max);
@@ -314,16 +314,16 @@ void PID_autotune(int PIDAT_test_temp)
               serial_send(" Ku: %f Tu: %f\r\n", PIDAT_Ku, PIDAT_Tu);
 
               PIDAT_Kp = 0.60*PIDAT_Ku;
-              PIDAT_Ki = 2*PIDAT_Kp/PIDAT_Tu;
-              PIDAT_Kd = PIDAT_Kp*PIDAT_Tu/8;
+              PIDAT_Ki = 2.0*PIDAT_Kp/(float)(PIDAT_Tu);
+              PIDAT_Kd = PIDAT_Kp*PIDAT_Tu/8.0;
               serial_send(" Clasic PID \r\n");
               serial_send(" CFG Kp: %d\r\n", (unsigned int)(PIDAT_Kp*256));
               serial_send(" CFG Ki: %d\r\n", (unsigned int)(PIDAT_Ki*PIDAT_TIME_FACTOR));
               serial_send(" CFG Kd: %d\r\n", (unsigned int)(PIDAT_Kd*PIDAT_TIME_FACTOR));
               
               PIDAT_Kp = 0.30*PIDAT_Ku;
-              PIDAT_Ki = PIDAT_Kp/PIDAT_Tu;
-              PIDAT_Kd = PIDAT_Kp*PIDAT_Tu/3;
+              PIDAT_Ki = PIDAT_Kp/(float)PIDAT_Tu;
+              PIDAT_Kd = PIDAT_Kp*PIDAT_Tu/3.0;
               serial_send(" Some overshoot \r\n");
               serial_send(" CFG Kp: %d\r\n", (unsigned int)(PIDAT_Kp*256));
               serial_send(" CFG Ki: %d\r\n", (unsigned int)(PIDAT_Ki*PIDAT_TIME_FACTOR));
@@ -379,16 +379,16 @@ void PID_autotune(int PIDAT_test_temp)
 
  void updatePID()
  {
-	if (PIDTEMP > -1)
+	if (PIDTEMP)
 	{
-		temp_iState_min = (256L * -PID_INTEGRAL_DRIVE_MAX) / PID_Ki;
-		temp_iState_max = (256L * PID_INTEGRAL_DRIVE_MAX) / PID_Ki;
+		temp_iState_min = (int)( (256L * -PID_INTEGRAL_DRIVE_MAX) / (float)(PID_Ki) );
+		temp_iState_max = (int)( (256L * PID_INTEGRAL_DRIVE_MAX) / (float)(PID_Ki) );
 	}
 
-	if (BED_PIDTEMP > -1)
+	if (BED_PIDTEMP)
 	{
-		temp_bed_iState_min = (256L * -BED_PID_INTEGRAL_DRIVE_MAX) / bed_PID_Ki;
-		temp_bed_iState_max = (256L * BED_PID_INTEGRAL_DRIVE_MAX) / bed_PID_Ki;
+		temp_bed_iState_min = (int)( (256L * -BED_PID_INTEGRAL_DRIVE_MAX) / (float)(bed_PID_Ki) );
+		temp_bed_iState_max = (int)( (256L * BED_PID_INTEGRAL_DRIVE_MAX) / (float)(bed_PID_Ki) );
 	}
  }
  
@@ -421,8 +421,8 @@ void PID_autotune(int PIDAT_test_temp)
  
   #ifdef SMOOTHING
     if (!nma) nma = SMOOTHFACTOR * current_raw;
-    nma = (nma + current_raw) - (nma / SMOOTHFACTOR);
-    current_raw = nma / SMOOTHFACTOR;
+    nma = (nma + current_raw) - ( nma / (float)(SMOOTHFACTOR) );
+    current_raw = nma / (float)(SMOOTHFACTOR);
   #endif
   
   #ifdef WATCHPERIOD
@@ -460,11 +460,11 @@ void PID_autotune(int PIDAT_test_temp)
 
   if (TEMP_0_PIN > -1)
   {
-    if (PIDTEMP > -1)
+    if (PIDTEMP)
 	{	  
       service_ExtruderHeaterPIDControl(analog2temp(current_raw), target_temp);
     }
-    else // if not (PIDTEMP > -1)
+    else // !PIDTEMP
 	{
       service_ExtruderHeaterSimpleControl(current_raw, target_raw);
 	} 	
@@ -538,7 +538,7 @@ int temp2analog_thermistor(int celsius, const short table[][2], int numtemps)
         raw = table[i-1][0] + 
           (celsius - table[i-1][1]) * 
           (table[i][0] - table[i-1][0]) /
-          (table[i][1] - table[i-1][1]);
+          (float)(table[i][1] - table[i-1][1]);
       
         break;
       }
@@ -565,7 +565,7 @@ int analog2temp_thermistor(int raw,const short table[][2], int numtemps) {
         celsius  = table[i-1][1] + 
           (raw - table[i-1][0]) * 
           (table[i][1] - table[i-1][1]) /
-          (table[i][0] - table[i-1][0]);
+          (float)(table[i][0] - table[i-1][0]);
 
         break;
       }
@@ -585,7 +585,7 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 	int delta_temp = current_temp - prev_temp;
 
 	prev_temp = current_temp;
-	pTerm = ((long)PID_Kp * error) / 256;
+	pTerm = ((long)PID_Kp * error) / 256.0;
 	int H0 = MIN(HEATER_DUTY_FOR_SETPOINT(target_temp),HEATER_CURRENT);
 	heater_duty = H0 + pTerm;
 
@@ -602,18 +602,18 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 			temp_iState = temp_iState_max;
 		}
 	
-		iTerm = ((long)PID_Ki * temp_iState) / 256;
+		iTerm = ((long)PID_Ki * temp_iState) / 256.0;
 		heater_duty += iTerm;
 	}
 
 	int prev_error = abs(target_temp - prev_temp);
 	int log3 = 1; // discrete logarithm base 3, plus 1
 
-	if(prev_error > 81){ prev_error /= 81; log3 += 4; }
-	if(prev_error >  9){ prev_error /=  9; log3 += 2; }
-	if(prev_error >  3){ prev_error /=  3; log3 ++;   }
+	if(prev_error > 81){ prev_error /= 81.0; log3 += 4; }
+	if(prev_error >  9){ prev_error /= 9.0; log3 += 2; }
+	if(prev_error >  3){ log3 ++; }
 
-	dTerm = ((long)PID_Kd * delta_temp) / (256*log3);
+	dTerm = ((long)PID_Kd * delta_temp) / (float)(256.0*log3);
 	heater_duty += dTerm;
 	
 	if (heater_duty < 0)
@@ -659,7 +659,7 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 	int delta_bed_temp = current_bed_temp - prev_bed_temp;
 	  
 	prev_bed_temp = current_bed_temp;
-	bed_pTerm = ((long)bed_PID_Kp * bed_error) / 256;
+	bed_pTerm = ((long)bed_PID_Kp * bed_error) / 256.0;
 	int H0 = MIN(HEATER_DUTY_FOR_SETPOINT(target_temp),HEATER_CURRENT);
 	bed_heater_duty = H0 + bed_pTerm;
   
@@ -677,18 +677,18 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 		  temp_bed_iState = temp_bed_iState_max;
 		}
 		  
-		bed_iTerm = ((long)bed_PID_Ki * temp_bed_iState) / 256;
+		bed_iTerm = ((long)bed_PID_Ki * temp_bed_iState) / 256.0;
 		bed_heater_duty += bed_iTerm;
 	}
 	  
 	int prev_bed_error = abs(target_bed_temp - prev_bed_temp);
 	int log3 = 1; // discrete logarithm base 3, plus 1
 	  
-	if(prev_bed_error > 81){ prev_bed_error /= 81; log3 += 4; }
-	if(prev_bed_error >  9){ prev_bed_error /=  9; log3 += 2; }
-	if(prev_bed_error >  3){ prev_bed_error /=  3; log3 ++;   }
+	if(prev_bed_error > 81){ prev_bed_error /= 81.0; log3 += 4; }
+	if(prev_bed_error >  9){ prev_bed_error /=  9.0; log3 += 2; }
+	if(prev_bed_error >  3){ log3 ++; }
 	  
-	bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) / (256*log3);
+	bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) / (float)(256.0*log3);
 	bed_heater_duty += bed_dTerm;
 	
 	if (bed_heater_duty < 0)

@@ -536,7 +536,7 @@ void read_command()
       break;
     }
 	
-	if (!ignore_comments)
+	if (ignore_comments < 1)
 	{
 	   cmdbuf[bufpos++] = (uint8_t)ch;
 	}
@@ -679,17 +679,20 @@ void process_command(const char *cmdstr)
     }
   }
 
-  // Validate the command's sequence number, if provided.
+  // Validate the command's sequence number, if provided. 
   uint32_t seqnbr;
   if (parse_uint(cmdstr, 'N', &seqnbr))
   {
     if (seqnbr == 0) cmdseqnbr = 0;
+	//Ignore sequence number errors for now.
+	/*
     if (seqnbr != cmdseqnbr) {
-	  //Ignore sequence number errors for now.
-      //serial_send("rs %ld (incorrect seqnbr) -> Expected: %ld, Found: %ld\r\n", cmdseqnbr, cmdseqnbr, seqnbr);
-      //return;
+      serial_send("rs %ld (incorrect seqnbr) -> Expected: %ld, Found: %ld\r\n", cmdseqnbr, cmdseqnbr, seqnbr);
+      return;
     }
+	*/
   }
+
 
   // Validate that the command has a single G or M code.
   int has_gcode;
@@ -704,7 +707,7 @@ void process_command(const char *cmdstr)
   }
   if (!has_gcode && !has_mcode)
   {
-    serial_send("rs %ld (command code missing)\r\n", cmdseqnbr);
+    //serial_send("-- %ld (command code missing)\r\n", cmdseqnbr);
     return;
   }
   if (code < 1 || code > 999)
@@ -786,7 +789,7 @@ FORCE_INLINE void homing_routine(unsigned char axis)
     prepare_move();
     st_synchronize();
 
-    current_position[axis] = home_bounce/2 * home_dir;
+    current_position[axis] = home_bounce/2.0 * home_dir;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
     destination[axis] = 0;
     prepare_move();
@@ -795,7 +798,7 @@ FORCE_INLINE void homing_routine(unsigned char axis)
     current_position[axis] = -home_bounce * home_dir;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
     destination[axis] = 0;
-    feedrate = homing_feedrate[axis]/2;
+    feedrate = homing_feedrate[axis]/2.0;
     prepare_move();
     st_synchronize();
 
@@ -945,7 +948,7 @@ void execute_mcode(struct command *cmd) {
           bedtempC = analog2tempBed(current_bed_raw);
         #endif
         #if (TEMP_0_PIN > -1)
-          serial_send("ok T%d", hotendtC);
+          serial_send("ok T:%d", hotendtC);
           #ifdef PIDTEMP
             serial_send(" D%d", heater_duty);
             /*
@@ -958,7 +961,7 @@ void execute_mcode(struct command *cmd) {
             #endif
           #endif
           #if TEMP_1_PIN > -1
-            serial_send(" B%d", bedtempC);
+            serial_send(" B:%d", bedtempC);
           #endif
           serial_send("\r\n");
         #else

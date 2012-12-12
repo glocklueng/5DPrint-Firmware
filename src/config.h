@@ -49,7 +49,10 @@
 //// Calibration variables
 // X, Y, Z, E steps per unit
 // Makibox A6 has screws which advance 8mm per 200 steps.  25 steps = 1mm.
-#define _AXIS_STEP_PER_UNIT {400, 400, 400, 150} //{25, 25, 25, 700}
+// Makiox A6 standard stepper motors have 1.8 deg/step. However with micro-
+// stepping feature 1/16th step is achieved.
+// Therefore 1mm movement in x, y, z = (200 / 8) * 16 = 400 micro-steps.
+#define _AXIS_STEP_PER_UNIT {400, 400, 400, 150}
 
 
 //// Endstop Settings
@@ -244,9 +247,9 @@
 
 //PID Controler Settings
 #define PID_INTEGRAL_DRIVE_MAX 120 //80 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define PID_PGAIN 8000 //19555 //2560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define PID_PGAIN 6000 //19555 //2560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
 #define PID_IGAIN 120 //64 //256 is 1.0  // value of X (e.g 0.25) means that each degree error over 1 sec (2 measurements) changes duty cycle by 2X (=0.5) units (verify?)
-#define PID_DGAIN 13539 //4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+#define PID_DGAIN 8000 //4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 // magic formula 1, to get approximate "zero error" PWM duty. Take few measurements with low PWM duty and make linear fit to get the formula
 // for my makergear hot-end: linear fit {50,10},{60,20},{80,30},{105,50},{176,100},{128,64},{208,128}
@@ -277,7 +280,7 @@
 
 //Hot Bed PID Controler Settings
 #define BED_PID_INTEGRAL_DRIVE_MAX 120 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define BED_PID_PGAIN 2560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define BED_PID_PGAIN 3560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
 #define BED_PID_IGAIN 64 //256 is 1.0  // value of X (e.g 0.25) means that each degree error over 1 sec (2 measurements) changes duty cycle by 2X (=0.5) units (verify?)
 #define BED_PID_DGAIN 4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 

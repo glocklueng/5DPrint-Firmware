@@ -50,7 +50,7 @@ void mc_arc(float *position, float *target, float *offset, uint8_t axis_0, uint8
   
   float millimeters_of_travel = hypot(angular_travel*radius, fabs(linear_travel));
   if (millimeters_of_travel < 0.001) { return; }
-  uint16_t segments = floor(millimeters_of_travel/(float)MM_PER_ARC_SEGMENT);
+  uint16_t segments = floor(millimeters_of_travel/MM_PER_ARC_SEGMENT);
   if(segments == 0) segments = 1;
 
   /*  
@@ -59,9 +59,9 @@ void mc_arc(float *position, float *target, float *offset, uint8_t axis_0, uint8
     // all segments.
     if (invert_feed_rate) { feed_rate *= segments; }
   */
-  float theta_per_segment = angular_travel/(float)(segments);
-  float linear_per_segment = linear_travel/(float)(segments);
-  float extruder_per_segment = extruder_travel/(float)(segments);
+  float theta_per_segment = angular_travel/segments;
+  float linear_per_segment = linear_travel/segments;
+  float extruder_per_segment = extruder_travel/segments;
   
   /* Vector rotation by transformation matrix: r is the original vector, r_T is the rotated vector,
      and phi is the angle of rotation. Based on the solution approach by Jens Geisler.

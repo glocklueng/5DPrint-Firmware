@@ -520,7 +520,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   block->steps_z = labs(target[Z_AXIS]-position[Z_AXIS]);
   block->steps_e = labs(target[E_AXIS]-position[E_AXIS]);
   block->steps_e *= extrudemultiply;
-  block->steps_e /= 100.0;
+  block->steps_e /= 100;
   block->step_event_count = MAX(block->steps_x, MAX(block->steps_y, MAX(block->steps_z, block->steps_e)));
 
   // Bail if this is a zero-length block
@@ -591,15 +591,15 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   // slow down when the buffer starts to empty, rather than wait at the corner for a buffer refill
   int moves_queued=(block_buffer_head-block_buffer_tail + BLOCK_BUFFER_SIZE) & BLOCK_BUFFER_MASK;
 #ifdef SLOWDOWN  
-  if(moves_queued < (BLOCK_BUFFER_SIZE * 0.5) && moves_queued > 1) feed_rate = feed_rate*moves_queued / (float)(BLOCK_BUFFER_SIZE * 0.5); 
+  if(moves_queued < (BLOCK_BUFFER_SIZE * 0.5) && moves_queued > 1) feed_rate = feed_rate*moves_queued / (BLOCK_BUFFER_SIZE * 0.5); 
 #endif
 
   float delta_mm[4];
-  delta_mm[X_AXIS] = (target[X_AXIS]-position[X_AXIS])/(float)(axis_steps_per_unit[X_AXIS]);
-  delta_mm[Y_AXIS] = (target[Y_AXIS]-position[Y_AXIS])/(float)(axis_steps_per_unit[Y_AXIS]);
-  delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/(float)(axis_steps_per_unit[Z_AXIS]);
+  delta_mm[X_AXIS] = (target[X_AXIS]-position[X_AXIS])/axis_steps_per_unit[X_AXIS];
+  delta_mm[Y_AXIS] = (target[Y_AXIS]-position[Y_AXIS])/axis_steps_per_unit[Y_AXIS];
+  delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/axis_steps_per_unit[Z_AXIS];
   //delta_mm[E_AXIS] = (target[E_AXIS]-position[E_AXIS])/axis_steps_per_unit[E_AXIS];
-  delta_mm[E_AXIS] = ((target[E_AXIS]-position[E_AXIS])/(float)(axis_steps_per_unit[E_AXIS]))*extrudemultiply/100.0;
+  delta_mm[E_AXIS] = ((target[E_AXIS]-position[E_AXIS])/axis_steps_per_unit[E_AXIS])*extrudemultiply/100.0;
   
   if ( block->steps_x <= DROP_SEGMENTS && block->steps_y <= DROP_SEGMENTS && block->steps_z <= DROP_SEGMENTS ) {
     block->millimeters = fabs(delta_mm[E_AXIS]);
@@ -607,7 +607,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
     block->millimeters = sqrt(square(delta_mm[X_AXIS]) + square(delta_mm[Y_AXIS]) + square(delta_mm[Z_AXIS]));
   }
   
-  float inverse_millimeters = 1.0/(float)(block->millimeters);  // Inverse millimeters to remove multiple divides 
+  float inverse_millimeters = 1.0/block->millimeters;  // Inverse millimeters to remove multiple divides 
   
   // Calculate speed in mm/second for each axis. No divide by zero due to previous checks.
   float inverse_second = feed_rate * inverse_millimeters;
@@ -660,7 +660,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   }
 
   // Compute and limit the acceleration rate for the trapezoid generator.  
-  float steps_per_mm = block->step_event_count/(float)(block->millimeters);
+  float steps_per_mm = block->step_event_count/block->millimeters;
   if(block->steps_x == 0 && block->steps_y == 0 && block->steps_z == 0) {
     block->acceleration_st = ceil(retract_acceleration * steps_per_mm); // convert to: acceleration steps/sec^2
   }
@@ -676,7 +676,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
     if(((float)block->acceleration_st * (float)block->steps_z / (float)block->step_event_count ) > axis_steps_per_sqr_second[Z_AXIS])
       block->acceleration_st = axis_steps_per_sqr_second[Z_AXIS];
   }
-  block->acceleration = block->acceleration_st / (float)(steps_per_mm);
+  block->acceleration = block->acceleration_st / steps_per_mm;
   block->acceleration_rate = (long)((float)block->acceleration_st * 8.388608);
   
 #if 0  // Use old jerk for now
@@ -714,20 +714,20 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
         // Compute maximum junction velocity based on maximum acceleration and junction deviation
         double sin_theta_d2 = sqrt(0.5*(1.0-cos_theta)); // Trig half angle identity. Always positive.
         vmax_junction = min(vmax_junction,
-          sqrt(block->acceleration * junction_deviation * sin_theta_d2/(float)(1.0-sin_theta_d2)) );
+          sqrt(block->acceleration * junction_deviation * sin_theta_d2/(1.0-sin_theta_d2)) );
       }
     }
   }
 #endif
   // Start with a safe speed
-  float vmax_junction = max_xy_jerk/2.0; 
+  float vmax_junction = max_xy_jerk/2; 
   float vmax_junction_factor = 1.0; 
 
-  if(fabs(current_speed[Z_AXIS]) > max_z_jerk/2.0) 
-    vmax_junction = fmin(vmax_junction, max_z_jerk/2.0);
+  if(fabs(current_speed[Z_AXIS]) > max_z_jerk/2) 
+    vmax_junction = fmin(vmax_junction, max_z_jerk/2);
 
-  if(fabs(current_speed[E_AXIS]) > max_e_jerk/2.0) 
-    vmax_junction = fmin(vmax_junction, max_e_jerk/2.0);
+  if(fabs(current_speed[E_AXIS]) > max_e_jerk/2) 
+    vmax_junction = fmin(vmax_junction, max_e_jerk/2);
 
   if(G92_reset_previous_speed == 1)
   {
@@ -744,7 +744,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
     vmax_junction = block->nominal_speed;
     //    }
     if (jerk > max_xy_jerk) {
-      vmax_junction_factor = (max_xy_jerk/(float)(jerk));
+      vmax_junction_factor = (max_xy_jerk/jerk);
     } 
     if(fabs(current_speed[Z_AXIS] - previous_speed[Z_AXIS]) > max_z_jerk) {
       vmax_junction_factor= fmin(vmax_junction_factor, (max_z_jerk/fabs(current_speed[Z_AXIS] - previous_speed[Z_AXIS])));
@@ -779,8 +779,8 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   // Update previous path unit_vector and nominal speed
   memcpy(previous_speed, current_speed, sizeof(previous_speed)); // previous_speed[] = current_speed[]
   previous_nominal_speed = block->nominal_speed;
-  calculate_trapezoid_for_block(block, block->entry_speed/(float)(block->nominal_speed),
-    safe_speed/(float)(block->nominal_speed));
+  calculate_trapezoid_for_block(block, block->entry_speed/block->nominal_speed,
+    safe_speed/block->nominal_speed);
     
   // Move buffer head
   block_buffer_head = next_buffer_head;

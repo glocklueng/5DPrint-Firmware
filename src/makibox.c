@@ -789,7 +789,7 @@ FORCE_INLINE void homing_routine(unsigned char axis)
     prepare_move();
     st_synchronize();
 
-    current_position[axis] = home_bounce/2.0 * home_dir;
+    current_position[axis] = home_bounce/2 * home_dir;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
     destination[axis] = 0;
     prepare_move();
@@ -798,7 +798,7 @@ FORCE_INLINE void homing_routine(unsigned char axis)
     current_position[axis] = -home_bounce * home_dir;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
     destination[axis] = 0;
-    feedrate = homing_feedrate[axis]/2.0;
+    feedrate = homing_feedrate[axis]/2;
     prepare_move();
     st_synchronize();
 
@@ -948,7 +948,7 @@ void execute_mcode(struct command *cmd) {
           bedtempC = analog2tempBed(current_bed_raw);
         #endif
         #if (TEMP_0_PIN > -1)
-          serial_send("ok T:%d", hotendtC);
+          serial_send("ok T%d", hotendtC);
           #ifdef PIDTEMP
             serial_send(" D%d", heater_duty);
             /*
@@ -961,7 +961,7 @@ void execute_mcode(struct command *cmd) {
             #endif
           #endif
           #if TEMP_1_PIN > -1
-            serial_send(" B:%d", bedtempC);
+            serial_send(" B%d", bedtempC);
           #endif
           serial_send("\r\n");
         #else
@@ -988,7 +988,8 @@ void execute_mcode(struct command *cmd) {
         codenum = millis(); 
         
         /* See if we are heating up or cooling down */
-        int target_direction = !!(current_raw < target_raw);  // true if heating, false if cooling
+        // true if heating, false if cooling
+		int target_direction = (current_raw < target_raw) ? 1 : 0;
         
       #ifdef TEMP_RESIDENCY_TIME
         long residencyStart;

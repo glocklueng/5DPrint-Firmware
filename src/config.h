@@ -177,7 +177,7 @@
 
 // everything with less than this number of steps will be ignored as move and
 // joined with the next movement
-#define DROP_SEGMENTS 5
+#define DROP_SEGMENTS 0
 
 
 //-----------------------------------------------------------------------
@@ -246,10 +246,10 @@
 #define PID_AUTOTUNE
 
 //PID Controler Settings
-#define PID_INTEGRAL_DRIVE_MAX 120 //80 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define PID_PGAIN 6000 //19555 //2560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
-#define PID_IGAIN 120 //64 //256 is 1.0  // value of X (e.g 0.25) means that each degree error over 1 sec (2 measurements) changes duty cycle by 2X (=0.5) units (verify?)
-#define PID_DGAIN 8000 //4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+#define PID_INTEGRAL_DRIVE_MAX 80 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
+#define PID_PGAIN 6000 //2560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define PID_IGAIN 120   //64 //256 is 1.0  // value of X (e.g 0.25) means that each degree error over 1 sec (2 measurements) changes duty cycle by 2X (=0.5) units (verify?)
+#define PID_DGAIN 13000 //4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 // magic formula 1, to get approximate "zero error" PWM duty. Take few measurements with low PWM duty and make linear fit to get the formula
 // for my makergear hot-end: linear fit {50,10},{60,20},{80,30},{105,50},{176,100},{128,64},{208,128}
@@ -263,7 +263,7 @@
 
 // How often should the heater check for new temp readings, in milliseconds
 #define HEATER_CHECK_INTERVAL 100
-#define BED_CHECK_INTERVAL 5000
+#define BED_CHECK_INTERVAL 3000
 
 // Comment the following line to enable heat management during acceleration
 #define DISABLE_CHECK_DURING_ACC
@@ -281,7 +281,7 @@
 //Hot Bed PID Controler Settings
 #define BED_PID_INTEGRAL_DRIVE_MAX 120 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
 #define BED_PID_PGAIN 3560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
-#define BED_PID_IGAIN 64 //256 is 1.0  // value of X (e.g 0.25) means that each degree error over 1 sec (2 measurements) changes duty cycle by 2X (=0.5) units (verify?)
+#define BED_PID_IGAIN 64 //256 is 1.0  
 #define BED_PID_DGAIN 4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 // Change this value (range 30-250) to limit the current to the HOT BED

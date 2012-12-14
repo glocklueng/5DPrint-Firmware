@@ -520,7 +520,7 @@ void read_command()
 	
     if (ch < 0 || ch > 255)
     {
-      // TODO:  do something?
+	  // TODO:  do something?
       continue;
     }
     if (ch == '\n' || ch == '\r')
@@ -528,7 +528,11 @@ void read_command()
       // Newline marks end of this command;  terminate
       // string and process it.
       cmdbuf[bufpos] = '\0';
-      process_command(cmdbuf);
+	  if (bufpos > 0)
+	  {
+		process_command(cmdbuf);
+	  }
+	  ignore_comments = 0;
       bufpos = 0;
       // Flush any output which may not have been sent 
       // at the end of command execution.
@@ -573,7 +577,7 @@ int16_t find_word(const char *cmd, char word)
   }
   if (first == -1) return -1;
   if (first != last) return -1;
-  if (first >= 0 && cmd[pos+1] == ' ') return -1;
+  if (first >= 0 && cmd[first+1] == ' ') return -1;
   return first;
 }
 
@@ -707,7 +711,7 @@ void process_command(const char *cmdstr)
   }
   if (!has_gcode && !has_mcode)
   {
-    //serial_send("-- %ld (command code missing)\r\n", cmdseqnbr);
+    serial_send("rs %ld (command code missing): %s\r\n", cmdseqnbr, cmdstr);
     return;
   }
   if (code < 1 || code > 999)
@@ -825,21 +829,21 @@ void execute_gcode(struct command *cmd)
         get_coordinates(cmd); // For X Y Z E F
         prepare_move();
         previous_millis_cmd = millis();
-        return;
-        //break;
+        //return;
+        break;
       #ifdef USE_ARC_FUNCTION
       case 2: // G2  - CW ARC
         get_arc_coordinates(cmd);
         prepare_arc_move(1);
         previous_millis_cmd = millis();
-        //break;
-        return;
+        break;
+        //return;
       case 3: // G3  - CCW ARC
         get_arc_coordinates(cmd);
         prepare_arc_move(0);
         previous_millis_cmd = millis();
-        //break;
-        return;  
+        break;
+        //return;  
       #endif  
       case 4: // G4 dwell
         codenum = 0;
@@ -932,6 +936,7 @@ void execute_mcode(struct command *cmd) {
             }
         #endif
         break;
+		
       case 140: // M140 set bed temp
 #ifdef CHAIN_OF_COMMAND
           st_synchronize(); // wait for all movements to finish
@@ -940,6 +945,7 @@ void execute_mcode(struct command *cmd) {
             if (cmd->has_S) target_bed_raw = temp2analogBed(cmd->S);
         #endif
         break;
+		
       case 105: // M105
         #if (TEMP_0_PIN > -1)
           hotendtC = analog2temp(current_raw);
@@ -948,7 +954,7 @@ void execute_mcode(struct command *cmd) {
           bedtempC = analog2tempBed(current_bed_raw);
         #endif
         #if (TEMP_0_PIN > -1)
-          serial_send("ok T%d", hotendtC);
+          serial_send("ok T:%d", hotendtC);
           #ifdef PIDTEMP
             serial_send(" D%d", heater_duty);
             /*
@@ -961,17 +967,17 @@ void execute_mcode(struct command *cmd) {
             #endif
           #endif
           #if TEMP_1_PIN > -1
-            serial_send(" B%d", bedtempC);
+            serial_send(" B:%d", bedtempC);
           #endif
           serial_send("\r\n");
         #else
           #error No temperature source available
         #endif
-        return;
-        //break;
-      case 109: { // M109 - Wait for extruder heater to reach target.
+        break;
+		
+      case 109:  // M109 - Wait for extruder heater to reach target.
 #ifdef CHAIN_OF_COMMAND
-          st_synchronize(); // wait for all movements to finish
+         st_synchronize(); // wait for all movements to finish
 #endif
         if (cmd->has_S) target_raw = temp2analogh(target_temp = cmd->S);
         #ifdef WATCHPERIOD
@@ -986,7 +992,7 @@ void execute_mcode(struct command *cmd) {
             }
         #endif
         codenum = millis(); 
-        
+       
         /* See if we are heating up or cooling down */
         // true if heating, false if cooling
 		int target_direction = (current_raw < target_raw) ? 1 : 0;
@@ -1020,8 +1026,8 @@ void execute_mcode(struct command *cmd) {
             }
           #endif
 	    }
-      }
       break;
+	  
       case 190: // M190 - Wait for bed heater to reach target temperature.
 #ifdef CHAIN_OF_COMMAND
           st_synchronize(); // wait for all movements to finish
@@ -1044,6 +1050,7 @@ void execute_mcode(struct command *cmd) {
         }
       #endif
       break;
+	  
       #if FAN_PIN > -1
       case 106: //M106 Fan On
 #ifdef CHAIN_OF_COMMAND
@@ -1078,6 +1085,7 @@ void execute_mcode(struct command *cmd) {
             setFanPWMDuty(ICR3);
         }
         break;
+		
       case 107: //M107 Fan Off
             setFanPWMDuty(0); 
         break;
@@ -1086,6 +1094,7 @@ void execute_mcode(struct command *cmd) {
       case 80: // M81 - ATX Power On
         SET_OUTPUT(PS_ON_PIN); //GND
         break;
+		
       case 81: // M81 - ATX Power Off
 #ifdef CHAIN_OF_COMMAND
           st_synchronize(); // wait for all movements to finish
@@ -1093,12 +1102,15 @@ void execute_mcode(struct command *cmd) {
         SET_INPUT(PS_ON_PIN); //Floating
         break;
       #endif
+	  
       case 82:
         axis_relative_modes[3] = 0;
         break;
+		
       case 83:
         axis_relative_modes[3] = 1;
         break;
+		
       case 84:
         st_synchronize(); // wait for all movements to finish
         if(cmd->has_S)
@@ -1120,18 +1132,21 @@ void execute_mcode(struct command *cmd) {
           disable_e(); 
         }
         break;
+		
       case 85: // M85
         if (cmd->has_S)
-	{
+		{
           max_inactive_time = cmd->S * 1000; 
         } else 
         {
           serial_send("!! S param required.\r\n");
         }
         break;
+		
       case 92: // M92
         execute_m92(cmd);
         break;
+		
       case 93: // M93 show current axis steps.
         serial_send("ok X%f Y%f Z%f E%f\r\n",
           axis_steps_per_unit[0],
@@ -1140,10 +1155,12 @@ void execute_mcode(struct command *cmd) {
           axis_steps_per_unit[3]
         );
         break;
+		
       case 115: // M115
         serial_send("FIRMWARE_NAME: Makibox PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel EXTRUDER_COUNT:1\r\n");
         serial_send("00000000-0000-0000-0000-000000000000\r\n");
         break;
+		
       case 114: // M114
         serial_send("ok X%f Y%f Z%f E%f\r\n",
           current_position[0],
@@ -1152,6 +1169,7 @@ void execute_mcode(struct command *cmd) {
           current_position[3]
         );
         break;
+		
       case 119: // M119
         serial_send("// ");
       	#if (X_MIN_PIN > -1)
@@ -1174,9 +1192,11 @@ void execute_mcode(struct command *cmd) {
       	#endif
         serial_send("\r\n"); 
       	break;
+		
       case 201: // M201  Set maximum acceleration in units/s^2 for print moves (M201 X1000 Y1000)
         execute_m201(cmd);
         break;
+		
       case 202: // M202 max feedrate mm/sec
         if (cmd->has_X)
           max_feedrate[X_AXIS] = cmd->X;
@@ -1187,17 +1207,20 @@ void execute_mcode(struct command *cmd) {
         if (cmd->has_E)
           max_feedrate[E_AXIS] = cmd->E;
       break;
+	  
       case 203: // M203 Temperature monitor
           if (cmd->has_S)
             manage_monitor = cmd->S;
           if(manage_monitor==100) manage_monitor=1; // Set 100 to heated bed
       break;
+	  
       case 204: // M204 acceleration S normal moves T filmanent only moves
           if (cmd->has_S)
             move_acceleration = cmd->S;
           if (cmd->has_T)
             retract_acceleration = cmd->T;
       break;
+	  
       case 205: //M205 advanced settings:  minimum travel speed S=while printing T=travel only,  B=minimum segment time X= maximum xy jerk, Z=maximum Z jerk, E= max E jerk
         if (cmd->has_S) minimumfeedrate = cmd->S;
         if (cmd->has_T) mintravelfeedrate = cmd->T;
@@ -1206,79 +1229,67 @@ void execute_mcode(struct command *cmd) {
         if (cmd->has_Z) max_z_jerk = cmd->Z;
         if (cmd->has_E) max_e_jerk = cmd->E;
       break;
+	  
       case 206: // M206 additional homing offset
         serial_send("// M206 Addhome X:%f Y:%f Z:%f\r\n", add_homing[0], add_homing[1], add_homing[2]);
         if (cmd->has_X) add_homing[X_AXIS] = cmd->X;
         if (cmd->has_Y) add_homing[Y_AXIS] = cmd->Y;
         if (cmd->has_Z) add_homing[Z_AXIS] = cmd->Z;
       break;  
+	  
       case 220: // M220 S<factor in percent>- set speed factor override percentage
-      {
         if(cmd->has_S) 
         {
           feedmultiply = CONSTRAIN(cmd->S, 20, 200);
           feedmultiplychanged=1;
         }
-      }
       break;
+	  
       case 221: // M221 S<factor in percent>- set extrude factor override percentage
-      {
         if(cmd->has_S) 
           extrudemultiply = CONSTRAIN(cmd->S, 40, 200);
-      }
       break;
 #ifdef PIDTEMP
       case 301: // M301
-      {
         //if(code_seen('P')) PID_Kp = code_value();
         //if(code_seen('I')) PID_Ki = code_value();
         //if(code_seen('D')) PID_Kd = code_value();
         //updatePID();
-      }
       break;
 #endif //PIDTEMP      
 #ifdef PID_AUTOTUNE
       case 303: // M303 PID autotune
-      {
-        float help_temp = 150.0;
-        if (cmd->has_S) help_temp=cmd->S;
-        PID_autotune(help_temp);
-      }
+        if (cmd->has_S)
+			PID_autotune((int)(cmd->S));
       break;
 #endif
       case 400: // M400 finish all moves
-      {
       	st_synchronize();	
-      }
       break;
+	  
 #ifdef USE_EEPROM_SETTINGS
       case 500: // Store settings in EEPROM
-      {
         EEPROM_StoreSettings();
-      }
       break;
+	  
       case 501: // Read settings from EEPROM
-      {
         EEPROM_RetrieveSettings(0, 1);
         for(int8_t i=0; i < NUM_AXIS; i++)
         {
           axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
         }
-      }
       break;
+	  
       case 502: // Revert to default settings
-      {
         EEPROM_RetrieveSettings(1, 1);
         for(int8_t i=0; i < NUM_AXIS; i++)
         {
           axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
         }
-      }
       break;
+	  
       case 503: // print settings currently in memory
-      {
         EEPROM_printSettings();
-      }
       break;  
 #endif      
       case 603: // M603  Free RAM

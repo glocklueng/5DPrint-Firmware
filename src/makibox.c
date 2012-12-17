@@ -203,9 +203,9 @@ void execute_m201(struct command *cmd);
 // M605 - Reset Timer 1 COMPA ISR Execution Time Min / Max Values
 // M606 - Show CPU loading information
 // M607 - Reset Peak and Average CPU load values
+// M608 - Show Firmware Version Info
 
-
-static const char VERSION_TEXT[] = "1.3.22T / 20.08.2012";
+static const char VERSION_TEXT[] = "1.3.23a-VCP / 17.12.2012 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1184,8 +1184,9 @@ void execute_mcode(struct command *cmd) {
         break;
 		
       case 115: // M115
-        serial_send("FIRMWARE_NAME: Makibox PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel EXTRUDER_COUNT:1\r\n");
+		serial_send("FIRMWARE_NAME: Makibox PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel EXTRUDER_COUNT:1\r\n");
         serial_send("00000000-0000-0000-0000-000000000000\r\n");
+		serial_send("// Makibox Firmware Version: %s\r\n", VERSION_TEXT);
         break;
 		
       case 114: // M114
@@ -1320,6 +1321,7 @@ void execute_mcode(struct command *cmd) {
       break;  
 #endif      
       case 603: // M603  Free RAM
+			serial_send("// Makibox Firmware Version: %s\r\n", VERSION_TEXT);
             serial_send("// Free Ram: %d\r\n", FreeRam1());
       break;
 	  
@@ -1362,6 +1364,10 @@ void execute_mcode(struct command *cmd) {
 			{
 				serial_send("CPU loading info not available in this version of firmware.\r\n");
 			}
+	  break;
+	  
+	  case 608:
+			serial_send("// Makibox Firmware Version: %s\r\n", VERSION_TEXT);
 	  break;
 	  
       default:

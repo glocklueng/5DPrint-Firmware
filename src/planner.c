@@ -393,8 +393,8 @@ void planner_recalculate_trapezoids() {
       // Recalculate if current block entry or exit junction speed has changed.
       if (current->recalculate_flag || next->recalculate_flag) {
         // NOTE: Entry and exit factors always > 0 by all previous logic operations.
-        calculate_trapezoid_for_block(current, current->entry_speed/current->nominal_speed,
-          next->entry_speed/current->nominal_speed);
+        calculate_trapezoid_for_block(current, current->entry_speed/(float)(current->nominal_speed),
+          next->entry_speed/(float)(current->nominal_speed));
         current->recalculate_flag = 0; // Reset current only to ensure next trapezoid is computed
       }
     }
@@ -402,8 +402,8 @@ void planner_recalculate_trapezoids() {
   }
   // Last/newest block in buffer. Exit speed is set with MINIMUM_PLANNER_SPEED. Always recalculated.
   if(next != NULL) {
-    calculate_trapezoid_for_block(next, next->entry_speed/next->nominal_speed,
-      MINIMUM_PLANNER_SPEED/next->nominal_speed);
+    calculate_trapezoid_for_block(next, next->entry_speed/(float)(next->nominal_speed),
+      MINIMUM_PLANNER_SPEED/(float)(next->nominal_speed));
     next->recalculate_flag = 0;
   }
 }

@@ -48,7 +48,8 @@ void board_init(void)
 
 
 int main(void)
-{	
+{
+	unsigned char first_loop = 1;
 	board_init();
 
 	setup();
@@ -57,9 +58,16 @@ int main(void)
 		if (DEBUG > -1)
 		{
 			CPU_Util_Calc();
+			
+			if (first_loop > 0)
+			{
+				peak_cpu_load = 0;
+				average_cpu_load = 0;
+				first_loop = 0;
+			}
 		}
-		
-		loop();		
+
+		loop();
 	}
 }
 
@@ -75,7 +83,7 @@ int main(void)
 * is set when running ISR's or heavy work loads to
 * indicate this.
 *
-* This functions estimates out the amount of time spent
+* This functions estimates the amount of time spent
 * running the background / idle loop over a period of
 * CPU_UTIL_CHECK_PERIOD. The CPU loading is then taken
 * to be [100% - (percentage idle time)].
@@ -136,4 +144,3 @@ void CPU_Util_Calc(void)
 	
 	previous_bckgnd_task_start_time = bckgnd_task_start_time;
 }
-

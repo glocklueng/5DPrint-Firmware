@@ -1,9 +1,23 @@
 Makibox Firmware
 ================
 
-
 This is the firmware that powers the Makible printers (currently, the Makibox
 A6).  It is based on the Sprinter firmware for RepRap-derivative controllers,
 which is itself based on the Tonokips firmware.
 
 Licensed under the GNU GPLv3.
+
+
+Makibox A6 Firmware - Virtual COM Port based USB Comms
+======================================================
+
+Forking off so that old virtual COM port USB comms tools (e.g. Pronterface) can 
+be used for testing. USB protocol edits can then be done independently without 
+holding up development and testing on other parts.
+
+NOTE:
+This fork will (most likely) not be officially supported by Makibox / Makible 
+going forward in the future. It will be left here for those who wish to develop 
+it further or wish to use their Makibox A6 with Pronterface and other 
+pre-existing software tools that require the use of USB virtual COM port 
+communications.

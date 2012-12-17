@@ -49,6 +49,35 @@
 *		Added commands to help debug system with information such as CPU loading
 *		and ISR execution times. Rough indicators only. Custom commands M604 to 
 *		M607. 
+*
+* +		07 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Ignore command sequence numbers since this was causing a problem with
+*		Pronterface. With 'monitor printer' switched on the sequence numbers
+*		go out of sync and cause printing problems..
+*
+*		read_command() now ignores characters after a ";" as these are comments.
+*
+* +		14 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Fix bug in find_word() parsing function. Previously it was checking for 
+*		a white space after the command terminator. This resulted in occasional 
+*		incorrect reporting that there was an error if there was a white space 
+*		left over beyond the therminating character from the previous command 
+*		in the buffer. Now checks for white space immediately after the 'word' 
+*		found.
+*
+*		M105 command's temperature reporting text format edited to be compatible 
+*		with Pronterface graphing ('monitor printer') feature.
+*
+*		Minor editing of execute_gcode() and execute_mcode() large switch 
+*		statements to make the formating more consistent (e.g. removed use of
+*		curly brackets around some cases).
+*
+* +		17 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		find_word() now checks for the "\0" terminating character after finding
+*		the 'word'.
 */
 
 
@@ -578,6 +607,7 @@ int16_t find_word(const char *cmd, char word)
   if (first == -1) return -1;
   if (first != last) return -1;
   if (first >= 0 && cmd[first+1] == ' ') return -1;
+  if (first >= 0 && cmd[first+1] == '\0') return -1;
   return first;
 }
 
@@ -793,7 +823,7 @@ FORCE_INLINE void homing_routine(unsigned char axis)
     prepare_move();
     st_synchronize();
 
-    current_position[axis] = home_bounce/2 * home_dir;
+    current_position[axis] = home_bounce/2.0 * home_dir;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
     destination[axis] = 0;
     prepare_move();
@@ -802,7 +832,7 @@ FORCE_INLINE void homing_routine(unsigned char axis)
     current_position[axis] = -home_bounce * home_dir;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
     destination[axis] = 0;
-    feedrate = homing_feedrate[axis]/2;
+    feedrate = homing_feedrate[axis]/2.0;
     prepare_move();
     st_synchronize();
 
@@ -829,7 +859,6 @@ void execute_gcode(struct command *cmd)
         get_coordinates(cmd); // For X Y Z E F
         prepare_move();
         previous_millis_cmd = millis();
-        //return;
         break;
       #ifdef USE_ARC_FUNCTION
       case 2: // G2  - CW ARC
@@ -837,13 +866,11 @@ void execute_gcode(struct command *cmd)
         prepare_arc_move(1);
         previous_millis_cmd = millis();
         break;
-        //return;
       case 3: // G3  - CCW ARC
         get_arc_coordinates(cmd);
         prepare_arc_move(0);
         previous_millis_cmd = millis();
-        break;
-        //return;  
+        break; 
       #endif  
       case 4: // G4 dwell
         codenum = 0;

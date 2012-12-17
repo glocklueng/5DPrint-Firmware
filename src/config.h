@@ -25,6 +25,11 @@
 *											www.xtrontec.com
 *		Added global variables for CPU loading calculation.
 *		Added DEBUG #define to enable/disable calculation.
+*
+* +		07 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		HEATER_CHECK_INTERVAL decreased to 100 so that extruder temperature is 
+*		checked (sampled) more frequently. Extruder PID parameters edited.
 */
 
 #ifndef CONFIGURATION_H
@@ -100,8 +105,8 @@
 //-----------------------------------------------------------------------
 // Disables axis when it's not being used.
 //-----------------------------------------------------------------------
-#define DISABLE_X 0 //1
-#define DISABLE_Y 0 //1
+#define DISABLE_X 0
+#define DISABLE_Y 0
 #define DISABLE_Z 1
 #define DISABLE_E 0
 
@@ -124,7 +129,7 @@
 //#define ENDSTOPS_ONLY_FOR_HOMING // If defined the endstops will only be used for homing
 
 // If true, axis won't move to coordinates less than zero.
-#define MIN_SOFTWARE_ENDSTOPS 0 //1
+#define MIN_SOFTWARE_ENDSTOPS 0
 // If true, axis won't move to coordinates greater than the defined lengths below.
 #define MAX_SOFTWARE_ENDSTOPS 1
 
@@ -139,8 +144,8 @@
 //-----------------------------------------------------------------------
 //// MOVEMENT SETTINGS
 //-----------------------------------------------------------------------
-#define _MAX_FEEDRATE {120, 120, 20, 45} //{50, 50, 50, 50}       // (mm/sec)    
-#define _HOMING_FEEDRATE {1500,1500,120} //{1500,1500,1500}      // (mm/min) !!
+#define _MAX_FEEDRATE {120, 120, 20, 45} // (mm/sec)    
+#define _HOMING_FEEDRATE {1500,1500,120} // (mm/min) !!
 #define _AXIS_RELATIVE_MODES {0, 0, 0, 0}
 
 #define MAX_STEP_FREQUENCY 30000 // Max step frequency
@@ -247,9 +252,9 @@
 
 //PID Controler Settings
 #define PID_INTEGRAL_DRIVE_MAX 80 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define PID_PGAIN 6000 //2560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
-#define PID_IGAIN 120   //64 //256 is 1.0  // value of X (e.g 0.25) means that each degree error over 1 sec (2 measurements) changes duty cycle by 2X (=0.5) units (verify?)
-#define PID_DGAIN 13000 //4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+#define PID_PGAIN 6000  //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define PID_IGAIN 120   //256 is 1.0  // value of X (e.g 0.25) means that each degree error over 1 sec (2 measurements) changes duty cycle by 2X (=0.5) units (verify?)
+#define PID_DGAIN 13000 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 // magic formula 1, to get approximate "zero error" PWM duty. Take few measurements with low PWM duty and make linear fit to get the formula
 // for my makergear hot-end: linear fit {50,10},{60,20},{80,30},{105,50},{176,100},{128,64},{208,128}

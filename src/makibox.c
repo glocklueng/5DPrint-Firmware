@@ -78,6 +78,14 @@
 *											www.xtrontec.com
 *		find_word() now checks for the "\0" terminating character after finding
 *		the 'word'.
+*
+* +		18 DEC 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		TEMP_HYSTERESIS is used to provide an acceptable target temperature
+*		band before M109 returns and allows the print to proceed. Previously, 
+*		the temperature can sometimes hover 1 or 2 degC above target and not be 
+*		able to begin printing unless the extruder head was 'blown' on to reduce 
+*		the temperature below the target. 
 */
 
 

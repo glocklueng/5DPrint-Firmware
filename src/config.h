@@ -258,7 +258,7 @@
 //The result of this function is only send with the Temperaturerequest to the host
 //#define AUTOTEMP 
 #ifdef AUTOTEMP
-    #define AUTO_TEMP_MAX 350
+    #define AUTO_TEMP_MAX 300
     #define AUTO_TEMP_MIN 205
     #define AUTO_TEMP_FACTOR 0.025
     #define AUTOTEMP_OLDWEIGHT 0.98

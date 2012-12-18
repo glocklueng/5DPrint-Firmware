@@ -30,6 +30,29 @@
 *											www.xtrontec.com
 *		HEATER_CHECK_INTERVAL decreased to 100 so that extruder temperature is 
 *		checked (sampled) more frequently. Extruder PID parameters edited.
+*
+* +		17 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Change MAXTEMP to 300 to limit extruder heater to 300 degC.
+*
+* +		18 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Uncomment TEMP_RESIDENCY_TIME and TEMP_HYSTERESIS defines and set to
+*		10 seconds and 2 degC respectively. This to see if it helps with print
+*		quality issues seen on the initial layers of prints. Upper layers seem 
+*		to stabilise and produce better quality / more consistent output during
+*		initial development testing. Suspect it could be a temperature issue 
+*		with the ABS plastic. The use of TEMP_RESIDENCY_TIME will ensure that 
+*		when the wait for extruder temperature command is issued the printer 
+*		will wait for the temperature to stabilise to the target for at least 
+*		TEMP_RESIDENCY_TIME (set to 10 seconds for now) before continuing to 
+*		print.
+*
+*		TEMP_HYSTERESIS is also used to provide an acceptable target temperature
+*		band before M109 returns and allows the print to proceed. Previously, 
+*		the temperature can sometimes hover 1 or 2 degC above target and not be 
+*		able to begin printing unless the extruder head was 'blown' on to reduce 
+*		the temperature below the target.  
 */
 
 #ifndef CONFIGURATION_H
@@ -311,8 +334,8 @@
 //#define WATCHPERIOD 5000 //5 seconds
 
 // Actual temperature must be close to target for this long before M109 returns success
-//#define TEMP_RESIDENCY_TIME 20  // (seconds)
-//#define TEMP_HYSTERESIS 5       // (C°) range of +/- temperatures considered "close" to the target one
+#define TEMP_RESIDENCY_TIME 	10	// (seconds)
+#define TEMP_HYSTERESIS 		2	// (°C) range of +/- temperatures considered "close" to the target one
 
 //// The minimal temperature defines the temperature below which the heater will not be enabled
 #define MINTEMP 5
@@ -321,7 +344,7 @@
 // When temperature exceeds max temp, your heater will be switched off.
 // This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
 // You should use MINTEMP for thermistor short/failure protection.
-#define MAXTEMP 350
+#define MAXTEMP 300
 
 // Select one of these only to define how the nozzle temp is read.
 #define HEATER_USES_THERMISTOR

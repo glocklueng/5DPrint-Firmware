@@ -1024,15 +1024,18 @@ void execute_mcode(struct command *cmd) {
         // true if heating, false if cooling
 		int target_direction = (current_raw < target_raw) ? 1 : 0;
         
+		int target_raw_low = temp2analogh(target_temp - TEMP_HYSTERESIS);
+		int target_raw_high = temp2analogh(target_temp + TEMP_HYSTERESIS);
+		
       #ifdef TEMP_RESIDENCY_TIME
         long residencyStart;
         residencyStart = -1;
         /* continue to loop until we have reached the target temp   
            _and_ until TEMP_RESIDENCY_TIME hasn't passed since we reached it */
-        while( (target_direction ? (current_raw < target_raw) : (current_raw > target_raw))
+        while( (target_direction ? (current_raw < target_raw_low) : (current_raw > target_raw_high))
             || (residencyStart > -1 && (millis() - residencyStart) < TEMP_RESIDENCY_TIME*1000) ) {
       #else
-        while ( target_direction ? (current_raw < target_raw) : (current_raw > target_raw) ) {
+        while ( target_direction ? (current_raw < target_raw_low) : (current_raw > target_raw_high) ) {
       #endif
           if( (millis() - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up/cooling down
           {
@@ -1046,8 +1049,8 @@ void execute_mcode(struct command *cmd) {
           #ifdef TEMP_RESIDENCY_TIME
             /* start/restart the TEMP_RESIDENCY_TIME timer whenever we reach target temp for the first time
                or when current temp falls outside the hysteresis after target temp was reached */
-            if (   (residencyStart == -1 &&  target_direction && current_raw >= target_raw)
-                || (residencyStart == -1 && !target_direction && current_raw <= target_raw)
+            if (   (residencyStart == -1 &&  target_direction && current_raw >= target_raw_low)
+                || (residencyStart == -1 && !target_direction && current_raw <= target_raw_high)
                 || (residencyStart > -1 && labs(analog2temp(current_raw) - analog2temp(target_raw)) > TEMP_HYSTERESIS) ) {
               residencyStart = millis();
             }

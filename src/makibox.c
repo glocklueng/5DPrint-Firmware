@@ -213,7 +213,7 @@ void execute_m201(struct command *cmd);
 // M607 - Reset Peak and Average CPU load values
 // M608 - Show Firmware Version Info
 
-static const char VERSION_TEXT[] = "1.3.23a-VCP / 17.12.2012 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.23c-VCP / 19.12.2012 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;

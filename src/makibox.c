@@ -213,7 +213,7 @@ void execute_m201(struct command *cmd);
 // M607 - Reset Peak and Average CPU load values
 // M608 - Show Firmware Version Info
 
-static const char VERSION_TEXT[] = "1.3.23e-VCP / 19.12.2012 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.23h-VCP / 19.12.2012 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1058,7 +1058,7 @@ void execute_mcode(struct command *cmd) {
           #ifdef TEMP_RESIDENCY_TIME
             /* start/restart the TEMP_RESIDENCY_TIME timer whenever we reach target temp for the first time
                or when current temp falls outside the hysteresis after target temp was reached */
-            if (   (residencyStart == -1 &&  (target_direction ? (current_raw <= target_raw_low) : (current_raw >= target_raw_high)))
+            if (   (residencyStart == -1)
                 || (residencyStart > -1 && labs(analog2temp(current_raw) - analog2temp(target_raw)) > TEMP_HYSTERESIS) ) {
               residencyStart = millis();
             }

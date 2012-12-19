@@ -213,7 +213,7 @@ void execute_m201(struct command *cmd);
 // M607 - Reset Peak and Average CPU load values
 // M608 - Show Firmware Version Info
 
-static const char VERSION_TEXT[] = "1.3.23c-VCP / 19.12.2012 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.23d-VCP / 19.12.2012 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1041,7 +1041,8 @@ void execute_mcode(struct command *cmd) {
         /* continue to loop until we have reached the target temp   
            _and_ until TEMP_RESIDENCY_TIME hasn't passed since we reached it */
         while( (target_direction ? (current_raw < target_raw_low) : (current_raw > target_raw_high))
-            || (residencyStart > -1 && (millis() - residencyStart) < TEMP_RESIDENCY_TIME*1000) ) {
+            || (residencyStart > -1 && (millis() - residencyStart) < TEMP_RESIDENCY_TIME*1000)
+			|| (residencyStart == -1) ) {
       #else
         while ( target_direction ? (current_raw < target_raw_low) : (current_raw > target_raw_high) ) {
       #endif

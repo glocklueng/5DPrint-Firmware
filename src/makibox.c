@@ -85,7 +85,17 @@
 *		band before M109 returns and allows the print to proceed. Previously, 
 *		the temperature can sometimes hover 1 or 2 degC above target and not be 
 *		able to begin printing unless the extruder head was 'blown' on to reduce 
-*		the temperature below the target. 
+*		the temperature below the target.
+*
+* +		24 DEC 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added M852 command to allow entry in to the DFU bootloader via the
+*		firmware application. This will allow the Makibox firmware to be 
+*		updated without the need to open up the Makibox and press the reset 
+*		button on the PrintRBoard or mess around with removing / reconnecting
+*		jumpers. A 'F' pass code must also be entered together with the M852
+*		command. This is to prevent accidental entry in to the bootloader by
+*		end-users.
 */
 
 
@@ -117,6 +127,7 @@
 
 #define  FORCE_INLINE __attribute__((always_inline)) inline
 
+#define BOOTLOADER_PASSCODE		34640180 
 
 void cmdbuf_read_serial();
 void cmdbuf_process();
@@ -127,6 +138,7 @@ void prepare_arc_move(char isclockwise);
   void get_arc_coordinates();
 #endif
 void kill();
+void JumpToBootloader(void) __attribute__((noreturn));
 
 #if (MINIMUM_FAN_START_SPEED > 0)
 void manage_fan_start_speed(void);
@@ -213,7 +225,9 @@ void execute_m201(struct command *cmd);
 // M607 - Reset Peak and Average CPU load values
 // M608 - Show Firmware Version Info
 
-static const char VERSION_TEXT[] = "1.3.23h-VCP / 19.12.2012 (USB VCP Protocol)";
+// M852 - Enter Boot Loader Command (Requires correct F pass code)
+
+static const char VERSION_TEXT[] = "1.3.23i-VCP / 24.12.2012 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1377,8 +1391,39 @@ void execute_mcode(struct command *cmd) {
 			}
 	  break;
 	  
-	  case 608:
+	  case 608: // M608
 			serial_send("// Makibox Firmware Version: %s\r\n", VERSION_TEXT);
+	  break;
+	  
+	  case 852: // M852 - Enter Boot Loader Command
+			if (cmd->has_F)
+			{
+				if (cmd->F == BOOTLOADER_PASSCODE)
+				{
+					serial_send("\r\n// Makibox Bootloader\r\n");
+					serial_send("// ENTERING BOOTLOADER...\r\n");
+					serial_send("// Existing USB connection will be disconnected.\r\n");
+					serial_send("// Please disconnect and close your current host software.\r\n\r\n");
+					
+					// Delay to allow time for message to be sent before disabling
+					// the USB in the JumpToBootloader() function.
+					delay(2000);
+					
+					JumpToBootloader();
+				}
+				else
+				{
+					serial_send("\r\n// Makibox Bootloader\r\n");
+					serial_send("// *** CAN NOT Enter Bootloader - Incorrect Pass Code!\r\n");
+					serial_send("// Please try again with correct pass code.\r\n\r\n");
+				}
+			}
+			else
+			{
+				serial_send("\r\n// Makibox Bootloader\r\n");
+				serial_send("// *** CAN NOT Enter Bootloader - Pass code not found!\r\n");
+				serial_send("// Please try again with correct pass code.\r\n\r\n");
+			}
 	  break;
 	  
       default:
@@ -1612,4 +1657,37 @@ void st_synchronize()
       manage_fan_start_speed();
     #endif
   }
+}
+
+
+/***************************************************
+* JumpToBootloader(void)
+*
+* This function detaches the USB connection and
+* disables the mircocontroller peripherals. Then 
+* jumps to the DFU bootloader start address.
+*
+* Note: The DFU bootloader must be present and setup
+* correctly in the Atmel AT90USB1286 microcontroller.
+*
+* This function does not return to the main 
+* application!
+****************************************************/
+void JumpToBootloader(void)
+{
+	cli();
+	delay(10);				// Delay milli-seconds
+	UDCON = 1;				// Detach USB Connection
+	USBCON = (1<<FRZCLK);	// Disable the USB clock
+	delay(100);
+	
+	// Disable Peripherals
+	EIMSK = 0; PCICR = 0; SPCR = 0; ACSR = 0; EECR = 0; ADCSRA = 0;
+	TIMSK0 = 0; TIMSK1 = 0; TIMSK2 = 0; TIMSK3 = 0; UCSR1B = 0; TWCR = 0;
+	DDRA = 0; DDRB = 0; DDRC = 0; DDRD = 0; DDRE = 0; DDRF = 0;
+	PORTA = 0; PORTB = 0; PORTC = 0; PORTD = 0; PORTE = 0; PORTF = 0;
+	
+	// Jump to Bootloader start address
+	asm volatile("jmp 0xF000");
+	while (1) ;
 }

@@ -87,8 +87,6 @@ int main(void)
 * running the background / idle loop over a period of
 * CPU_UTIL_CHECK_PERIOD. The CPU loading is then taken
 * to be [100% - (percentage idle time)].
-*
-* Sets the PWM duty of the fan.
 ****************************************************/
 void CPU_Util_Calc(void)
 {

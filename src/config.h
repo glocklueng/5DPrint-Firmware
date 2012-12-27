@@ -309,7 +309,7 @@
 //Hot Bed PID Controler Settings
 #define BED_PID_INTEGRAL_DRIVE_MAX 120 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
 #define BED_PID_PGAIN 3560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
-#define BED_PID_IGAIN 64 //256 is 1.0  
+#define BED_PID_IGAIN 120  //256 is 1.0  
 #define BED_PID_DGAIN 4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 // Change this value (range 30-250) to limit the current to the HOT BED

@@ -53,6 +53,17 @@
 *		the temperature can sometimes hover 1 or 2 degC above target and not be 
 *		able to begin printing unless the extruder head was 'blown' on to reduce 
 *		the temperature below the target.  
+*
+* +		27 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Increased BED_PID_IGAIN to 120.
+*
+*		Uncomment WATCHPERIOD. This enables checks of the hotend heater when a
+*		target temperature is set. If the temperature does not appear to be 
+*		increasing after WATCHPERIOD has elapsed then the target temperature is
+*		set to 0 degC in order to protect the hotend heater. This situation 
+*		may occur if the hotend thermistor has not been installed at the right 
+*		location and therefore not measuring the hotend temperature.
 */
 
 #ifndef CONFIGURATION_H
@@ -329,9 +340,14 @@
 
 
 //// Experimental watchdog and minimal temp
-// The watchdog waits for the watchperiod in milliseconds whenever an M104 or M109 increases the target temperature
-// If the temperature has not increased at the end of that period, the target temperature is set to zero. It can be reset with another M104/M109
-//#define WATCHPERIOD 5000 //5 seconds
+// The watchdog waits for the watchperiod in milliseconds whenever an M104 or 
+// M109 increases the target temperature. If the temperature has not increased 
+// at the end of that period, the target temperature is set to zero. It can be 
+// reset with another M104/M109. Guards against situation where the hotend 
+// thermistor has not been installed properly such that the temperature of the 
+// hotend is not being measured corretly - the hotend heater continues 
+// heating until it burns itself out.
+#define WATCHPERIOD 3500 // 3.5 seconds
 
 // Actual temperature must be close to target for this long before M109 returns success
 #define TEMP_RESIDENCY_TIME 	10	// (seconds)

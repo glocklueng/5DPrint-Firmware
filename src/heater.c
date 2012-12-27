@@ -428,7 +428,7 @@ void PID_autotune(int PIDAT_test_temp)
   #ifdef WATCHPERIOD
     if(watchmillis && millis() - watchmillis > WATCHPERIOD)
     {
-        if(watch_raw + 1 >= current_raw)
+        if(watch_raw >= current_raw)
         {
             target_temp = target_raw = 0;
             WRITE(HEATER_0_PIN,LOW);

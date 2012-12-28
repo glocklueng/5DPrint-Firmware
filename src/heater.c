@@ -586,8 +586,9 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 
 	prev_temp = current_temp;
 	pTerm = ((long)PID_Kp * error) / 256.0;
-	int H0 = MIN(HEATER_DUTY_FOR_SETPOINT(target_temp),HEATER_CURRENT);
-	heater_duty = H0 + pTerm;
+	//int H0 = MIN(HEATER_DUTY_FOR_SETPOINT(target_temp),HEATER_CURRENT);
+	//heater_duty = H0 + pTerm;
+	heater_duty = pTerm;
 
 	if(error < 30)
 	{

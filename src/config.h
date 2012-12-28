@@ -286,9 +286,9 @@
 
 //PID Controler Settings
 #define PID_INTEGRAL_DRIVE_MAX 120 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define PID_PGAIN 6000  //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
-#define PID_IGAIN 120   //256 is 1.0 
-#define PID_DGAIN 13000 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+#define PID_PGAIN 1000 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define PID_IGAIN 15   //256 is 1.0 
+#define PID_DGAIN 120  //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 // magic formula 1, to get approximate "zero error" PWM duty. Take few measurements with low PWM duty and make linear fit to get the formula
 // for my makergear hot-end: linear fit {50,10},{60,20},{80,30},{105,50},{176,100},{128,64},{208,128}
@@ -347,7 +347,7 @@
 // thermistor has not been installed properly such that the temperature of the 
 // hotend is not being measured corretly - the hotend heater continues 
 // heating until it burns itself out.
-#define WATCHPERIOD 3500 // 3.5 seconds
+#define WATCHPERIOD 5000 // 3.5 seconds
 
 // Actual temperature must be close to target for this long before M109 returns success
 #define TEMP_RESIDENCY_TIME 	10	// (seconds)

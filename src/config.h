@@ -64,6 +64,15 @@
 *		set to 0 degC in order to protect the hotend heater. This situation 
 *		may occur if the hotend thermistor has not been installed at the right 
 *		location and therefore not measuring the hotend temperature.
+*
+* +		02 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Update _AXIS_STEP_PER_UNIT with new value for extruder stepping. New 
+*		PID settings for the hotend and hotbed heaters for the slightly modified
+*		PID algorithms.
+*		Removed some redundant #defines.
+*		BED_CHECK_INTERVAL reduced to 1000 in order to give slightly better 
+*		temperature control of the hotbed.
 */
 
 #ifndef CONFIGURATION_H
@@ -91,7 +100,7 @@
 // Makiox A6 standard stepper motors have 1.8 deg/step. However with micro-
 // stepping feature 1/16th step is achieved.
 // Therefore 1mm movement in x, y, z = (200 / 8) * 16 = 400 micro-steps.
-#define _AXIS_STEP_PER_UNIT {400, 400, 400, 150}
+#define _AXIS_STEP_PER_UNIT {400, 400, 400, 250}
 
 
 //// Endstop Settings
@@ -216,7 +225,7 @@
 
 // everything with less than this number of steps will be ignored as move and
 // joined with the next movement
-#define DROP_SEGMENTS 0
+#define DROP_SEGMENTS 5
 
 
 //-----------------------------------------------------------------------
@@ -285,16 +294,11 @@
 #define PID_AUTOTUNE
 
 //PID Controler Settings
-#define PID_INTEGRAL_DRIVE_MAX 120 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define PID_PGAIN 1000 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define PID_INTEGRAL_DRIVE_MAX 80 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
+#define PID_PGAIN 1600 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
 #define PID_IGAIN 15   //256 is 1.0 
-#define PID_DGAIN 120  //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+#define PID_DGAIN 30  //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
-// magic formula 1, to get approximate "zero error" PWM duty. Take few measurements with low PWM duty and make linear fit to get the formula
-// for my makergear hot-end: linear fit {50,10},{60,20},{80,30},{105,50},{176,100},{128,64},{208,128}
-#define HEATER_DUTY_FOR_SETPOINT(setpoint) ((int)((187L*(long)setpoint)>>8)-27)  
-// magic formula 2, to make led brightness approximately linear
-#define LED_PWM_FOR_BRIGHTNESS(brightness) ((64*brightness-1384)/(300-brightness))
 #endif
 
 // Change this value (range 30-250) to limit the current to the nozzle
@@ -302,7 +306,7 @@
 
 // How often should the heater check for new temp readings, in milliseconds
 #define HEATER_CHECK_INTERVAL 100
-#define BED_CHECK_INTERVAL 3000
+#define BED_CHECK_INTERVAL 1000
 
 // Comment the following line to enable heat management during acceleration
 #define DISABLE_CHECK_DURING_ACC
@@ -318,10 +322,10 @@
 #ifdef BED_PIDTEMP
 
 //Hot Bed PID Controler Settings
-#define BED_PID_INTEGRAL_DRIVE_MAX 120 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define BED_PID_PGAIN 3560 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
-#define BED_PID_IGAIN 120  //256 is 1.0  
-#define BED_PID_DGAIN 4096 //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+#define BED_PID_INTEGRAL_DRIVE_MAX 180 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
+#define BED_PID_PGAIN 20000	//256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define BED_PID_IGAIN 512	//256 is 1.0  
+#define BED_PID_DGAIN 0	//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 // Change this value (range 30-250) to limit the current to the HOT BED
 #define BED_HEATER_CURRENT 250

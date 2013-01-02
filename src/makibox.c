@@ -96,6 +96,11 @@
 *		jumpers. A 'F' pass code must also be entered together with the M852
 *		command. This is to prevent accidental entry in to the bootloader by
 *		end-users.
+*
+* +		02 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		M105 command edited to provide bed heater duty information. Duty cycles
+*		now reported as a percentage.
 */
 
 
@@ -128,6 +133,10 @@
 #define  FORCE_INLINE __attribute__((always_inline)) inline
 
 #define BOOTLOADER_PASSCODE		34640180 
+
+// Minimum change in target temperature for 'WATCHPERIOD' to be activated
+// for hotend heater.
+#define MIN_TARGET_TEMP_CHANGE	10
 
 void cmdbuf_read_serial();
 void cmdbuf_process();
@@ -227,7 +236,7 @@ void execute_m201(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.23m-VCP / 28.12.2012 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.2n-VCP / 01.01.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -973,8 +982,9 @@ void execute_mcode(struct command *cmd) {
           st_synchronize(); // wait for all movements to finish
 #endif
         if (cmd->has_S) target_raw = temp2analogh(target_temp = cmd->S);
+		temp_iState = 0;
         #ifdef WATCHPERIOD
-            if(target_raw > current_raw)
+            if( target_raw > (current_raw + temp2analogh(MIN_TARGET_TEMP_CHANGE)) )
             {
                 watchmillis = MAX(1,millis());
                 watch_raw = current_raw;
@@ -983,6 +993,7 @@ void execute_mcode(struct command *cmd) {
             {
                 watchmillis = 0;
             }
+		
         #endif
         break;
 		
@@ -1005,7 +1016,7 @@ void execute_mcode(struct command *cmd) {
         #if (TEMP_0_PIN > -1)
           serial_send("ok T:%d", hotendtC);
           #ifdef PIDTEMP
-            serial_send(" D%d", heater_duty);
+            serial_send(" D%d%%", (int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ));
             /*
             serial_send(",P:%d", pTerm);
             serial_send(",I:%d", iTerm);
@@ -1018,6 +1029,9 @@ void execute_mcode(struct command *cmd) {
           #if TEMP_1_PIN > -1
             serial_send(" B:%d", bedtempC);
           #endif
+			serial_send(" D%d%%", (int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
+		  #ifdef BED_PIDTEMP
+		  #endif
           serial_send("\r\n");
         #else
           #error No temperature source available
@@ -1029,8 +1043,9 @@ void execute_mcode(struct command *cmd) {
          st_synchronize(); // wait for all movements to finish
 #endif
         if (cmd->has_S) target_raw = temp2analogh(target_temp = cmd->S);
+		temp_iState = 0;
         #ifdef WATCHPERIOD
-            if(target_raw>current_raw)
+            if( target_raw > (current_raw + temp2analogh(MIN_TARGET_TEMP_CHANGE)) )
             {
                 watchmillis = MAX(1,millis());
                 watch_raw = current_raw;

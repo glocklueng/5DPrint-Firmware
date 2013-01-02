@@ -46,6 +46,13 @@
 *
 *		extruderFan() removed as extruder fan pin defined in previous code
 *		does not map to suitable control pin on PrintRBoard rev B.
+*
+* +		02 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Modified PID algorithms for the hotend and hotbed temperature control.
+*		Removed the initial H0 starting value from the P-term calculation.
+*		Reset temp_istate values to zero if outside of I-term control range.
+*		Removed divisions based on error range for the D-term calculation.
 */
 
 
@@ -586,11 +593,9 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 
 	prev_temp = current_temp;
 	pTerm = ((long)PID_Kp * error) / 256.0;
-	//int H0 = MIN(HEATER_DUTY_FOR_SETPOINT(target_temp),HEATER_CURRENT);
-	//heater_duty = H0 + pTerm;
 	heater_duty = pTerm;
 
-	if(error < 30)
+	if(error < 6)
 	{
 		temp_iState += error;
 		if (temp_iState < temp_iState_min)
@@ -606,16 +611,13 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 		iTerm = ((long)PID_Ki * temp_iState) / 256.0;
 		heater_duty += iTerm;
 	}
+	else
+	{
+		temp_iState = 0;
+	}
 
-	int prev_error = abs(target_temp - prev_temp);
-	int log3 = 1; // discrete logarithm base 3, plus 1
-
-	if(prev_error > 81){ prev_error /= 81.0; log3 += 4; }
-	if(prev_error >  9){ prev_error /= 9.0; log3 += 2; }
-	if(prev_error >  3){ log3 ++; }
-
-	dTerm = ((long)PID_Kd * delta_temp) / (float)(256.0*log3);
-	heater_duty += dTerm;
+	dTerm = ((long)PID_Kd * delta_temp) / 256.0;
+	heater_duty -= dTerm;
 	
 	if (heater_duty < 0)
 	{
@@ -661,8 +663,7 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 	  
 	prev_bed_temp = current_bed_temp;
 	bed_pTerm = ((long)bed_PID_Kp * bed_error) / 256.0;
-	int H0 = MIN(HEATER_DUTY_FOR_SETPOINT(target_temp),HEATER_CURRENT);
-	bed_heater_duty = H0 + bed_pTerm;
+	bed_heater_duty = bed_pTerm;
   
 	if(bed_error < 30)
 	{
@@ -681,16 +682,13 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 		bed_iTerm = ((long)bed_PID_Ki * temp_bed_iState) / 256.0;
 		bed_heater_duty += bed_iTerm;
 	}
+	else
+	{
+		temp_bed_iState = 0;
+	}
 	  
-	int prev_bed_error = abs(target_bed_temp - prev_bed_temp);
-	int log3 = 1; // discrete logarithm base 3, plus 1
-	  
-	if(prev_bed_error > 81){ prev_bed_error /= 81.0; log3 += 4; }
-	if(prev_bed_error >  9){ prev_bed_error /=  9.0; log3 += 2; }
-	if(prev_bed_error >  3){ log3 ++; }
-	  
-	bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) / (float)(256.0*log3);
-	bed_heater_duty += bed_dTerm;
+	bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) / 256.0;
+	bed_heater_duty -= bed_dTerm;
 	
 	if (bed_heater_duty < 0)
 	{

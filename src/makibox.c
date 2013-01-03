@@ -236,7 +236,7 @@ void execute_m201(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.2n-VCP / 01.01.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.23o-VCP / 03.01.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -984,7 +984,7 @@ void execute_mcode(struct command *cmd) {
         if (cmd->has_S) target_raw = temp2analogh(target_temp = cmd->S);
 		temp_iState = 0;
         #ifdef WATCHPERIOD
-            if( target_raw > (current_raw + temp2analogh(MIN_TARGET_TEMP_CHANGE)) )
+            if( target_raw > temp2analogh(analog2temp(current_raw) + MIN_TARGET_TEMP_CHANGE) )
             {
                 watchmillis = MAX(1,millis());
                 watch_raw = current_raw;
@@ -1045,7 +1045,7 @@ void execute_mcode(struct command *cmd) {
         if (cmd->has_S) target_raw = temp2analogh(target_temp = cmd->S);
 		temp_iState = 0;
         #ifdef WATCHPERIOD
-            if( target_raw > (current_raw + temp2analogh(MIN_TARGET_TEMP_CHANGE)) )
+            if( target_raw > temp2analogh(analog2temp(current_raw) + MIN_TARGET_TEMP_CHANGE) )
             {
                 watchmillis = MAX(1,millis());
                 watch_raw = current_raw;

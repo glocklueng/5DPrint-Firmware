@@ -293,11 +293,15 @@
 // (default target temperature = 150C)
 #define PID_AUTOTUNE
 
+// If the temperature difference between the target temperature and the current temperature
+// is more then PID_FUNCTIONAL_RANGE then the PID will operate with proportional control only.
+#define PID_FUNCTIONAL_RANGE	10 
+
 //PID Controler Settings
-#define PID_INTEGRAL_DRIVE_MAX 80 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define PID_PGAIN 1600 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
-#define PID_IGAIN 15   //256 is 1.0 
-#define PID_DGAIN 30  //256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+#define PID_INTEGRAL_DRIVE_MAX	80 		// too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
+#define PID_PGAIN 				1600 	//256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define PID_IGAIN 				20   	//256 is 1.0 
+#define PID_DGAIN 				60  	//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 #endif
 
@@ -321,11 +325,15 @@
 #define BED_PIDTEMP 1
 #ifdef BED_PIDTEMP
 
+// If the temperature difference between the target temperature and the current temperature
+// is more then PID_FUNCTIONAL_RANGE then the PID will operate with proportional control only.
+#define BED_PID_FUNCTIONAL_RANGE	30 
+
 //Hot Bed PID Controler Settings
-#define BED_PID_INTEGRAL_DRIVE_MAX 180 // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define BED_PID_PGAIN 20000	//256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
-#define BED_PID_IGAIN 512	//256 is 1.0  
-#define BED_PID_DGAIN 0	//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+#define BED_PID_INTEGRAL_DRIVE_MAX	180 	// too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
+#define BED_PID_PGAIN 				20000	//256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define BED_PID_IGAIN 				512		//256 is 1.0  
+#define BED_PID_DGAIN 				0		//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 // Change this value (range 30-250) to limit the current to the HOT BED
 #define BED_HEATER_CURRENT 250

@@ -592,10 +592,10 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 	int delta_temp = current_temp - prev_temp;
 
 	prev_temp = current_temp;
-	pTerm = ((long)PID_Kp * error) / 256.0;
+	pTerm = ((long)PID_Kp * error) / 256;
 	heater_duty = pTerm;
 
-	if(error < 6)
+	if( abs(error) < PID_FUNCTIONAL_RANGE )
 	{
 		temp_iState += error;
 		if (temp_iState < temp_iState_min)
@@ -608,16 +608,17 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 			temp_iState = temp_iState_max;
 		}
 	
-		iTerm = ((long)PID_Ki * temp_iState) / 256.0;
+		iTerm = ((long)PID_Ki * temp_iState) / 256;
 		heater_duty += iTerm;
+		
+		dTerm = ((long)PID_Kd * delta_temp) / 256;
+		heater_duty -= dTerm;
 	}
 	else
 	{
 		temp_iState = 0;
 	}
 
-	dTerm = ((long)PID_Kd * delta_temp) / 256.0;
-	heater_duty -= dTerm;
 	
 	if (heater_duty < 0)
 	{
@@ -662,10 +663,10 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 	int delta_bed_temp = current_bed_temp - prev_bed_temp;
 	  
 	prev_bed_temp = current_bed_temp;
-	bed_pTerm = ((long)bed_PID_Kp * bed_error) / 256.0;
+	bed_pTerm = ((long)bed_PID_Kp * bed_error) / 256;
 	bed_heater_duty = bed_pTerm;
   
-	if(bed_error < 30)
+	if( abs(bed_error) < BED_PID_FUNCTIONAL_RANGE )
 	{
 		temp_bed_iState += bed_error;
 		
@@ -679,16 +680,17 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 		  temp_bed_iState = temp_bed_iState_max;
 		}
 		  
-		bed_iTerm = ((long)bed_PID_Ki * temp_bed_iState) / 256.0;
+		bed_iTerm = ((long)bed_PID_Ki * temp_bed_iState) / 256;
 		bed_heater_duty += bed_iTerm;
+		
+		bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) / 256;
+		bed_heater_duty -= bed_dTerm;
 	}
 	else
 	{
 		temp_bed_iState = 0;
 	}
 	  
-	bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) / 256.0;
-	bed_heater_duty -= bed_dTerm;
 	
 	if (bed_heater_duty < 0)
 	{

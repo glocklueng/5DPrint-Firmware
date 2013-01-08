@@ -236,7 +236,7 @@ void execute_m201(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.23p-VCP / 04.01.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.23q-VCP / 08.01.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1028,8 +1028,8 @@ void execute_mcode(struct command *cmd) {
           #if TEMP_1_PIN > -1
             serial_send(" B:%d", bedtempC);
           #endif
-			serial_send(" D%d%%", (int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
 		  #ifdef BED_PIDTEMP
+			serial_send(" D%d%%", (int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
 		  #endif
           serial_send("\r\n");
         #else

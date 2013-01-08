@@ -53,6 +53,10 @@
 *		Removed the initial H0 starting value from the P-term calculation.
 *		Reset temp_istate values to zero if outside of I-term control range.
 *		Removed divisions based on error range for the D-term calculation.
+*
+* +		08 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Refactored manage_heater() slightly.
 */
 
 
@@ -401,72 +405,68 @@ void PID_autotune(int PIDAT_test_temp)
  
  void manage_heater()
  {
+  PreemptionFlag |= 0x0008;
+  
   service_TemperatureMonitor();
  
-  if( (millis() - previous_millis_heater) < HEATER_CHECK_INTERVAL )
+  if ( (TEMP_0_PIN > -1) 
+			&& (millis() - previous_millis_heater >= HEATER_CHECK_INTERVAL) )
   {
-    return;
-  }
+	previous_millis_heater = millis();
   
-  PreemptionFlag |= 0x0008;
+	#ifdef HEATER_USES_THERMISTOR
+	current_raw = analogRead(TEMP_0_PIN); 
+	// When using thermistor, when the heater is colder than targer temp, we get a higher analog reading than target, 
+	// this switches it up so that the reading appears lower than target for the control logic.
+	current_raw = 1023 - current_raw;
+	#endif
 
-  previous_millis_heater = millis();
-  
-  #ifdef HEATER_USES_THERMISTOR
-    current_raw = analogRead(TEMP_0_PIN); 
-    // When using thermistor, when the heater is colder than targer temp, we get a higher analog reading than target, 
-    // this switches it up so that the reading appears lower than target for the control logic.
-    current_raw = 1023 - current_raw;
-  #endif
-  
-  //MIN / MAX save to display the jitter of Heaterbarrel
-  if(current_raw > current_raw_maxval)
-    current_raw_maxval = current_raw;
-    
-  if(current_raw < current_raw_minval)
-    current_raw_minval = current_raw;
+	//MIN / MAX save to display the jitter of Heaterbarrel
+	if(current_raw > current_raw_maxval)
+	current_raw_maxval = current_raw;
+
+	if(current_raw < current_raw_minval)
+	current_raw_minval = current_raw;
  
-  #ifdef SMOOTHING
-    if (!nma) nma = SMOOTHFACTOR * current_raw;
-    nma = (nma + current_raw) - ( nma / (float)(SMOOTHFACTOR) );
-    current_raw = nma / (float)(SMOOTHFACTOR);
-  #endif
-  
-  #ifdef WATCHPERIOD
-    if(watchmillis && millis() - watchmillis > WATCHPERIOD)
-    {
-        if(watch_raw >= current_raw)
-        {
-            target_temp = target_raw = 0;
-            WRITE(HEATER_0_PIN,LOW);
+	#ifdef SMOOTHING
+	if (!nma) nma = SMOOTHFACTOR * current_raw;
+	nma = (nma + current_raw) - ( nma / (float)(SMOOTHFACTOR) );
+	current_raw = nma / (float)(SMOOTHFACTOR);
+	#endif
 
-            setHeaterPWMDuty(HEATER_0_PIN, 0);
-        }
-        else
-        {
-            watchmillis = 0;
-        }
-    }
-  #endif
+	#ifdef WATCHPERIOD
+	if(watchmillis && millis() - watchmillis > WATCHPERIOD)
+	{
+		if(watch_raw >= current_raw)
+		{
+			target_temp = target_raw = 0;
+			WRITE(HEATER_0_PIN,LOW);
+
+			setHeaterPWMDuty(HEATER_0_PIN, 0);
+		}
+		else
+		{
+			watchmillis = 0;
+		}
+	}
+	#endif
   
-  //If tmp is lower then MINTEMP stop the Heater
-  //or it os better to deaktivate the uutput PIN or PWM ?
-  #ifdef MINTEMP
+	//If tmp is lower then MINTEMP stop the Heater
+	//or it os better to deaktivate the uutput PIN or PWM ?
+	#ifdef MINTEMP
 	minttemp = temp2analogh(MINTEMP);
-    if(current_raw <= minttemp)
-        target_temp = target_raw = 0;
-  #endif
+	if(current_raw <= minttemp)
+		target_temp = target_raw = 0;
+	#endif
   
-  #ifdef MAXTEMP
+	#ifdef MAXTEMP
 	maxttemp = temp2analogh(MAXTEMP);
-    if(current_raw >= maxttemp)
-    {
-        target_temp = target_raw = 0;
-    }
-  #endif
+	if(current_raw >= maxttemp)
+	{
+		target_temp = target_raw = 0;
+	}
+	#endif
 
-  if (TEMP_0_PIN > -1)
-  {
     if (PIDTEMP)
 	{	  
       service_ExtruderHeaterPIDControl(analog2temp(current_raw), target_temp);
@@ -475,23 +475,15 @@ void PID_autotune(int PIDAT_test_temp)
 	{
       service_ExtruderHeaterSimpleControl(current_raw, target_raw);
 	} 	
-  }		// end if (TEMP_0_PIN > -1)
+  }		// end if ( (TEMP_0_PIN > -1)
+		//	&& (millis() - previous_millis_heater >= HEATER_CHECK_INTERVAL) )
     
-  if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
-    return;
   
-  previous_millis_bed_heater = millis();
-
-  #ifndef TEMP_1_PIN
-    return;
-  #endif
-  
-  if (TEMP_1_PIN == -1)
-  {
-    return;
-  }
-  else
+  if ( (TEMP_1_PIN > -1) 
+			&& (millis() - previous_millis_bed_heater >= BED_CHECK_INTERVAL) )
   {  
+	previous_millis_bed_heater = millis();
+	
 	//If tmp is lower then MINTEMP stop the Heater
 	//or it os better to deaktivate the uutput PIN or PWM ?
 	#ifdef MINTEMP

@@ -359,7 +359,7 @@
 // thermistor has not been installed properly such that the temperature of the 
 // hotend is not being measured corretly - the hotend heater continues 
 // heating until it burns itself out.
-#define WATCHPERIOD 5000 // 3.5 seconds
+#define WATCHPERIOD 5000 // 5 seconds
 
 // Actual temperature must be close to target for this long before M109 returns success
 #define TEMP_RESIDENCY_TIME 	10	// (seconds)

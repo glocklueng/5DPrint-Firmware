@@ -230,7 +230,7 @@ void _reboot_Teensyduino_(void)
 	USBCON = (1<<FRZCLK);
 	delayMicroseconds(15000);
 	disable_peripherals();
-	asm volatile("jmp 0x1FC00");
+	asm volatile("jmp 0");
 	//__builtin_unreachable();  // available in gcc 4.5
 	while (1) ;
 }

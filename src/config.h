@@ -73,6 +73,12 @@
 *		Removed some redundant #defines.
 *		BED_CHECK_INTERVAL reduced to 1000 in order to give slightly better 
 *		temperature control of the hotbed.
+*
+* +		09 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Increased BLOCK_BUFFER_SIZE to 64 in order to test if this will prevent
+*		stops / pauses during some prints - suspect that it may be due to buffer
+*		under run.
 */
 
 #ifndef CONFIGURATION_H
@@ -219,6 +225,7 @@
 #define DEFAULT_MINIMUMFEEDRATE       0.0     // minimum feedrate
 #define DEFAULT_MINTRAVELFEEDRATE     0.0
 
+
 // If defined the movements slow down when the look ahead buffer is only half full
 #define SLOWDOWN
 
@@ -241,15 +248,15 @@
 //    32      0x1F    2304
 //    64      0x3F    4608
 //    128     0x7F    9216
-#define BLOCK_BUFFER_SIZE 32
-#define BLOCK_BUFFER_MASK 0x1F
+#define BLOCK_BUFFER_SIZE 64
+#define BLOCK_BUFFER_MASK 0x3F
 
 //-----------------------------------------------------------------------
 //// SETTINGS FOR ARC FUNCTION (Command G2/G2)
 //-----------------------------------------------------------------------
 
 // Arc interpretation settings:
-//Step to split a cirrcle in small Lines 
+//Step to split a circle in small Lines 
 #define MM_PER_ARC_SEGMENT 1
 //After this count of steps a new SIN / COS caluclation is startet to correct the circle interpolation
 #define N_ARC_CORRECTION 25

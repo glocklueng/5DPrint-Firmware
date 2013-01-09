@@ -236,7 +236,7 @@ void execute_m201(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.23q-VCP / 08.01.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.23r-VCP / 08.01.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1290,7 +1290,7 @@ void execute_mcode(struct command *cmd) {
       case 205: //M205 advanced settings:  minimum travel speed S=while printing T=travel only,  B=minimum segment time X= maximum xy jerk, Z=maximum Z jerk, E= max E jerk
         if (cmd->has_S) minimumfeedrate = cmd->S;
         if (cmd->has_T) mintravelfeedrate = cmd->T;
-      //if (cmd->has_B) minsegmenttime = cmd->B;
+		//if (cmd->has_B) minsegmenttime = cmd->B;
         if (cmd->has_X) max_xy_jerk = cmd->X;
         if (cmd->has_Z) max_z_jerk = cmd->Z;
         if (cmd->has_E) max_e_jerk = cmd->E;

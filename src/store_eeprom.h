@@ -41,6 +41,10 @@ extern float max_xy_jerk;
 extern float max_z_jerk;
 extern float max_e_jerk;
 
+#ifdef SLOWDOWN
+	extern unsigned long minsegmenttime;
+#endif
+
 #define axis_steps_per_unit_address (EEPROM_OFFSET + 4*sizeof(char))
 #define max_feedrate_address (axis_steps_per_unit_address + 4*sizeof(float))
 #define max_acceleration_units_per_sq_second_address (max_feedrate_address + 4*sizeof(float))

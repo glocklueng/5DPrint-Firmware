@@ -246,7 +246,7 @@ void execute_m201(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.23t-VCP / 15.01.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.23u-VCP / 15.01.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1172,7 +1172,7 @@ void execute_mcode(struct command *cmd) {
 			break;
 		  }
 		  
-		  if ( (target_temp == 0) || (target_raw == 0) )
+		  if (target_bed_raw == 0)
 		  {
 			serial_send("\r\n*** Hot-bed heater does not appear to be responding.\r\n");
 			serial_send("*** Check hot-bed and hot-bed thermistor connections!!!\r\n");

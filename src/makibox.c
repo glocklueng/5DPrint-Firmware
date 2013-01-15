@@ -101,6 +101,11 @@
 *											www.xtrontec.com
 *		M105 command edited to provide bed heater duty information. Duty cycles
 *		now reported as a percentage.
+*
+* +		15 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Edit M109 and M190 wait for temperature commands so that the text format
+*		is compatile with Pronterface's graphing feature.
 */
 
 
@@ -236,7 +241,7 @@ void execute_m201(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.23r-VCP / 08.01.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.23s-VCP / 15.01.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1062,6 +1067,11 @@ void execute_mcode(struct command *cmd) {
 		int target_raw_low = temp2analogh(target_temp - TEMP_HYSTERESIS);
 		int target_raw_high = temp2analogh(target_temp + TEMP_HYSTERESIS);
 		
+		serial_send("\r\nTarget Temperature: %ddegC", target_temp);
+		serial_send("\r\nWaiting for extruder heater to reach target temperature...\r\n");
+		
+		long hotend_timeout = millis();
+		
       #ifdef TEMP_RESIDENCY_TIME
         long residencyStart;
         residencyStart = -1;
@@ -1075,13 +1085,18 @@ void execute_mcode(struct command *cmd) {
       #endif
           if( (millis() - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up/cooling down
           {
-            serial_send("T%d\r\n", analog2temp(current_raw));
+			serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
+							(int)( (heater_duty * 100) / (float)(HEATER_CURRENT)),
+							analog2temp(current_bed_raw),
+							(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
+            
             codenum = millis();
           }
           manage_heater();
           #if (MINIMUM_FAN_START_SPEED > 0)
             manage_fan_start_speed();
           #endif
+		  
           #ifdef TEMP_RESIDENCY_TIME
             /* start/restart the TEMP_RESIDENCY_TIME timer whenever we reach target temp for the first time
                or when current temp falls outside the hysteresis after target temp was reached */
@@ -1090,6 +1105,14 @@ void execute_mcode(struct command *cmd) {
               residencyStart = millis();
             }
           #endif
+		  
+		  // Timeout if target if not reach after HOTEND_HEATUP_TIMEOUT 
+		  // milli-seconds has passed. Exit loop if timeout reached.
+		  if ( (millis() - hotend_timeout) > HOTEND_HEATUP_TIMEOUT )
+		  {
+			serial_send("\r\n*** Hot-end heater took too long to reach target. Timed Out!\r\n");
+			break;
+		  }
 	    }
       break;
 	  
@@ -1099,19 +1122,36 @@ void execute_mcode(struct command *cmd) {
 #endif
       #if TEMP_1_PIN > -1
         if (cmd->has_S) target_bed_raw = temp2analogBed(cmd->S);
+		
+		serial_send("\r\nTarget Temperature: %ddegC", (int)cmd->S);
+		serial_send("\r\nWaiting for hot-bed heater to reach target temperature...\r\n");
+		
+		long bed_timeout = millis();
+		
         codenum = millis(); 
         while(current_bed_raw < target_bed_raw) 
         {
           if( (millis()-codenum) > 1000 ) //Print Temp Reading every 1 second while heating up.
           {
-            hotendtC=analog2temp(current_raw);
-            serial_send("T%d B%d\r\n", hotendtC, analog2tempBed(current_bed_raw));
+			serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
+							(int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ),
+							analog2temp(current_bed_raw),
+							(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
+			
             codenum = millis(); 
           }
           manage_heater();
           #if (MINIMUM_FAN_START_SPEED > 0)
             manage_fan_start_speed();
           #endif
+		  
+		  // Timeout if target if not reach after HOTEND_HEATUP_TIMEOUT 
+		  // milli-seconds has passed. Exit loop if timeout reached.
+		  if ( (millis() - bed_timeout) > BED_HEATUP_TIMEOUT )
+		  {
+			serial_send("\r\n*** Hot bed heater took too long to reach target. Timed Out!\r\n");
+			break;
+		  }
         }
       #endif
       break;

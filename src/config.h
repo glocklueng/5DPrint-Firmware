@@ -79,6 +79,14 @@
 *		Increased BLOCK_BUFFER_SIZE to 64 in order to test if this will prevent
 *		stops / pauses during some prints - suspect that it may be due to buffer
 *		under run.
+*
+* +		15 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Increased DROP_SEGMENTS to 50. _AXIS_STEP_PER_UNIT changed to 240 for 
+*		the new extruder drive - needs to be double checked with final drive 
+*		design.
+*
+*		Added BED_HEATUP_TIMEOUT and HOTEND_HEATUP_TIMEOUT.
 */
 
 #ifndef CONFIGURATION_H
@@ -106,7 +114,7 @@
 // Makiox A6 standard stepper motors have 1.8 deg/step. However with micro-
 // stepping feature 1/16th step is achieved.
 // Therefore 1mm movement in x, y, z = (200 / 8) * 16 = 400 micro-steps.
-#define _AXIS_STEP_PER_UNIT {400, 400, 400, 250}
+#define _AXIS_STEP_PER_UNIT {400, 400, 400, 240}
 
 
 //// Endstop Settings
@@ -208,11 +216,11 @@
 //// Acceleration settings
 //-----------------------------------------------------------------------
 // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
-#define _ACCELERATION 1000         // Axis Normal acceleration mm/s^2
+#define _ACCELERATION	1000       // Axis Normal acceleration mm/s^2
 #define _RETRACT_ACCELERATION 2000 // Extruder Normal acceleration mm/s^2
-#define _MAX_XY_JERK 20.0
-#define _MAX_Z_JERK 0.4
-#define _MAX_E_JERK 5.0    // (mm/sec)
+#define _MAX_XY_JERK	20.0
+#define _MAX_Z_JERK		0.4
+#define _MAX_E_JERK		5.0    // (mm/sec)
 // X, Y, Z and E max acceleration in mm/s^2 for printing moves or retracts
 #define _MAX_ACCELERATION_UNITS_PER_SQ_SECOND {5000,5000,50,5000}    
 
@@ -232,7 +240,7 @@
 
 // everything with less than this number of steps will be ignored as move and
 // joined with the next movement
-#define DROP_SEGMENTS 5
+#define DROP_SEGMENTS 50
 
 
 //-----------------------------------------------------------------------
@@ -257,9 +265,9 @@
 
 // Arc interpretation settings:
 //Step to split a circle in small Lines 
-#define MM_PER_ARC_SEGMENT 1
-//After this count of steps a new SIN / COS caluclation is startet to correct the circle interpolation
-#define N_ARC_CORRECTION 25
+#define MM_PER_ARC_SEGMENT	1
+//After this count of steps a new SIN / COS calculation is started to correct the circle interpolation
+#define N_ARC_CORRECTION	25
 
 
 
@@ -270,25 +278,25 @@
 //Minimum start speed for FAN when the last speed was zero
 //Set to 0 to deaktivate
 //If value is set the fan will drive with this minimum speed for MINIMUM_FAN_START_TIME
-#define MINIMUM_FAN_START_SPEED  0
+#define MINIMUM_FAN_START_SPEED	0
 
 //This is the time how long the minimum FAN speed is set
-#define MINIMUM_FAN_START_TIME  6000    //6sec
+#define MINIMUM_FAN_START_TIME	6000    //6sec
 
 //-----------------------------------------------------------------------
 //// HEATERCONTROL AND PID PARAMETERS
 //-----------------------------------------------------------------------
 
-//Testfunction to adjust the Hotend temperatur in case of Printingspeed
+//Testfunction to adjust the Hotend temperature in case of Printingspeed
 //If the Printer print slow the Temp is going to AUTO_TEMP_MIN
 //At the moment this Value dont change the targettemp from the Hotend
 //The result of this function is only send with the Temperaturerequest to the host
 //#define AUTOTEMP 
 #ifdef AUTOTEMP
-    #define AUTO_TEMP_MAX 300
-    #define AUTO_TEMP_MIN 205
-    #define AUTO_TEMP_FACTOR 0.025
-    #define AUTOTEMP_OLDWEIGHT 0.98
+    #define AUTO_TEMP_MAX		300
+    #define AUTO_TEMP_MIN		205
+    #define AUTO_TEMP_FACTOR	0.025
+    #define AUTOTEMP_OLDWEIGHT	0.98
 #endif
 
 //// PID settings:
@@ -315,9 +323,11 @@
 // Change this value (range 30-250) to limit the current to the nozzle
 #define HEATER_CURRENT 250
 
+#define HOTEND_HEATUP_TIMEOUT	600000	// ms
+
 // How often should the heater check for new temp readings, in milliseconds
-#define HEATER_CHECK_INTERVAL 100
-#define BED_CHECK_INTERVAL 1000
+#define HEATER_CHECK_INTERVAL	100
+#define BED_CHECK_INTERVAL		1000
 
 // Comment the following line to enable heat management during acceleration
 #define DISABLE_CHECK_DURING_ACC
@@ -344,6 +354,8 @@
 
 // Change this value (range 30-250) to limit the current to the HOT BED
 #define BED_HEATER_CURRENT 250
+
+#define BED_HEATUP_TIMEOUT 3600000			// ms (3600000ms = 1 hour)
 
 #endif // #ifdef BED_PIDTEMP
 

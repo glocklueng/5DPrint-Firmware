@@ -74,13 +74,13 @@ void EEPROM_StoreSettings()
 
   //PID Settings
   #ifdef PIDTEMP
-   EEPROM_write_setting(Kp_address, PID_Kp);     //Kp
-   EEPROM_write_setting(Ki_address, PID_Ki);     //Ki
-   EEPROM_write_setting(Kd_address, PID_Kd);     //Kd
+   EEPROM_write_setting(Kp_address, PID_Kp);    //Kp
+   EEPROM_write_setting(Ki_address, PID_Ki);   	//Ki
+   EEPROM_write_setting(Kd_address, PID_Kd);	//Kd
   #else
-   EEPROM_write_setting(Kp_address, 2048);     //Kp
-   EEPROM_write_setting(Ki_address, 32);     //Ki
-   EEPROM_write_setting(Kd_address, 2048);     //Kd
+   EEPROM_write_setting(Kp_address, 2048);     	//Kp
+   EEPROM_write_setting(Ki_address, 32);     	//Ki
+   EEPROM_write_setting(Kd_address, 2048);     	//Kd
   #endif
   
 

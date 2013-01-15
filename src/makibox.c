@@ -106,6 +106,11 @@
 *											www.xtrontec.com
 *		Edit M109 and M190 wait for temperature commands so that the text format
 *		is compatile with Pronterface's graphing feature.
+*
+*		M109 and M190 wait for target temperature commands. Added check and 
+*		feedback text for situation where the target temperature has been reset 
+*		to zero. This may happen if the thermistor or heater connections are 
+*		disconnected.
 */
 
 
@@ -241,7 +246,7 @@ void execute_m201(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.23s-VCP / 15.01.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.23t-VCP / 15.01.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1106,11 +1111,25 @@ void execute_mcode(struct command *cmd) {
             }
           #endif
 		  
-		  // Timeout if target if not reach after HOTEND_HEATUP_TIMEOUT 
+		  // Timeout if target not reached after HOTEND_HEATUP_TIMEOUT 
 		  // milli-seconds has passed. Exit loop if timeout reached.
 		  if ( (millis() - hotend_timeout) > HOTEND_HEATUP_TIMEOUT )
 		  {
 			serial_send("\r\n*** Hot-end heater took too long to reach target. Timed Out!\r\n");
+			break;
+		  }
+		  
+		  if ( (target_temp == 0) || (target_raw == 0) )
+		  {
+			serial_send("\r\n*** Hot-end heater does not appear to be responding.\r\n");
+			serial_send("*** STOP PRINT!!! - Power Off Printer - Disconnect and close host software.\r\n");
+			serial_send("*** Check hot-end and hot-end thermistor connections!!!\r\n");
+			
+			serial_send("\r\n*** Firmware will continue operation after 30 seconds...\r\n");
+			
+			delay(30000);
+			
+			serial_send("*** Continuing...\r\n");
 			break;
 		  }
 	    }
@@ -1145,11 +1164,18 @@ void execute_mcode(struct command *cmd) {
             manage_fan_start_speed();
           #endif
 		  
-		  // Timeout if target if not reach after HOTEND_HEATUP_TIMEOUT 
+		  // Timeout if target not reached after HOTEND_HEATUP_TIMEOUT 
 		  // milli-seconds has passed. Exit loop if timeout reached.
 		  if ( (millis() - bed_timeout) > BED_HEATUP_TIMEOUT )
 		  {
 			serial_send("\r\n*** Hot bed heater took too long to reach target. Timed Out!\r\n");
+			break;
+		  }
+		  
+		  if ( (target_temp == 0) || (target_raw == 0) )
+		  {
+			serial_send("\r\n*** Hot-bed heater does not appear to be responding.\r\n");
+			serial_send("*** Check hot-bed and hot-bed thermistor connections!!!\r\n");
 			break;
 		  }
         }

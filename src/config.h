@@ -87,6 +87,9 @@
 *		design.
 *
 *		Added BED_HEATUP_TIMEOUT and HOTEND_HEATUP_TIMEOUT.
+*
+*		Removed thermistor selection defines (THERMISTORHEATER and 
+*		THERMISTORBED) from config.h since they are not used anywhere.
 */
 
 #ifndef CONFIGURATION_H
@@ -95,18 +98,7 @@
 // Define DEBUG to > -1 to enable CPU loading calculations
 #define DEBUG 1
 
-// BASIC SETTINGS: select thermistor type, axis scaling, and endstop configuration
-
-//// Thermistor settings:
-// 1 is 100k thermistor
-// 2 is 200k thermistor
-// 3 is mendel-parts thermistor
-// 4 is 10k thermistor
-// 5 is ParCan supplied 104GT-2 100K
-// 6 is EPCOS 100k
-// 7 is 100k Honeywell thermistor 135-104LAG-J01
-#define THERMISTORHEATER 1
-#define THERMISTORBED 1
+// BASIC SETTINGS: select axis scaling, and endstop configuration
 
 //// Calibration variables
 // X, Y, Z, E steps per unit
@@ -192,7 +184,7 @@
 
 
 //-----------------------------------------------------------------------
-//Max Length for Prusa Mendel, check the ways of your axis and set this Values
+// Max Lengths
 //-----------------------------------------------------------------------
 #define X_MAX_LENGTH 115
 #define Y_MAX_LENGTH 165

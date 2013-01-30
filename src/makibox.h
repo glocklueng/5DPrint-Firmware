@@ -23,6 +23,8 @@
 #define Z_AXIS 2
 #define E_AXIS 3
 
+extern unsigned char reset_flags;
+
 void manage_inactivity(unsigned char debug);
 
 void enable_x();

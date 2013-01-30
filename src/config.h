@@ -90,6 +90,12 @@
 *
 *		Removed thermistor selection defines (THERMISTORHEATER and 
 *		THERMISTORBED) from config.h since they are not used anywhere.
+*
+* +		30 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		INVERT_E_DIR is set to 1 currently for use in the Alpha boxes. For the 
+*		Beta boxes this needs to be changed to 0. _AXIS_STEP_PER_UNIT extruder 
+*		config set changed to 200.
 */
 
 #ifndef CONFIGURATION_H
@@ -106,7 +112,7 @@
 // Makiox A6 standard stepper motors have 1.8 deg/step. However with micro-
 // stepping feature 1/16th step is achieved.
 // Therefore 1mm movement in x, y, z = (200 / 8) * 16 = 400 micro-steps.
-#define _AXIS_STEP_PER_UNIT {400, 400, 400, 240}
+#define _AXIS_STEP_PER_UNIT {400, 400, 400, 200}
 
 
 //// Endstop Settings

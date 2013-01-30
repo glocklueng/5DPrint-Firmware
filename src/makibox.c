@@ -111,6 +111,21 @@
 *		feedback text for situation where the target temperature has been reset 
 *		to zero. This may happen if the thermistor or heater connections are 
 *		disconnected.
+*
+* +		25 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added M112 - Emergency Stop - disables all motors and heaters and then
+*		restarts the firmware (keeps USB connection active). Emergency stop 
+*		button (sends M112) is availale in the Repetier Host GUI.
+*
+* +		30 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added M112 - Emergency Stop - disables all motors and heaters and then 
+*		restarts the firmware (keeps USB connection active). Emergency stop 
+*		button (sends M112) is availale in the Repetier Host GUI.
+*		Enable the watchdog timer. Set to 4 seconds. This is to cover situations
+*		where the firmware hangs for some unexpected reason.
+*		Added M609 - Show the reset flags (in hex format) from the last reset.
 */
 
 
@@ -198,6 +213,7 @@ void execute_m201(struct command *cmd);
 // M106 - Fan on
 // M107 - Fan off
 // M109 - Wait for extruder current temp to reach target temp.
+// M112 - Emergency Stop
 // M114 - Display current position
 
 //Custom M Codes
@@ -243,10 +259,11 @@ void execute_m201(struct command *cmd);
 // M606 - Show CPU loading information
 // M607 - Reset Peak and Average CPU load values
 // M608 - Show Firmware Version Info
+// M609 - Show last reset flags
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.23u-VCP / 15.01.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.23v-VCP / 25.01.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1505,6 +1522,39 @@ void execute_mcode(struct command *cmd) {
 			}
 	  break;
 	  
+	  case 112:	// M112 - Emergency Stop
+			kill();
+			serial_send("\r\n-- Emergency Stop!\r\n");
+			serial_send("-- Motors off. Heaters Off.\r\n");
+			_restart_Teensyduino_();
+	  break;
+	  
+	  case 609: // M609 - Show last reset flags
+			serial_send("\r\nReset Flags: 0x%X ", reset_flags);
+			serial_send("( ");
+			if ( reset_flags & (1 << JTRF) )
+			{
+				serial_send("JTAG ");
+			}
+			if ( reset_flags & (1 << WDRF) )
+			{
+				serial_send("WDT ");
+			}
+			if ( reset_flags & (1 << BORF) )
+			{
+				serial_send("BOR ");
+			}
+			if ( reset_flags & (1 << EXTRF) )
+			{
+				serial_send("EXT ");
+			}
+			if ( reset_flags & (1 << PORF) )
+			{
+				serial_send("POR ");
+			}
+			serial_send(")\r\n");
+	  break;
+	  
       default:
             serial_send("-- Unknown code M%d.\r\n", cmd->code);
       break;
@@ -1677,12 +1727,18 @@ FORCE_INLINE void kill()
 {
   #if TEMP_0_PIN > -1
     target_raw=0;
+	target_temp=0;
+	setHeaterPWMDuty(HEATER_0_PIN, 0);
     WRITE(HEATER_0_PIN,LOW);
   #endif
   
   #if TEMP_1_PIN > -1
     target_bed_raw=0;
-    if(HEATER_1_PIN > -1) WRITE(HEATER_1_PIN,LOW);
+    if(HEATER_1_PIN > -1)
+	{
+		setHeaterPWMDuty(HEATER_1_PIN, 0);
+		WRITE(HEATER_1_PIN,LOW);
+	}
   #endif
 
   disable_x();

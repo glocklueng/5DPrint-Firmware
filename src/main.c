@@ -1,5 +1,6 @@
 
 #include <avr/interrupt.h>
+#include <avr/wdt.h>
 #include "pins_teensy.h"
 #include "config.h"
 
@@ -24,6 +25,7 @@ uint32_t bckgnd_task_time = 0;
 unsigned char cpu_loading = 0, peak_cpu_load = 0, average_cpu_load = 0;
 uint32_t previous_millis_cpu_util = 0;
 uint16_t PreemptionFlag = 0;
+unsigned char reset_flags;
 
 void board_init(void)
 {
@@ -43,6 +45,14 @@ void board_init(void)
 	ADCSRA = (1<<ADEN) | (ADC_PRESCALER + ADC_PRESCALE_ADJUST);
 	ADCSRB = DEFAULT_ADCSRB;
 	DIDR0 = 0;
+	
+	// Save the reset flags and then clear MCUSR register
+	reset_flags = MCUSR;
+	MCUSR = 0;
+	
+	// Enable the watchdog timer
+	wdt_enable(WDTO_4S);
+	
 	sei();
 }
 
@@ -55,6 +65,10 @@ int main(void)
 	setup();
     
 	while (1) {
+	
+		// Reset the watchdog timer
+		wdt_reset();
+		
 		if (DEBUG > -1)
 		{
 			CPU_Util_Calc();

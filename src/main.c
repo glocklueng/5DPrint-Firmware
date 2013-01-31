@@ -50,7 +50,7 @@ void board_init(void)
 	reset_flags = MCUSR;
 	MCUSR = 0;
 	
-	// Disale the watchdog timer
+	// Disable the watchdog timer
 	wdt_disable();
 	
 	sei();

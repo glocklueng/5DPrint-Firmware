@@ -126,6 +126,12 @@
 *		Enable the watchdog timer. Set to 4 seconds. This is to cover situations
 *		where the firmware hangs for some unexpected reason.
 *		Added M609 - Show the reset flags (in hex format) from the last reset.
+*
+* +		31 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Disabled watchdog timer as this was being triggered by some of the 
+*		longer operations such as the homing routine. Perhaps consider 
+*		implementing a workable system watchdog again later if time allows.
 */
 
 
@@ -263,7 +269,7 @@ void execute_m201(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.23v-VCP / 25.01.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.23w-VCP / 31.01.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;

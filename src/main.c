@@ -50,8 +50,8 @@ void board_init(void)
 	reset_flags = MCUSR;
 	MCUSR = 0;
 	
-	// Enable the watchdog timer
-	wdt_enable(WDTO_4S);
+	// Disale the watchdog timer
+	wdt_disable();
 	
 	sei();
 }
@@ -65,10 +65,6 @@ int main(void)
 	setup();
     
 	while (1) {
-	
-		// Reset the watchdog timer
-		wdt_reset();
-		
 		if (DEBUG > -1)
 		{
 			CPU_Util_Calc();

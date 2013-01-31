@@ -26,11 +26,7 @@
  * +		16 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
  *												www.xtrontec.com
  *			Removed analogWrite() function as it is no longer used anywhere.
- *
- * +		16 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
- *												www.xtrontec.com
- *			Watchdog timer reset moved to Timer0 ISR.
- 
+ * 
  */
 
 

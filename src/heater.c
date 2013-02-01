@@ -404,14 +404,14 @@ void PID_autotune(int PIDAT_test_temp)
  }
  
  void manage_heater()
- {
-  PreemptionFlag |= 0x0008;
-  
+ { 
   service_TemperatureMonitor();
  
   if ( (TEMP_0_PIN > -1) 
 			&& (millis() - previous_millis_heater >= HEATER_CHECK_INTERVAL) )
   {
+	PreemptionFlag |= 0x0008;
+	
 	previous_millis_heater = millis();
   
 	#ifdef HEATER_USES_THERMISTOR
@@ -482,6 +482,8 @@ void PID_autotune(int PIDAT_test_temp)
   if ( (TEMP_1_PIN > -1) 
 			&& (millis() - previous_millis_bed_heater >= BED_CHECK_INTERVAL) )
   {  
+	PreemptionFlag |= 0x0010;
+	
 	previous_millis_bed_heater = millis();
 	
 	//If tmp is lower then MINTEMP stop the Heater

@@ -17,7 +17,7 @@ void CPU_Util_Calc(void);
 #define ADC_PRESCALE_ADJUST (-1)
 #define DEFAULT_ADCSRB 0x80  // ADHSM  (high speed)
 
-#define CPU_UTIL_CHECK_PERIOD	25 // ms
+#define CPU_UTIL_CHECK_PERIOD	25L // ms
 
 uint32_t bckgnd_loop_count = 0;
 uint32_t previous_bckgnd_task_start_time = 0;
@@ -131,12 +131,12 @@ void CPU_Util_Calc(void)
 	{
 		idle_time = (bckgnd_loop_count) * bckgnd_task_time;
 		
-		if ( idle_time > (CPU_UTIL_CHECK_PERIOD * 1000) )
+		if ( idle_time > (CPU_UTIL_CHECK_PERIOD * 1000L) )
 		{
-			idle_time = CPU_UTIL_CHECK_PERIOD * 1000;
+			idle_time = CPU_UTIL_CHECK_PERIOD * 1000L;
 		}
-		work_time = (CPU_UTIL_CHECK_PERIOD * 1000) - idle_time;	// us
-		total_cpu_time = CPU_UTIL_CHECK_PERIOD * 1000; 	// us
+		work_time = (CPU_UTIL_CHECK_PERIOD * 1000L) - idle_time;	// us
+		total_cpu_time = CPU_UTIL_CHECK_PERIOD * 1000L; 	// us
 		cpu_loading = (unsigned char)( ((float)(work_time) / (float)(total_cpu_time)) * 100 ); // %
 		
 		if (cpu_loading > peak_cpu_load)

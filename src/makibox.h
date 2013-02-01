@@ -1,3 +1,6 @@
+#ifndef _MAKIBOX_H_
+#define _MAKIBOX_H_
+
 // A bug in avr-gcc causes spurious warnings when printing a float value:
 //   warning: format ‘%f’ expects type ‘double’, but argument 2 has type ‘float’
 // (This is because the '%f' format is actually defined to take a double.)
@@ -35,3 +38,6 @@ void disable_x();
 void disable_y();
 void disable_z();
 void disable_e();
+
+
+#endif // _MAKIBOX_H_

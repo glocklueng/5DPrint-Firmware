@@ -96,6 +96,14 @@
 *		INVERT_E_DIR is set to 1 currently for use in the Alpha boxes. For the 
 *		Beta boxes this needs to be changed to 0. _AXIS_STEP_PER_UNIT extruder 
 *		config set changed to 200.
+*
+* +		05 FEB 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Slight tweek to the hot end PID parameters to tune for the newer hot 
+*		end design.
+*
+*		INVERT_E_DIR now set to 0. The extruder drive on the alpha unit has 
+*		been modified to be in the same orientation as the beta units.
 */
 
 #ifndef CONFIGURATION_H
@@ -171,7 +179,7 @@
 #define INVERT_X_DIR 0
 #define INVERT_Y_DIR 0
 #define INVERT_Z_DIR 0
-#define INVERT_E_DIR 1
+#define INVERT_E_DIR 0
 
 //-----------------------------------------------------------------------
 //// ENDSTOP SETTINGS:
@@ -312,7 +320,7 @@
 
 //PID Controler Settings
 #define PID_INTEGRAL_DRIVE_MAX	80 		// too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define PID_PGAIN 				1600 	//256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define PID_PGAIN 				1800 	//256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
 #define PID_IGAIN 				20   	//256 is 1.0 
 #define PID_DGAIN 				60  	//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 

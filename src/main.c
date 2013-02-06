@@ -32,15 +32,16 @@ void board_init(void)
 	cli();
 	CLKPR = 0x80;
 	CLKPR = CPU_PRESCALER;
+	
 	// timer 0, fast pwm mode
 	TCCR0A = (1<<WGM01) | (1<<WGM00);
 	TCCR0B = (1<<CS01) | (1<<CS00);		// div 64 prescaler
 	TIMSK0 |= (1<<TOIE0);
-	// timer 1, 8 bit phase correct pwm
-	TCCR1A = (1<<WGM10);
-	TCCR1B = (1<<CS11);			// div 8 prescaler
-	// timer 2 -> not used;
-	// timer 3 -> initialised later in setup();
+	
+	// timer 1 -> Stepper Motors Drive and Heater Control (Initialised later in setup();
+	// timer 2 -> Not used;
+	// timer 3 -> HW PWM for Heaters and Fan - initialised later in setup();
+	
 	// ADC
 	ADCSRA = (1<<ADEN) | (ADC_PRESCALER + ADC_PRESCALE_ADJUST);
 	ADCSRB = DEFAULT_ADCSRB;

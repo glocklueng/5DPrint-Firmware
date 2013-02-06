@@ -57,6 +57,17 @@
 * +		08 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
 *											www.xtrontec.com
 *		Refactored manage_heater() slightly.
+*
+* +		06 FEB 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		now using Timer 1C to regularly service the heater control for the hot 
+*		end and hot bed. This is better than the previous case where the 
+*		manage_heater() function had to be called in various places within the 
+*		main code. This potentially had the  situations where the heater 
+*		control would be held off or not serviced. Now with the heater control 
+*		provided via an ISR there is less chance of the heaters not being 
+*		serviced properly due to coding errors causing accidental delay or 
+*		infinite loop elsewhere.
 */
 
 
@@ -162,8 +173,14 @@ void service_BedHeaterSimpleControl(int current_bed_raw, int target_bed_raw);
 
 
 //------------------------------------------------------------------------
-// Setup Timer and PWM for Heater and FAN
+// Setup Timers and PWM for Heater and FAN
 //------------------------------------------------------------------------
+
+ISR(TIMER1_COMPC_vect)
+{
+	manage_heater();
+}
+
 
 void init_Timer3_HW_pwm(void)
 {
@@ -186,7 +203,7 @@ void init_Timer3_HW_pwm(void)
 									// (no need for an ISR)
 	// HOT BED HEATER PWM
 	OCR3C = 0;						// Start with 0% duty
-	TCCR3A |= (1 << COM3C1);    	// Compare Output Mode for channel B
+	TCCR3A |= (1 << COM3C1);    	// Compare Output Mode for channel C
 	TIMSK3 &= ~(1 << OCIE3C);    	// Disable Timer 3C output compare match interrupt
 									// (no need for an ISR)
   

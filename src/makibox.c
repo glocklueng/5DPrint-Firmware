@@ -132,6 +132,11 @@
 *		Disabled watchdog timer as this was being triggered by some of the 
 *		longer operations such as the homing routine. Perhaps consider 
 *		implementing a workable system watchdog again later if time allows.
+*
+* +		06 FEB 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Removed calls to manage_heater(). This is now called regularly via an 
+*		ISR triggered by timer 1C.
 */
 
 
@@ -269,7 +274,7 @@ void execute_m201(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.23y-VCP / 05.02.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.23z-VCP / 06.02.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -532,7 +537,7 @@ void setup()
     SET_OUTPUT(E_STEP_PIN);
   #endif  
  
-  // Initialize Timer 3 / PWM for Extruder Heater, Hotbed Heater, and Fan
+  // Initialise Timer 3 / PWM for Extruder Heater, Hotbed Heater, and Fan
   init_Timer3_HW_pwm();
   
   serial_send("// Planner Init\r\n");
@@ -917,9 +922,6 @@ void execute_gcode(struct command *cmd)
   switch(cmd->code) {
       case 0: // G0 -> G1
       case 1: // G1
-        #if (defined DISABLE_CHECK_DURING_ACC) || (defined DISABLE_CHECK_DURING_MOVE) || (defined DISABLE_CHECK_DURING_TRAVEL)
-          manage_heater();
-        #endif
         get_coordinates(cmd); // For X Y Z E F
         prepare_move();
         previous_millis_cmd = millis();
@@ -944,7 +946,6 @@ void execute_gcode(struct command *cmd)
         codenum += millis();  // keep track of when we started waiting
         st_synchronize();  // wait for all movements to finish
         while(millis()  < codenum ){
-          manage_heater();
         }
         break;
       case 28: //G28 Home all Axis one at a time
@@ -1095,8 +1096,8 @@ void execute_mcode(struct command *cmd) {
 		int target_raw_low = temp2analogh(target_temp - TEMP_HYSTERESIS);
 		int target_raw_high = temp2analogh(target_temp + TEMP_HYSTERESIS);
 		
-		serial_send("\r\nTarget Temperature: %ddegC", target_temp);
-		serial_send("\r\nWaiting for extruder heater to reach target temperature...\r\n");
+		serial_send("\r\n// Target Temperature: %ddegC", target_temp);
+		serial_send("\r\n// Waiting for extruder heater to reach target temperature...\r\n");
 		
 		long hotend_timeout = millis();
 		
@@ -1120,7 +1121,6 @@ void execute_mcode(struct command *cmd) {
             
             codenum = millis();
           }
-          manage_heater();
           #if (MINIMUM_FAN_START_SPEED > 0)
             manage_fan_start_speed();
           #endif
@@ -1137,21 +1137,21 @@ void execute_mcode(struct command *cmd) {
 		  // milli-seconds has passed. Exit loop if timeout reached.
 		  if ( (millis() - hotend_timeout) > HOTEND_HEATUP_TIMEOUT )
 		  {
-			serial_send("\r\n*** Hot-end heater took too long to reach target. Timed Out!\r\n");
+			serial_send("\r\n// *** Hot-end heater took too long to reach target. Timed Out!\r\n");
 			break;
 		  }
 		  
 		  if ( (target_temp == 0) || (target_raw == 0) )
 		  {
-			serial_send("\r\n*** Hot-end heater does not appear to be responding.\r\n");
-			serial_send("*** STOP PRINT!!! - Power Off Printer - Disconnect and close host software.\r\n");
-			serial_send("*** Check hot-end and hot-end thermistor connections!!!\r\n");
+			serial_send("\r\n// *** Hot-end heater does not appear to be responding.\r\n");
+			serial_send("// *** STOP PRINT!!! - Power Off Printer - Disconnect and close host software.\r\n");
+			serial_send("//*** Check hot-end and hot-end thermistor connections!!!\r\n");
 			
-			serial_send("\r\n*** Firmware will continue operation after 30 seconds...\r\n");
+			serial_send("\r\n// *** Firmware will continue operation after 30 seconds...\r\n");
 			
 			delay(30000);
 			
-			serial_send("*** Continuing...\r\n");
+			serial_send("// *** Continuing...\r\n");
 			break;
 		  }
 	    }
@@ -1164,8 +1164,8 @@ void execute_mcode(struct command *cmd) {
       #if TEMP_1_PIN > -1
         if (cmd->has_S) target_bed_raw = temp2analogBed(cmd->S);
 		
-		serial_send("\r\nTarget Temperature: %ddegC", (int)cmd->S);
-		serial_send("\r\nWaiting for hot-bed heater to reach target temperature...\r\n");
+		serial_send("\r\n// Target Temperature: %ddegC", (int)cmd->S);
+		serial_send("\r\n// Waiting for hot-bed heater to reach target temperature...\r\n");
 		
 		long bed_timeout = millis();
 		
@@ -1181,7 +1181,6 @@ void execute_mcode(struct command *cmd) {
 			
             codenum = millis(); 
           }
-          manage_heater();
           #if (MINIMUM_FAN_START_SPEED > 0)
             manage_fan_start_speed();
           #endif
@@ -1190,14 +1189,14 @@ void execute_mcode(struct command *cmd) {
 		  // milli-seconds has passed. Exit loop if timeout reached.
 		  if ( (millis() - bed_timeout) > BED_HEATUP_TIMEOUT )
 		  {
-			serial_send("\r\n*** Hot bed heater took too long to reach target. Timed Out!\r\n");
+			serial_send("\r\n// *** Hot bed heater took too long to reach target. Timed Out!\r\n");
 			break;
 		  }
 		  
 		  if (target_bed_raw == 0)
 		  {
-			serial_send("\r\n*** Hot-bed heater does not appear to be responding.\r\n");
-			serial_send("*** Check hot-bed and hot-bed thermistor connections!!!\r\n");
+			serial_send("\r\n// *** Hot-bed heater does not appear to be responding.\r\n");
+			serial_send("// *** Check hot-bed and hot-bed thermistor connections!!!\r\n");
 			break;
 		  }
         }
@@ -1452,30 +1451,30 @@ void execute_mcode(struct command *cmd) {
       break;
 	  
 	  case 604:	// M604 Show Timer 1 COMPA ISR Execution Time Debug Info
-			serial_send("Last TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
+			serial_send("// Last TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
 												timer1_compa_isr_exe_micros);
-			serial_send("MIN TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
+			serial_send("// MIN TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
 												timer1_compa_isr_exe_micros_min);
-			serial_send("MAX TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
+			serial_send("// MAX TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
 												timer1_compa_isr_exe_micros_max);
 	  break;
 	  
 	  case 605:	// M605 Reset Timer 1 COMPA ISR Execution Time Min / Max Values
 			timer1_compa_isr_exe_micros_min = 0xFFFFFFFF;
 			timer1_compa_isr_exe_micros_max = 0;
-			serial_send("TIMER1_COMPA_vect ISR Execution Time MIN / MAX Reset.\r\n");
+			serial_send("// TIMER1_COMPA_vect ISR Execution Time MIN / MAX Reset.\r\n");
 	  break;
 	  
 	  case 606: // M606 - Show CPU loading information
 			if (DEBUG > -1)
 			{
-				serial_send("Current CPU Loading:	%d %%\r\n", cpu_loading);
-				serial_send("Peak CPU Load:		%d %%\r\n", peak_cpu_load);
-				serial_send("Average CPU Load: 	%d %%\r\n", average_cpu_load);
+				serial_send("// Current CPU Loading:	%d %%\r\n", cpu_loading);
+				serial_send("// Peak CPU Load:		%d %%\r\n", peak_cpu_load);
+				serial_send("// Average CPU Load: 	%d %%\r\n", average_cpu_load);
 			}
 			else
 			{
-				serial_send("CPU loading info not available in this version of firmware.\r\n");
+				serial_send("// CPU loading info not available in this version of firmware.\r\n");
 			}
 	  break;
 	  
@@ -1484,11 +1483,11 @@ void execute_mcode(struct command *cmd) {
 			{
 				peak_cpu_load = 0;
 				average_cpu_load = 0;
-				serial_send("Peak and Average CPU Load Values Reset.\r\n");
+				serial_send("// Peak and Average CPU Load Values Reset.\r\n");
 			}
 			else
 			{
-				serial_send("CPU loading info not available in this version of firmware.\r\n");
+				serial_send("// CPU loading info not available in this version of firmware.\r\n");
 			}
 	  break;
 	  
@@ -1529,13 +1528,13 @@ void execute_mcode(struct command *cmd) {
 	  
 	  case 112:	// M112 - Emergency Stop
 			kill();
-			serial_send("\r\n-- Emergency Stop!\r\n");
-			serial_send("-- Motors off. Heaters Off.\r\n");
+			serial_send("\r\n// Emergency Stop!\r\n");
+			serial_send("// Motors off. Heaters Off.\r\n");
 			_restart_Teensyduino_();
 	  break;
 	  
 	  case 609: // M609 - Show last reset flags
-			serial_send("\r\nReset Flags: 0x%X ", reset_flags);
+			serial_send("\r\n// Reset Flags: 0x%X ", reset_flags);
 			serial_send("( ");
 			if ( reset_flags & (1 << JTRF) )
 			{
@@ -1755,7 +1754,6 @@ FORCE_INLINE void kill()
 
 void manage_inactivity(unsigned char debug) 
 { 
-  manage_heater();
   if( (millis()-previous_millis_cmd) >  max_inactive_time ) if(max_inactive_time) kill(); 
   
   if( (millis()-previous_millis_cmd) >  stepper_inactive_time ) if(stepper_inactive_time) 

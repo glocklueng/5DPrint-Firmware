@@ -120,7 +120,7 @@
 // Makiox A6 standard stepper motors have 1.8 deg/step. However with micro-
 // stepping feature 1/16th step is achieved.
 // Therefore 1mm movement in x, y, z = (200 / 8) * 16 = 400 micro-steps.
-#define _AXIS_STEP_PER_UNIT {400, 400, 400, 200}
+#define _AXIS_STEP_PER_UNIT {400, 400, 400, 260}
 
 
 //// Endstop Settings
@@ -316,7 +316,7 @@
 
 // If the temperature difference between the target temperature and the current temperature
 // is more then PID_FUNCTIONAL_RANGE then the PID will operate with proportional control only.
-#define PID_FUNCTIONAL_RANGE	10 
+#define PID_FUNCTIONAL_RANGE	12 
 
 //PID Controler Settings
 #define PID_INTEGRAL_DRIVE_MAX	80 		// too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
@@ -384,7 +384,7 @@
 // thermistor has not been installed properly such that the temperature of the 
 // hotend is not being measured corretly - the hotend heater continues 
 // heating until it burns itself out.
-#define WATCHPERIOD 5000 // 5 seconds
+#define WATCHPERIOD 10000 // 10 seconds
 
 // Actual temperature must be close to target for this long before M109 returns success
 #define TEMP_RESIDENCY_TIME 	10	// (seconds)

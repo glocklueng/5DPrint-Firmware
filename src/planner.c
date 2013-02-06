@@ -51,6 +51,10 @@
 *											www.xtrontec.com
 *		Added casting and literals for division calculations in order to guard
 *		against integer division problems.
+*
+* +		06 Feb 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		st_init() now also initialises timer 1C.
 */
 
 
@@ -1424,6 +1428,7 @@ void st_init()
   // output mode = 00 (disconnected)
   TCCR1A &= ~(3<<COM1A0); 
   TCCR1A &= ~(3<<COM1B0); 
+  TCCR1A &= ~(3<<COM1C0);
 
   // Set the timer pre-scaler
   // Generally we use a divider of 8, resulting in a 2MHz timer
@@ -1441,6 +1446,15 @@ void st_init()
   #else
     enable_endstops(1);
   #endif
+  
+  // Timer 1B -> Disabled
+  OCR1B = 0xFFFF;
+  TIMSK1 &= ~(1 << OCIE1B);
+  
+  // Timer 1C -> Heater Control.
+  // Approx 10kHz. Interrupt Freq = Clk / (N * (1 + OCR1C)
+  OCR1C = 199;
+  TIMSK1 |= (1 << OCIE1C);   // enable timer 1C output compare match interrupt
   
   sei();
 }

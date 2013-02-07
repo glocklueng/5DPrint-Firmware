@@ -35,6 +35,10 @@
 * +		15 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
 *											www.xtrontec.com
 *		Removed some unused variables and function prototypes. 
+*
+* +		07 FEB 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Changed watch_raw to watch_temp.
 */
 
 
@@ -121,7 +125,7 @@ extern unsigned char manage_monitor;
 
 
 #ifdef WATCHPERIOD
-	extern int watch_raw;
+	extern int watch_temp;
 	extern unsigned long watchmillis;
 #endif
 

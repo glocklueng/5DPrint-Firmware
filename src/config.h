@@ -104,6 +104,10 @@
 *
 *		INVERT_E_DIR now set to 0. The extruder drive on the alpha unit has 
 *		been modified to be in the same orientation as the beta units.
+*
+* +		07 FEB 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Reduced extruder steps per mm to 240.
 */
 
 #ifndef CONFIGURATION_H
@@ -321,8 +325,8 @@
 //PID Controler Settings
 #define PID_INTEGRAL_DRIVE_MAX	80 		// too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
 #define PID_PGAIN 				1800 	//256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
-#define PID_IGAIN 				20   	//256 is 1.0 
-#define PID_DGAIN 				60  	//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+#define PID_IGAIN 				15   	//256 is 1.0 
+#define PID_DGAIN 				650  	//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 #endif
 

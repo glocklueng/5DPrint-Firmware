@@ -68,6 +68,16 @@
 *		provided via an ISR there is less chance of the heaters not being 
 *		serviced properly due to coding errors causing accidental delay or 
 *		infinite loop elsewhere.
+*
+* +		07 FEB 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Changed watch_raw to watch_temp. Slight adjustment to temperature 
+*		watch period checking. Now checks temperature value instead of the raw
+*		value. Easier to understand and avoids errors if the thermistor 
+*		temperature table was ever changed (e.g. NTC vs PTC type). 
+*
+*		Edited PID control calculations to do right shifts instead of divide by
+*		256. 
 */
 
 
@@ -146,7 +156,7 @@ unsigned long previous_millis_heater, previous_millis_bed_heater, previous_milli
 #endif
 
 #ifdef WATCHPERIOD
-	int watch_raw = -1000;
+	int watch_temp = 0;
 	unsigned long watchmillis = 0;
 #endif
 
@@ -421,7 +431,9 @@ void PID_autotune(int PIDAT_test_temp)
  }
  
  void manage_heater()
- { 
+ {
+  int current_temp;
+ 
   service_TemperatureMonitor();
  
   if ( (TEMP_0_PIN > -1) 
@@ -436,6 +448,8 @@ void PID_autotune(int PIDAT_test_temp)
 	// When using thermistor, when the heater is colder than targer temp, we get a higher analog reading than target, 
 	// this switches it up so that the reading appears lower than target for the control logic.
 	current_raw = 1023 - current_raw;
+	
+	current_temp = analog2temp(current_raw);
 	#endif
 
 	//MIN / MAX save to display the jitter of Heaterbarrel
@@ -452,9 +466,9 @@ void PID_autotune(int PIDAT_test_temp)
 	#endif
 
 	#ifdef WATCHPERIOD
-	if(watchmillis && millis() - watchmillis > WATCHPERIOD)
+	if ( (watchmillis > 0) && (millis() - watchmillis > WATCHPERIOD) )
 	{
-		if(watch_raw >= current_raw)
+		if( watch_temp >= current_temp )
 		{
 			target_temp = target_raw = 0;
 			WRITE(HEATER_0_PIN,LOW);
@@ -471,14 +485,14 @@ void PID_autotune(int PIDAT_test_temp)
 	//If tmp is lower then MINTEMP stop the Heater
 	//or it os better to deaktivate the uutput PIN or PWM ?
 	#ifdef MINTEMP
-	minttemp = temp2analogh(MINTEMP);
-	if(current_raw <= minttemp)
+	//minttemp = temp2analogh(MINTEMP);
+	if(current_temp <= MINTEMP)
 		target_temp = target_raw = 0;
 	#endif
   
 	#ifdef MAXTEMP
-	maxttemp = temp2analogh(MAXTEMP);
-	if(current_raw >= maxttemp)
+	//maxttemp = temp2analogh(MAXTEMP);
+	if(current_temp >= MAXTEMP)
 	{
 		target_temp = target_raw = 0;
 	}
@@ -486,7 +500,7 @@ void PID_autotune(int PIDAT_test_temp)
 
     if (PIDTEMP)
 	{	  
-      service_ExtruderHeaterPIDControl(analog2temp(current_raw), target_temp);
+      service_ExtruderHeaterPIDControl(current_temp, target_temp);
     }
     else // !PIDTEMP
 	{
@@ -603,7 +617,7 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 	int delta_temp = current_temp - prev_temp;
 
 	prev_temp = current_temp;
-	pTerm = ((long)PID_Kp * error) / 256;
+	pTerm = ((long)PID_Kp * error) >> 8;
 	heater_duty = pTerm;
 
 	if( abs(error) < PID_FUNCTIONAL_RANGE )
@@ -619,10 +633,10 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 			temp_iState = temp_iState_max;
 		}
 	
-		iTerm = ((long)PID_Ki * temp_iState) / 256;
+		iTerm = ((long)PID_Ki * temp_iState) >> 8;
 		heater_duty += iTerm;
 		
-		dTerm = ((long)PID_Kd * delta_temp) / 256;
+		dTerm = ((long)PID_Kd * delta_temp) >> 8;
 		heater_duty -= dTerm;
 	}
 	else
@@ -674,7 +688,7 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 	int delta_bed_temp = current_bed_temp - prev_bed_temp;
 	  
 	prev_bed_temp = current_bed_temp;
-	bed_pTerm = ((long)bed_PID_Kp * bed_error) / 256;
+	bed_pTerm = ((long)bed_PID_Kp * bed_error) >> 8;
 	bed_heater_duty = bed_pTerm;
   
 	if( abs(bed_error) < BED_PID_FUNCTIONAL_RANGE )
@@ -691,10 +705,10 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 		  temp_bed_iState = temp_bed_iState_max;
 		}
 		  
-		bed_iTerm = ((long)bed_PID_Ki * temp_bed_iState) / 256;
+		bed_iTerm = ((long)bed_PID_Ki * temp_bed_iState) >> 8;
 		bed_heater_duty += bed_iTerm;
 		
-		bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) / 256;
+		bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) >> 8;
 		bed_heater_duty -= bed_dTerm;
 	}
 	else

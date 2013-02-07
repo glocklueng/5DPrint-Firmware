@@ -1452,8 +1452,8 @@ void st_init()
   TIMSK1 &= ~(1 << OCIE1B);
   
   // Timer 1C -> Heater Control.
-  // Approx 10kHz. Interrupt Freq = Clk / (N * (1 + OCR1C)
-  OCR1C = 199;
+  // Approx 2kHz. Interrupt Freq = Clk / (N * (1 + OCR1C)
+  OCR1C = 999;
   TIMSK1 |= (1 << OCIE1C);   // enable timer 1C output compare match interrupt
   
   sei();

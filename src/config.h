@@ -112,7 +112,7 @@
 // Makiox A6 standard stepper motors have 1.8 deg/step. However with micro-
 // stepping feature 1/16th step is achieved.
 // Therefore 1mm movement in x, y, z = (200 / 8) * 16 = 400 micro-steps.
-#define _AXIS_STEP_PER_UNIT {400, 400, 400, 200}
+#define _AXIS_STEP_PER_UNIT {400, 400, 400, 260}
 
 
 //// Endstop Settings
@@ -171,7 +171,7 @@
 #define INVERT_X_DIR 0
 #define INVERT_Y_DIR 0
 #define INVERT_Z_DIR 0
-#define INVERT_E_DIR 1
+#define INVERT_E_DIR 0
 
 //-----------------------------------------------------------------------
 //// ENDSTOP SETTINGS:
@@ -312,8 +312,8 @@
 
 //PID Controler Settings
 #define PID_INTEGRAL_DRIVE_MAX	80 		// too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define PID_PGAIN 				1600 	//256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
-#define PID_IGAIN 				20   	//256 is 1.0 
+#define PID_PGAIN 				1800 	//256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define PID_IGAIN 				15   	//256 is 1.0 
 #define PID_DGAIN 				60  	//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 #endif
@@ -376,7 +376,8 @@
 // thermistor has not been installed properly such that the temperature of the 
 // hotend is not being measured corretly - the hotend heater continues 
 // heating until it burns itself out.
-#define WATCHPERIOD 5000 // 5 seconds
+//#define WATCHPERIOD 10000 // 10 seconds
+#define WATCHPERIOD 8000 // 8 seconds
 
 // Actual temperature must be close to target for this long before M109 returns success
 #define TEMP_RESIDENCY_TIME 	10	// (seconds)

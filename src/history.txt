@@ -1,0 +1,429 @@
+
+Makibox A6 Firmware - History / Change Log
+==========================================
+
+Please add most recent change logs / history to the top of the list.
+Save as plain text file so that no special tools are required to view this file.
+
+
+--------------------------
+DATE: 	14 FEB 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Created history.txt and copied old history text source files to the bottom of 
+this file.
+
+Slight adjustment of PID parameters.
+
+Added manage_heaters() call back in to the manage_inactivity() function. This 
+is called by the main / background loop. The timer 1C ISR is still present and 
+calls the manage_heaters() function. This attempts to guard against any infinite
+or long loops in other parts of the code.
+   
+
+
+------------------------------------------------------------
+Old history text removed from source files and added here...
+------------------------------------------------------------
+
+/* heater.c
+*
+* History:
+* =======
+*
+* +		08 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Added init_Timer3_HW_pwm(void) to initialise Timer 3 for hardware
+*		PWM. Phase correct PWM rate set at 500Hz similar to SOFT_PWM.
+*
+* +		14 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		First attempt to add PWM and PID control for Hot Bed heater. Basically
+*		just replicating PID control code for the extruder heater which is also
+*		within manage_heater(). The code could do with being tidied up some more
+*		when time permits - too many lines of code in one function.
+*
+* +		15 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Removed some unused variables and functions.
+*		Removed code for MAX6675 and AD595 thermocouple amplifier / interface
+*		ICs since they are unlikely to be used with the Makibox.
+*
+*		controllerFan() removed as controller fan pin defined in previous code
+*		does not map to suitable control pin on PrintRBoard rev B.
+*
+*		extruderFan() removed as extruder fan pin defined in previous code
+*		does not map to suitable control pin on PrintRBoard rev B.
+*
+* +		02 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Modified PID algorithms for the hotend and hotbed temperature control.
+*		Removed the initial H0 starting value from the P-term calculation.
+*		Reset temp_istate values to zero if outside of I-term control range.
+*		Removed divisions based on error range for the D-term calculation.
+*
+* +		08 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Refactored manage_heater() slightly.
+*
+* +		06 FEB 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		now using Timer 1C to regularly service the heater control for the hot 
+*		end and hot bed. This is better than the previous case where the 
+*		manage_heater() function had to be called in various places within the 
+*		main code. This potentially had the  situations where the heater 
+*		control would be held off or not serviced. Now with the heater control 
+*		provided via an ISR there is less chance of the heaters not being 
+*		serviced properly due to coding errors causing accidental delay or 
+*		infinite loop elsewhere.
+*
+* +		07 FEB 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Changed watch_raw to watch_temp. Slight adjustment to temperature 
+*		watch period checking. Now checks temperature value instead of the raw
+*		value. Easier to understand and avoids errors if the thermistor 
+*		temperature table was ever changed (e.g. NTC vs PTC type). 
+*
+*		Edited PID control calculations to do right shifts instead of divide by
+*		256. 
+*/
+
+
+/* makibox.c
+*
+* History:
+* =======
+*
+* + 	02 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Corrected missing ")" for function call to analogWrite_check()
+*		within function 'execute_mcode'.
+*
+*		Moved function prototype for analogWrite_check() to makibox.h
+*		so that it can be called from heater.c
+*
+* +		08 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Replaced calls to analogWrite_check(FAN_PIN, l_fan_code_val);
+*		with analogWrite(FAN_PIN, l_fan_code_val);. analogWrite_check()
+*		does not appear to do much - perhaps an issue with the preprocessing
+*		#defines.
+*
+*		Minor correction for missing ")" in function call within 
+*		manage_fan_start_speed().
+*
+* +		16 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Removed analogWrite_check() function. Replaced calls to analogWrite 
+*		with calls to setFanPWMDuty() and setHeaterPWMDuty() functions.
+*		A few other edits to remove code and function calls not required.
+*
+* +		30 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added commands to help debug system with information such as CPU loading
+*		and ISR execution times. Rough indicators only. Custom commands M604 to 
+*		M607. 
+*
+* +		07 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Ignore command sequence numbers since this was causing a problem with
+*		Pronterface. With 'monitor printer' switched on the sequence numbers
+*		go out of sync and cause printing problems..
+*
+*		read_command() now ignores characters after a ";" as these are comments.
+*
+* +		14 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Fix bug in find_word() parsing function. Previously it was checking for 
+*		a white space after the command terminator. This resulted in occasional 
+*		incorrect reporting that there was an error if there was a white space 
+*		left over beyond the therminating character from the previous command 
+*		in the buffer. Now checks for white space immediately after the 'word' 
+*		found.
+*
+*		M105 command's temperature reporting text format edited to be compatible 
+*		with Pronterface graphing ('monitor printer') feature.
+*
+*		Minor editing of execute_gcode() and execute_mcode() large switch 
+*		statements to make the formating more consistent (e.g. removed use of
+*		curly brackets around some cases).
+*
+* +		17 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		find_word() now checks for the "\0" terminating character after finding
+*		the 'word'.
+*
+* +		18 DEC 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		TEMP_HYSTERESIS is used to provide an acceptable target temperature
+*		band before M109 returns and allows the print to proceed. Previously, 
+*		the temperature can sometimes hover 1 or 2 degC above target and not be 
+*		able to begin printing unless the extruder head was 'blown' on to reduce 
+*		the temperature below the target.
+*
+* +		24 DEC 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added M852 command to allow entry in to the DFU bootloader via the
+*		firmware application. This will allow the Makibox firmware to be 
+*		updated without the need to open up the Makibox and press the reset 
+*		button on the PrintRBoard or mess around with removing / reconnecting
+*		jumpers. A 'F' pass code must also be entered together with the M852
+*		command. This is to prevent accidental entry in to the bootloader by
+*		end-users.
+*
+* +		02 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		M105 command edited to provide bed heater duty information. Duty cycles
+*		now reported as a percentage.
+*
+* +		15 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Edit M109 and M190 wait for temperature commands so that the text format
+*		is compatile with Pronterface's graphing feature.
+*
+*		M109 and M190 wait for target temperature commands. Added check and 
+*		feedback text for situation where the target temperature has been reset 
+*		to zero. This may happen if the thermistor or heater connections are 
+*		disconnected.
+*
+* +		25 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added M112 - Emergency Stop - disables all motors and heaters and then
+*		restarts the firmware (keeps USB connection active). Emergency stop 
+*		button (sends M112) is availale in the Repetier Host GUI.
+*
+* +		30 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added M112 - Emergency Stop - disables all motors and heaters and then 
+*		restarts the firmware (keeps USB connection active). Emergency stop 
+*		button (sends M112) is availale in the Repetier Host GUI.
+*		Enable the watchdog timer. Set to 4 seconds. This is to cover situations
+*		where the firmware hangs for some unexpected reason.
+*		Added M609 - Show the reset flags (in hex format) from the last reset.
+*
+* +		31 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Disabled watchdog timer as this was being triggered by some of the 
+*		longer operations such as the homing routine. Perhaps consider 
+*		implementing a workable system watchdog again later if time allows.
+*
+* +		06 FEB 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Removed calls to manage_heater(). This is now called regularly via an 
+*		ISR triggered by timer 1C.
+*/
+
+
+/* pins_teensy.c
+ *
+ * History:
+ * =======
+ *
+ * +		16 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+ *												www.xtrontec.com
+ *			Removed analogWrite() function as it is no longer used anywhere.
+ * 
+ */
+ 
+
+/* planner.c
+*
+* History:
+* =======
+*
+* +		28 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		ISR(TIMER1_COMPA_vect) nop instruction added to ensure that pulse width 
+*		generated meets the	minimum requirement for the Allegro A4982 stepper 
+*		motor driver input.
+*		The existing code relies on delays in executing commands between setting
+*		the step high and stepping it low again to meet the A4982's minimum pulse 
+*		width requirement. Some motor drive issues have been seen during 
+*		development testing which may be related to this.
+*		
+*		*** NOTE ***
+*		THIS IS A QUICK AND DIRTY HACK TO GET THINGS WORKING A
+*		BIT BETTER. RECOMMEND THAT THIS ISR IS RE-VISITED AND REFACTORED TO
+*		TO WORK PROPERLY AND GENERATE THE CORRECT PULSE WIDTHS FOR THE A4982
+*		DRIVER IC.
+*
+* +		29 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added some very rough indicators of ISR execution time for 
+*		ISR(TIMER1_COMPA_vect).
+*
+* +		30 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		ISR(TIMER1_COMPA_vect) added another nop loop after the stepper pulse
+*		has been pulled low. This is to ensure that the minimum low pulse width
+*		is met for the A4982.
+*
+* +		17 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added casting and literals for division calculations in order to guard
+*		against integer division problems.
+*
+* +		06 Feb 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		st_init() now also initialises timer 1C.
+*/
+
+
+/* config.h
+*
+* History:
+* =======
+*
+* + 	02 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Commented out #define FAN_SOFT_PWM and #define PID_SOFT_PWM. This is to 
+*		free up Timer 2. Slightly less processing as the Timer 2 ISRs are no 
+*		longer called.
+*
+* +		14 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Added some defines associated with HOT BED PID control. PID parameters 
+*		have been copied from the extruder heater PID settings. The PID 
+*		parameters will need to be tuned for the hot bed and adjusted here.
+*
+* +		15 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Removed controller fan pin defines
+*		Does not map to suitable control pin on PrintRBoard rev B.
+*
+*		Removed extruder fan pin defines.
+*		Does not map to suitable control pin on PrintRBoard rev B.
+*
+* +		29 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Added global variables for CPU loading calculation.
+*		Added DEBUG #define to enable/disable calculation.
+*
+* +		07 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		HEATER_CHECK_INTERVAL decreased to 100 so that extruder temperature is 
+*		checked (sampled) more frequently. Extruder PID parameters edited.
+*
+* +		17 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Change MAXTEMP to 300 to limit extruder heater to 300 degC.
+*
+* +		18 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Uncomment TEMP_RESIDENCY_TIME and TEMP_HYSTERESIS defines and set to
+*		10 seconds and 2 degC respectively. This to see if it helps with print
+*		quality issues seen on the initial layers of prints. Upper layers seem 
+*		to stabilise and produce better quality / more consistent output during
+*		initial development testing. Suspect it could be a temperature issue 
+*		with the ABS plastic. The use of TEMP_RESIDENCY_TIME will ensure that 
+*		when the wait for extruder temperature command is issued the printer 
+*		will wait for the temperature to stabilise to the target for at least 
+*		TEMP_RESIDENCY_TIME (set to 10 seconds for now) before continuing to 
+*		print.
+*
+*		TEMP_HYSTERESIS is also used to provide an acceptable target temperature
+*		band before M109 returns and allows the print to proceed. Previously, 
+*		the temperature can sometimes hover 1 or 2 degC above target and not be 
+*		able to begin printing unless the extruder head was 'blown' on to reduce 
+*		the temperature below the target.  
+*
+* +		27 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Increased BED_PID_IGAIN to 120.
+*
+*		Uncomment WATCHPERIOD. This enables checks of the hotend heater when a
+*		target temperature is set. If the temperature does not appear to be 
+*		increasing after WATCHPERIOD has elapsed then the target temperature is
+*		set to 0 degC in order to protect the hotend heater. This situation 
+*		may occur if the hotend thermistor has not been installed at the right 
+*		location and therefore not measuring the hotend temperature.
+*
+* +		02 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Update _AXIS_STEP_PER_UNIT with new value for extruder stepping. New 
+*		PID settings for the hotend and hotbed heaters for the slightly modified
+*		PID algorithms.
+*		Removed some redundant #defines.
+*		BED_CHECK_INTERVAL reduced to 1000 in order to give slightly better 
+*		temperature control of the hotbed.
+*
+* +		09 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Increased BLOCK_BUFFER_SIZE to 64 in order to test if this will prevent
+*		stops / pauses during some prints - suspect that it may be due to buffer
+*		under run.
+*
+* +		15 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Increased DROP_SEGMENTS to 50. _AXIS_STEP_PER_UNIT changed to 240 for 
+*		the new extruder drive - needs to be double checked with final drive 
+*		design.
+*
+*		Added BED_HEATUP_TIMEOUT and HOTEND_HEATUP_TIMEOUT.
+*
+*		Removed thermistor selection defines (THERMISTORHEATER and 
+*		THERMISTORBED) from config.h since they are not used anywhere.
+*
+* +		30 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		INVERT_E_DIR is set to 1 currently for use in the Alpha boxes. For the 
+*		Beta boxes this needs to be changed to 0. _AXIS_STEP_PER_UNIT extruder 
+*		config set changed to 200.
+*
+* +		05 FEB 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Slight tweek to the hot end PID parameters to tune for the newer hot 
+*		end design.
+*
+*		INVERT_E_DIR now set to 0. The extruder drive on the alpha unit has 
+*		been modified to be in the same orientation as the beta units.
+*
+* +		07 FEB 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Reduced extruder steps per mm to 240.
+*/
+
+
+/* heater.h
+*
+* History:
+* =======
+*
+* +		08 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Added init_Timer3_HW_pwm(void) to initialise Timer 3 for hardware
+*		PWM. 
+*
+* +		14 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Added some variales associated with HOT BED PID control. 
+*
+* +		15 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Removed some unused variables and function prototypes. 
+*
+* +		07 FEB 2013		Author: JTK Wong 	XTRONTEC Limited
+*											www.xtrontec.com
+*		Changed watch_raw to watch_temp.
+*/
+
+
+/* makibox.h
+*
+* History:
+* =======
+* + 	02 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
+*		Moved function prototype for analogWrite_check() to makibox.h
+*		so that it can be called from heater.c
+*/
+
+
+/* pins_teensy.h
+ * History:
+ * =======
+ *
+ * +		16 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+ *												www.xtrontec.com
+ *			Removed analogWrite() function as it is no longer used anywhere.
+ *			Removed "pinMode" related Teensy functions - not used.
+ *
+ * +		21 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
+ *												www.xtrontec.com
+ *			Removed extern void _init_Teensyduino_internal_(void); as it is
+ *			not used anywhere.
+ */
+
+

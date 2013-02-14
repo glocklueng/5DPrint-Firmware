@@ -1,18 +1,3 @@
-/*
- * History:
- * =======
- *
- * +		16 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
- *												www.xtrontec.com
- *			Removed analogWrite() function as it is no longer used anywhere.
- *			Removed "pinMode" related Teensy functions - not used.
- *
- * +		21 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
- *												www.xtrontec.com
- *			Removed extern void _init_Teensyduino_internal_(void); as it is
- *			not used anywhere.
- */
-
 #ifndef _core_pins_h_
 #define _core_pins_h_
 

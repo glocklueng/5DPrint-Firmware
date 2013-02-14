@@ -9,14 +9,6 @@
 // confusing the compiler (see gcc bug #46372).  However, because they are
 // identical, we can simply #define away all our worries:
 
-/* makibox.h
-*
-* History:
-* =======
-* + 	02 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
-*		Moved function prototype for analogWrite_check() to makibox.h
-*		so that it can be called from heater.c
-*/
 
 #define float double
 

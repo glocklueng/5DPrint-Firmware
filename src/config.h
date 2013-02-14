@@ -1,103 +1,3 @@
-/* config.h
-*
-* History:
-* =======
-*
-* + 	02 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
-*		Commented out #define FAN_SOFT_PWM and #define PID_SOFT_PWM. This is to 
-*		free up Timer 2. Slightly less processing as the Timer 2 ISRs are no 
-*		longer called.
-*
-* +		14 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
-*		Added some defines associated with HOT BED PID control. PID parameters 
-*		have been copied from the extruder heater PID settings. The PID 
-*		parameters will need to be tuned for the hot bed and adjusted here.
-*
-* +		15 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Removed controller fan pin defines
-*		Does not map to suitable control pin on PrintRBoard rev B.
-*
-*		Removed extruder fan pin defines.
-*		Does not map to suitable control pin on PrintRBoard rev B.
-*
-* +		29 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Added global variables for CPU loading calculation.
-*		Added DEBUG #define to enable/disable calculation.
-*
-* +		07 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		HEATER_CHECK_INTERVAL decreased to 100 so that extruder temperature is 
-*		checked (sampled) more frequently. Extruder PID parameters edited.
-*
-* +		17 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Change MAXTEMP to 300 to limit extruder heater to 300 degC.
-*
-* +		18 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Uncomment TEMP_RESIDENCY_TIME and TEMP_HYSTERESIS defines and set to
-*		10 seconds and 2 degC respectively. This to see if it helps with print
-*		quality issues seen on the initial layers of prints. Upper layers seem 
-*		to stabilise and produce better quality / more consistent output during
-*		initial development testing. Suspect it could be a temperature issue 
-*		with the ABS plastic. The use of TEMP_RESIDENCY_TIME will ensure that 
-*		when the wait for extruder temperature command is issued the printer 
-*		will wait for the temperature to stabilise to the target for at least 
-*		TEMP_RESIDENCY_TIME (set to 10 seconds for now) before continuing to 
-*		print.
-*
-*		TEMP_HYSTERESIS is also used to provide an acceptable target temperature
-*		band before M109 returns and allows the print to proceed. Previously, 
-*		the temperature can sometimes hover 1 or 2 degC above target and not be 
-*		able to begin printing unless the extruder head was 'blown' on to reduce 
-*		the temperature below the target.  
-*
-* +		27 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Increased BED_PID_IGAIN to 120.
-*
-*		Uncomment WATCHPERIOD. This enables checks of the hotend heater when a
-*		target temperature is set. If the temperature does not appear to be 
-*		increasing after WATCHPERIOD has elapsed then the target temperature is
-*		set to 0 degC in order to protect the hotend heater. This situation 
-*		may occur if the hotend thermistor has not been installed at the right 
-*		location and therefore not measuring the hotend temperature.
-*
-* +		02 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Update _AXIS_STEP_PER_UNIT with new value for extruder stepping. New 
-*		PID settings for the hotend and hotbed heaters for the slightly modified
-*		PID algorithms.
-*		Removed some redundant #defines.
-*		BED_CHECK_INTERVAL reduced to 1000 in order to give slightly better 
-*		temperature control of the hotbed.
-*
-* +		09 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Increased BLOCK_BUFFER_SIZE to 64 in order to test if this will prevent
-*		stops / pauses during some prints - suspect that it may be due to buffer
-*		under run.
-*
-* +		15 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Increased DROP_SEGMENTS to 50. _AXIS_STEP_PER_UNIT changed to 240 for 
-*		the new extruder drive - needs to be double checked with final drive 
-*		design.
-*
-*		Added BED_HEATUP_TIMEOUT and HOTEND_HEATUP_TIMEOUT.
-*
-*		Removed thermistor selection defines (THERMISTORHEATER and 
-*		THERMISTORBED) from config.h since they are not used anywhere.
-*
-* +		30 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		INVERT_E_DIR is set to 1 currently for use in the Alpha boxes. For the 
-*		Beta boxes this needs to be changed to 0. _AXIS_STEP_PER_UNIT extruder 
-*		config set changed to 200.
-*/
-
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
@@ -308,13 +208,13 @@
 
 // If the temperature difference between the target temperature and the current temperature
 // is more then PID_FUNCTIONAL_RANGE then the PID will operate with proportional control only.
-#define PID_FUNCTIONAL_RANGE	10 
+#define PID_FUNCTIONAL_RANGE	12 
 
 //PID Controler Settings
 #define PID_INTEGRAL_DRIVE_MAX	80 		// too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define PID_PGAIN 				1800 	//256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define PID_PGAIN 				2000 	//256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
 #define PID_IGAIN 				15   	//256 is 1.0 
-#define PID_DGAIN 				60  	//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+#define PID_DGAIN 				1000	//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 #endif
 
@@ -376,8 +276,7 @@
 // thermistor has not been installed properly such that the temperature of the 
 // hotend is not being measured corretly - the hotend heater continues 
 // heating until it burns itself out.
-//#define WATCHPERIOD 10000 // 10 seconds
-#define WATCHPERIOD 8000 // 8 seconds
+#define WATCHPERIOD 10000 // 10 seconds
 
 // Actual temperature must be close to target for this long before M109 returns success
 #define TEMP_RESIDENCY_TIME 	10	// (seconds)

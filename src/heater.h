@@ -21,22 +21,6 @@
  
 */
 
-/*
-* History:
-* =======
-*
-* +		08 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
-*		Added init_Timer3_HW_pwm(void) to initialise Timer 3 for hardware
-*		PWM. 
-*
-* +		14 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
-*		Added some variales associated with HOT BED PID control. 
-*
-* +		15 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Removed some unused variables and function prototypes. 
-*/
-
 
 #include "config.h"
 
@@ -121,7 +105,7 @@ extern unsigned char manage_monitor;
 
 
 #ifdef WATCHPERIOD
-	extern int watch_raw;
+	extern int watch_temp;
 	extern unsigned long watchmillis;
 #endif
 

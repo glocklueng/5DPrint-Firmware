@@ -16,41 +16,6 @@
  
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
-
-* History:
-* =======
-*
-* +		28 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
-*		ISR(TIMER1_COMPA_vect) nop instruction added to ensure that pulse width 
-*		generated meets the	minimum requirement for the Allegro A4982 stepper 
-*		motor driver input.
-*		The existing code relies on delays in executing commands between setting
-*		the step high and stepping it low again to meet the A4982's minimum pulse 
-*		width requirement. Some motor drive issues have been seen during 
-*		development testing which may be related to this.
-*		
-*		*** NOTE ***
-*		THIS IS A QUICK AND DIRTY HACK TO GET THINGS WORKING A
-*		BIT BETTER. RECOMMEND THAT THIS ISR IS RE-VISITED AND REFACTORED TO
-*		TO WORK PROPERLY AND GENERATE THE CORRECT PULSE WIDTHS FOR THE A4982
-*		DRIVER IC.
-*
-* +		29 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Added some very rough indicators of ISR execution time for 
-*		ISR(TIMER1_COMPA_vect).
-*
-* +		30 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		ISR(TIMER1_COMPA_vect) added another nop loop after the stepper pulse
-*		has been pulled low. This is to ensure that the minimum low pulse width
-*		is met for the A4982.
-*
-* +		17 Dec 2012		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Added casting and literals for division calculations in order to guard
-*		against integer division problems.
 */
 
 
@@ -1042,7 +1007,8 @@ unsigned short calc_timer(unsigned short step_rate)
   if(step_rate < (F_CPU/500000)) step_rate = (F_CPU/500000);
   step_rate -= (F_CPU/500000); // Correct for minimal speed
   
-  if(step_rate >= (8*256)) // higher step rate 
+  //if(step_rate >= (8*256)) // higher step rate
+  if(step_rate >= 2048) // higher step rate
   { // higher step rate 
     unsigned short table_address = (unsigned short)&speed_lookuptable_fast[(unsigned char)(step_rate>>8)][0];
     unsigned char tmp_step_rate = (step_rate & 0x00ff);
@@ -1424,6 +1390,7 @@ void st_init()
   // output mode = 00 (disconnected)
   TCCR1A &= ~(3<<COM1A0); 
   TCCR1A &= ~(3<<COM1B0); 
+  TCCR1A &= ~(3<<COM1C0);
 
   // Set the timer pre-scaler
   // Generally we use a divider of 8, resulting in a 2MHz timer
@@ -1441,6 +1408,15 @@ void st_init()
   #else
     enable_endstops(1);
   #endif
+  
+  // Timer 1B -> Disabled
+  OCR1B = 0xFFFF;
+  TIMSK1 &= ~(1 << OCIE1B);
+  
+  // Timer 1C -> Heater Control.
+  // Approx 2kHz. Interrupt Freq = Clk / (N * (1 + OCR1C)
+  OCR1C = 999;
+  TIMSK1 |= (1 << OCIE1C);   // enable timer 1C output compare match interrupt
   
   sei();
 }

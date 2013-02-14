@@ -21,43 +21,6 @@
  big thanks to kliment (https://github.com/kliment/Sprinter)
 */
 
-/*
-* History:
-* =======
-*
-* +		08 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
-*		Added init_Timer3_HW_pwm(void) to initialise Timer 3 for hardware
-*		PWM. Phase correct PWM rate set at 500Hz similar to SOFT_PWM.
-*
-* +		14 NOV 2012		Author: JTK Wong (XTRONTEC Limited)
-*		First attempt to add PWM and PID control for Hot Bed heater. Basically
-*		just replicating PID control code for the extruder heater which is also
-*		within manage_heater(). The code could do with being tidied up some more
-*		when time permits - too many lines of code in one function.
-*
-* +		15 NOV 2012		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Removed some unused variables and functions.
-*		Removed code for MAX6675 and AD595 thermocouple amplifier / interface
-*		ICs since they are unlikely to be used with the Makibox.
-*
-*		controllerFan() removed as controller fan pin defined in previous code
-*		does not map to suitable control pin on PrintRBoard rev B.
-*
-*		extruderFan() removed as extruder fan pin defined in previous code
-*		does not map to suitable control pin on PrintRBoard rev B.
-*
-* +		02 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Modified PID algorithms for the hotend and hotbed temperature control.
-*		Removed the initial H0 starting value from the P-term calculation.
-*		Reset temp_istate values to zero if outside of I-term control range.
-*		Removed divisions based on error range for the D-term calculation.
-*
-* +		08 JAN 2013		Author: JTK Wong 	XTRONTEC Limited
-*											www.xtrontec.com
-*		Refactored manage_heater() slightly.
-*/
 
 
 #include <avr/interrupt.h>
@@ -135,7 +98,7 @@ unsigned long previous_millis_heater, previous_millis_bed_heater, previous_milli
 #endif
 
 #ifdef WATCHPERIOD
-	int watch_raw = -1000;
+	int watch_temp = 0;
 	unsigned long watchmillis = 0;
 #endif
 
@@ -162,8 +125,14 @@ void service_BedHeaterSimpleControl(int current_bed_raw, int target_bed_raw);
 
 
 //------------------------------------------------------------------------
-// Setup Timer and PWM for Heater and FAN
+// Setup Timers and PWM for Heater and FAN
 //------------------------------------------------------------------------
+
+ISR(TIMER1_COMPC_vect)
+{
+	manage_heater();
+}
+
 
 void init_Timer3_HW_pwm(void)
 {
@@ -186,7 +155,7 @@ void init_Timer3_HW_pwm(void)
 									// (no need for an ISR)
 	// HOT BED HEATER PWM
 	OCR3C = 0;						// Start with 0% duty
-	TCCR3A |= (1 << COM3C1);    	// Compare Output Mode for channel B
+	TCCR3A |= (1 << COM3C1);    	// Compare Output Mode for channel C
 	TIMSK3 &= ~(1 << OCIE3C);    	// Disable Timer 3C output compare match interrupt
 									// (no need for an ISR)
   
@@ -404,7 +373,9 @@ void PID_autotune(int PIDAT_test_temp)
  }
  
  void manage_heater()
- { 
+ {
+  int current_temp;
+ 
   service_TemperatureMonitor();
  
   if ( (TEMP_0_PIN > -1) 
@@ -419,6 +390,8 @@ void PID_autotune(int PIDAT_test_temp)
 	// When using thermistor, when the heater is colder than targer temp, we get a higher analog reading than target, 
 	// this switches it up so that the reading appears lower than target for the control logic.
 	current_raw = 1023 - current_raw;
+	
+	current_temp = analog2temp(current_raw);
 	#endif
 
 	//MIN / MAX save to display the jitter of Heaterbarrel
@@ -435,9 +408,9 @@ void PID_autotune(int PIDAT_test_temp)
 	#endif
 
 	#ifdef WATCHPERIOD
-	if(watchmillis && millis() - watchmillis > WATCHPERIOD)
+	if ( (watchmillis > 0) && (millis() - watchmillis > WATCHPERIOD) )
 	{
-		if(watch_raw >= current_raw)
+		if( watch_temp >= current_temp )
 		{
 			target_temp = target_raw = 0;
 			WRITE(HEATER_0_PIN,LOW);
@@ -454,14 +427,14 @@ void PID_autotune(int PIDAT_test_temp)
 	//If tmp is lower then MINTEMP stop the Heater
 	//or it os better to deaktivate the uutput PIN or PWM ?
 	#ifdef MINTEMP
-	minttemp = temp2analogh(MINTEMP);
-	if(current_raw <= minttemp)
+	//minttemp = temp2analogh(MINTEMP);
+	if(current_temp <= MINTEMP)
 		target_temp = target_raw = 0;
 	#endif
   
 	#ifdef MAXTEMP
-	maxttemp = temp2analogh(MAXTEMP);
-	if(current_raw >= maxttemp)
+	//maxttemp = temp2analogh(MAXTEMP);
+	if(current_temp >= MAXTEMP)
 	{
 		target_temp = target_raw = 0;
 	}
@@ -469,7 +442,7 @@ void PID_autotune(int PIDAT_test_temp)
 
     if (PIDTEMP)
 	{	  
-      service_ExtruderHeaterPIDControl(analog2temp(current_raw), target_temp);
+      service_ExtruderHeaterPIDControl(current_temp, target_temp);
     }
     else // !PIDTEMP
 	{
@@ -586,7 +559,7 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 	int delta_temp = current_temp - prev_temp;
 
 	prev_temp = current_temp;
-	pTerm = ((long)PID_Kp * error) / 256;
+	pTerm = ((long)PID_Kp * error) >> 8;
 	heater_duty = pTerm;
 
 	if( abs(error) < PID_FUNCTIONAL_RANGE )
@@ -602,10 +575,10 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 			temp_iState = temp_iState_max;
 		}
 	
-		iTerm = ((long)PID_Ki * temp_iState) / 256;
+		iTerm = ((long)PID_Ki * temp_iState) >> 8;
 		heater_duty += iTerm;
 		
-		dTerm = ((long)PID_Kd * delta_temp) / 256;
+		dTerm = ((long)PID_Kd * delta_temp) >> 8;
 		heater_duty -= dTerm;
 	}
 	else
@@ -657,7 +630,7 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 	int delta_bed_temp = current_bed_temp - prev_bed_temp;
 	  
 	prev_bed_temp = current_bed_temp;
-	bed_pTerm = ((long)bed_PID_Kp * bed_error) / 256;
+	bed_pTerm = ((long)bed_PID_Kp * bed_error) >> 8;
 	bed_heater_duty = bed_pTerm;
   
 	if( abs(bed_error) < BED_PID_FUNCTIONAL_RANGE )
@@ -674,10 +647,10 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 		  temp_bed_iState = temp_bed_iState_max;
 		}
 		  
-		bed_iTerm = ((long)bed_PID_Ki * temp_bed_iState) / 256;
+		bed_iTerm = ((long)bed_PID_Ki * temp_bed_iState) >> 8;
 		bed_heater_duty += bed_iTerm;
 		
-		bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) / 256;
+		bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) >> 8;
 		bed_heater_duty -= bed_dTerm;
 	}
 	else

@@ -990,6 +990,8 @@ void st_wake_up()
 unsigned short calc_timer(unsigned short step_rate)
 {
   unsigned short timer;
+  unsigned long fcpu_div_500k = (F_CPU/500000L);
+  
   if(step_rate > MAX_STEP_FREQUENCY) step_rate = MAX_STEP_FREQUENCY;
   
   if(step_rate > 20000) { // If steprate > 20kHz >> step 4 times
@@ -1004,8 +1006,8 @@ unsigned short calc_timer(unsigned short step_rate)
     step_loops = 1;
   } 
   
-  if(step_rate < (F_CPU/500000)) step_rate = (F_CPU/500000);
-  step_rate -= (F_CPU/500000); // Correct for minimal speed
+  if(step_rate < fcpu_div_500k) step_rate = fcpu_div_500k;
+  step_rate -= fcpu_div_500k; // Correct for minimal speed
   
   //if(step_rate >= (8*256)) // higher step rate
   if(step_rate >= 2048) // higher step rate

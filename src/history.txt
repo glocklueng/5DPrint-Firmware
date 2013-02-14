@@ -21,6 +21,12 @@ Added manage_heaters() call back in to the manage_inactivity() function. This
 is called by the main / background loop. The timer 1C ISR is still present and 
 calls the manage_heaters() function. This attempts to guard against any infinite
 or long loops in other parts of the code.
+
+Added fcpu_div_500k = (F_CPU/500000L) in calc_timer() so that the result can be 
+used within the function rather than calculating each time as before (division 
+is relatively demanding). The compiler may optimise the resulting assembler but 
+we will just use a tiny bit more memory just to be sure.
+
    
 
 

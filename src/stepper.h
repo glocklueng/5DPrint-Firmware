@@ -5,9 +5,9 @@ extern uint32_t timer1_compa_isr_exe_micros;
 extern uint32_t timer1_compa_isr_exe_micros_min;
 extern uint32_t timer1_compa_isr_exe_micros_max;
 
-static unsigned short virtual_steps_x = 0;
-static unsigned short virtual_steps_y = 0;
-static unsigned short virtual_steps_z = 0;
+extern unsigned short virtual_steps_x;
+extern unsigned short virtual_steps_y;
+extern unsigned short virtual_steps_z;
 
 void st_init();
 void st_wake_up();

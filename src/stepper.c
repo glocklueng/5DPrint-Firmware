@@ -19,10 +19,7 @@
 */
 
 #include <avr/interrupt.h>
-#include "pgmspace.h"
-#include <math.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "config.h"
 #include "makibox.h"
@@ -43,6 +40,10 @@
 uint32_t timer1_compa_isr_exe_micros = 0;
 uint32_t timer1_compa_isr_exe_micros_min = 0xFFFFFFFF;
 uint32_t timer1_compa_isr_exe_micros_max = 0;
+
+unsigned short virtual_steps_x = 0;
+unsigned short virtual_steps_y = 0;
+unsigned short virtual_steps_z = 0;
 
 uint8_t is_homing = 0;
 

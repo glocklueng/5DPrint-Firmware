@@ -7,6 +7,26 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	21 FEB 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Slight tweaks to the planner.c and stepper.c split files.
+
+
+
+--------------------------
+DATE: 	20 FEB 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Split stepper ISR and related code from planner.c and added new file - stepper.c
+
+
+
+--------------------------
 DATE: 	14 FEB 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

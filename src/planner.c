@@ -20,16 +20,12 @@
 
 
 #include <avr/interrupt.h>
-#include "pgmspace.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "config.h"
 #include "makibox.h"
-#include "board_io.h"
-#include "pins.h"
-#include "pins_teensy.h"
 #include "planner.h"
 #include "stepper.h"
 

@@ -138,7 +138,7 @@
 
 // everything with less than this number of steps will be ignored as move and
 // joined with the next movement
-#define DROP_SEGMENTS 50
+#define DROP_SEGMENTS 25
 
 
 //-----------------------------------------------------------------------

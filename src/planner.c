@@ -724,11 +724,20 @@ int calc_plannerpuffer_fill(void)
 
 void plan_set_position(float x, float y, float z, float e)
 {
+  st_position_t pos;
+  
   position[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]);
   position[Y_AXIS] = lround(y*axis_steps_per_unit[Y_AXIS]);
   position[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);     
-  position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);  
+  position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);
+  
+  pos.x = position[X_AXIS];
+  pos.y = position[Y_AXIS];
+  pos.z = position[Z_AXIS];
+  pos.e = position[E_AXIS];
 
+  st_set_current_position(pos);
+  
   virtual_steps_x = 0;
   virtual_steps_y = 0;
   virtual_steps_z = 0;

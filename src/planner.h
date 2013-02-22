@@ -60,7 +60,6 @@ extern float max_e_jerk;
 extern volatile int extrudemultiply;
 extern float mintravelfeedrate;
 extern float minimumfeedrate;
-extern uint8_t is_homing;
 extern unsigned long axis_steps_per_sqr_second[NUM_AXIS];
 
 void enable_endstops(uint8_t check);

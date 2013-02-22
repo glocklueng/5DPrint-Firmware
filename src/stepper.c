@@ -41,11 +41,20 @@ uint32_t timer1_compa_isr_exe_micros = 0;
 uint32_t timer1_compa_isr_exe_micros_min = 0xFFFFFFFF;
 uint32_t timer1_compa_isr_exe_micros_max = 0;
 
+// actual_steps_ are used to try and keep track of the actual positions of the
+// axes and extruder drive. System must first be 'homed' so we know where the
+// zero points are.
+unsigned long actual_steps_x = 0;
+unsigned long actual_steps_y = 0;
+unsigned long actual_steps_z = 0;
+long actual_steps_e = 0;
+
 unsigned short virtual_steps_x = 0;
 unsigned short virtual_steps_y = 0;
 unsigned short virtual_steps_z = 0;
 
 uint8_t is_homing = 0;
+uint8_t x_homed, y_homed, z_homed = 0;
 
 
 // Stepper
@@ -199,6 +208,15 @@ void st_wake_up()
   if(!busy) 
   ENABLE_STEPPER_DRIVER_INTERRUPT();  
 }
+
+
+void st_sleep() 
+{
+  //  TCNT1 = 0;
+  if(!busy) 
+  DISABLE_STEPPER_DRIVER_INTERRUPT();  
+}
+
 
 unsigned short calc_timer(unsigned short step_rate)
 {
@@ -441,6 +459,16 @@ ISR(TIMER1_COMPA_vect)
             virtual_steps_x--;
           else
             WRITE(X_STEP_PIN, HIGH);
+			
+			// Keeping track of stepper positions
+			if (current_block->direction_bits & (1 << X_AXIS))
+			{
+				actual_steps_x ? actual_steps_x-- : 0;
+			}
+			else
+			{
+				actual_steps_x++;
+			}
         }
         else
           virtual_steps_x++;
@@ -456,6 +484,16 @@ ISR(TIMER1_COMPA_vect)
             virtual_steps_y--;
           else
             WRITE(Y_STEP_PIN, HIGH);
+			
+			// Keeping track of stepper positions
+			if (current_block->direction_bits & (1 << Y_AXIS))
+			{
+				actual_steps_y ? actual_steps_y-- : 0;
+			}
+			else
+			{
+				actual_steps_y++;
+			}
         }
         else
           virtual_steps_y++;
@@ -471,6 +509,16 @@ ISR(TIMER1_COMPA_vect)
             virtual_steps_z--;
           else
             WRITE(Z_STEP_PIN, HIGH);
+			
+			// Keeping track of stepper positions
+			if (current_block->direction_bits & (1 << Z_AXIS))
+			{
+				actual_steps_z ? actual_steps_z-- : 0;
+			}
+			else
+			{
+				actual_steps_z++;
+			}
         }
         else
           virtual_steps_z++;
@@ -481,6 +529,17 @@ ISR(TIMER1_COMPA_vect)
       counter_e += current_block->steps_e;
       if (counter_e > 0) {
         WRITE(E_STEP_PIN, HIGH);
+		
+		// Keeping track of stepper positions
+		if (current_block->direction_bits & (1 << E_AXIS))
+		{
+			actual_steps_e--;
+		}
+		else
+		{
+			actual_steps_e++;
+		}
+		
         counter_e -= current_block->step_event_count;
       }
 	  
@@ -636,4 +695,27 @@ void st_init()
   sei();
 }
 
+
+void st_set_current_position(st_position_t new_position)
+{
+	actual_steps_x = new_position.x;
+	actual_steps_y = new_position.y;
+	actual_steps_z = new_position.z;
+	actual_steps_e = new_position.e;
+}
+
+
+st_position_t st_get_current_position(void)
+{
+	st_position_t pos;
+
+	CRITICAL_SECTION_START;
+	pos.x = actual_steps_x;
+	pos.y = actual_steps_y;
+	pos.z = actual_steps_z;
+	pos.e = actual_steps_e;
+	CRITICAL_SECTION_END;
+
+  return pos;
+}
 

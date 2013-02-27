@@ -7,6 +7,17 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	25 FEB 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Edited M114 position reporting - do_position_report() - so now the millimeters 
+reporting conforms to the RepRap format with "C:" prefixed to indicate that 
+coordinates follow. 
+
+
+--------------------------
 DATE: 	22 FEB 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

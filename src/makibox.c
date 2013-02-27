@@ -156,7 +156,7 @@ void do_position_report(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.24i-VCP / 22.02.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.24j-VCP / 22.02.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1692,6 +1692,18 @@ void st_synchronize()
 }
 
 
+/***************************************************
+* do_position_report(void)
+*
+* Reports the current position of the stepper motors
+* and sends the information to the host.
+*
+* The axes should be homed after power up to allow
+* an accurate report of the position. Otherwise, the
+* starting positions on power up will be taken to be
+* the zero positions. X, Y, and Z axes do not report
+* positions less than zero.
+****************************************************/
 void do_position_report(void)
 {
 	char x_mm_str[10];
@@ -1711,7 +1723,7 @@ void do_position_report(void)
 	dtostrf(z_mm, 3, 5, z_mm_str);
 	dtostrf(e_mm, 3, 5, e_mm_str);
 	
-	serial_send("-- X:%s Y:%s Z:%s E:%s (mm)\r\n", 
+	serial_send("-- C: X:%s Y:%s Z:%s E:%s (mm)\r\n", 
 									x_mm_str, y_mm_str, z_mm_str, e_mm_str);
 									
 	serial_send("-- X:%lu Y:%lu Z:%lu E:%ld (steps)\r\n", 

@@ -35,6 +35,7 @@
 #include "usb.h"
 #include "command.h"
 #include "planner.h"
+#include "stepper.h"
 
 #ifdef USE_ARC_FUNCTION
   #include "arc_func.h"
@@ -76,6 +77,8 @@ void get_coordinates(struct command *cmd);
 void get_arc_coordinates(struct command *cmd);
 void execute_m92(struct command *cmd);
 void execute_m201(struct command *cmd);
+
+void do_position_report(void);
 
 #ifndef CRITICAL_SECTION_START
 #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli()
@@ -153,7 +156,7 @@ void execute_m201(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.24f-VCP / 14.02.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.24j-VCP / 22.02.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -790,6 +793,21 @@ FORCE_INLINE void homing_routine(unsigned char axis)
     destination[axis] = current_position[axis];
     feedrate = 0;
   }
+  
+	switch(axis){
+	case X_AXIS:
+	  x_homed = 1;
+	  break;
+	case Y_AXIS:
+	  y_homed = 1;
+	  break;
+	case Z_AXIS:
+	  z_homed = 1;
+	  break;
+	default:
+	  //never reached
+	  break;
+	}
 }
 
 //------------------------------------------------
@@ -1194,12 +1212,7 @@ void execute_mcode(struct command *cmd) {
         break;
 		
       case 114: // M114
-        serial_send("ok X%f Y%f Z%f E%f\r\n",
-          current_position[0],
-          current_position[1],
-          current_position[2],
-          current_position[3]
-        );
+		do_position_report();
         break;
 		
       case 119: // M119
@@ -1676,6 +1689,52 @@ void st_synchronize()
       manage_fan_start_speed();
     #endif
   }
+}
+
+
+/***************************************************
+* do_position_report(void)
+*
+* Reports the current position of the stepper motors
+* and sends the information to the host.
+*
+* The axes should be homed after power up to allow
+* an accurate report of the position. Otherwise, the
+* starting positions on power up will be taken to be
+* the zero positions. X, Y, and Z axes do not report
+* positions less than zero.
+****************************************************/
+void do_position_report(void)
+{
+	char x_mm_str[10];
+	char y_mm_str[10];
+	char z_mm_str[10];
+	char e_mm_str[10];
+	
+	float axis_steps_per_mm[4] = _AXIS_STEP_PER_UNIT;
+	st_position_t pos = st_get_current_position();
+	float x_mm = pos.x ? (pos.x / (float)(axis_steps_per_mm[0])) : 0;
+	float y_mm = pos.y ? (pos.y / (float)(axis_steps_per_mm[1])) : 0;
+	float z_mm = pos.z ? (pos.z / (float)(axis_steps_per_mm[2])) : 0;
+	float e_mm = (pos.e != 0) ? (pos.e / (float)(axis_steps_per_mm[3])) : 0;
+	
+	dtostrf(x_mm, 3, 5, x_mm_str);
+	dtostrf(y_mm, 3, 5, y_mm_str);
+	dtostrf(z_mm, 3, 5, z_mm_str);
+	dtostrf(e_mm, 3, 5, e_mm_str);
+	
+	serial_send("-- C: X:%s Y:%s Z:%s E:%s (mm)\r\n", 
+									x_mm_str, y_mm_str, z_mm_str, e_mm_str);
+									
+	serial_send("-- X:%lu Y:%lu Z:%lu E:%ld (steps)\r\n", 
+												pos.x, pos.y, pos.z, pos.e);
+												
+	serial_send("-- Axes Homed X:%d Y:%d Z:%d\r\n", x_homed, y_homed, z_homed);
+	
+	if (!x_homed || !y_homed || !z_homed)
+	{
+		serial_send("-- *Not all axes homed! Positions reported may be incorrect!!!\r\n");
+	}
 }
 
 

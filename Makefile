@@ -5,7 +5,7 @@ F_CPU=16000000
 
 
 MAKIBOX_OBJS   = arc_func.o heater.o main.o makibox.o pins_teensy.o \
-                 planner.o store_eeprom.o usb.o
+                 planner.o stepper.o store_eeprom.o usb.o
 
 
 CC=avr-gcc
@@ -36,7 +36,7 @@ clean:
 makibox: $(MAKIBOX_OBJS)
 
 makibox.elf: $(MAKIBOX_OBJS)
-	$(CC) $(LDFLAGS) -o $@ $^ -lc -lm
+	$(CC) $(LDFLAGS) -o $@ $^ -lm -lc
 #	@(printf "Program size:\n")
 #	@(printf "  .text  %8d bytes\n" 0x$$(readelf -S $@ | grep '\.text' | cut -c 58-63))
 #	@(printf "  .data  %8d bytes\n" 0x$$(readelf -S $@ | grep '\.data' | cut -c 58-63))

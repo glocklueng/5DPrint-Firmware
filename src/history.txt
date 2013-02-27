@@ -7,6 +7,55 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	25 FEB 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Edited M114 position reporting - do_position_report() - so now the millimeters 
+reporting conforms to the RepRap format with "C:" prefixed to indicate that 
+coordinates follow. 
+
+
+--------------------------
+DATE: 	22 FEB 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Ability to track the positions of the X, Y, Z, and E axes added. This is based 
+on counting the actual numer of steps issued to the stepper driver. The system 
+must be homed first for accurate position feedback. On first power up, the 
+existing positions are assumed to be the zero position (X, Y, and Z will not 
+display negative positions - zero is the minimum).
+
+M114 now uses a new function in makibox.c to output text feedack for the 
+position.
+
+Slight update to the make file.
+
+
+--------------------------
+DATE: 	21 FEB 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Slight tweaks to the planner.c and stepper.c split files.
+
+
+
+--------------------------
+DATE: 	20 FEB 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Split stepper ISR and related code from planner.c and added new file - stepper.c
+
+
+
+--------------------------
 DATE: 	14 FEB 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

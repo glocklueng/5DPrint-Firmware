@@ -61,3 +61,42 @@ const short temptable[NUMTEMPS][2] = {
 {	1004	,	5	},
 {	1008	,	0	} //safety
 };
+
+
+// Rough calibration for Makibox A6 Hotbed (initial Beta version).
+// Calibrated to temperature near centre of the Hotbed using a K-Type 
+// Thermocouple.
+// Note: temperature differences / gradients around other areas of the 
+// Hotbed have been ignored for now.
+const short bedtemptable[BNUMTEMPS][2] = {
+{	258	,	200	},		// Extrapolated Value - Test Hotbed can not reach this temp
+{	594	,	140	},
+{	622	,	135	},
+{	650	,	130	},
+{	678	,	125	},
+{	693	,	120	},
+{	723	,	115	},
+{	741	,	110	},
+{	767	,	105	},
+{	786	,	100	},
+{	793	,	95	},
+{	818	,	90	},
+{	831	,	85	},
+{	844	,	80	},
+{	867	,	75	},
+{	878	,	70	},
+{	891	,	65	},
+{	905	,	60	},
+{	916	,	55	},
+{	922	,	50	},
+{	935	,	45	},
+{	943	,	40	},
+{	950	,	35	},
+{	967	,	30	},
+{	976	,	25	},
+{	987	,	20	},		// Assumed Value - Not Calibrated 
+{	994	,	15	},		// Assumed Value - Not Calibrated
+{	1001	,	10	},	// Assumed Value - Not Calibrated
+{	1006	,	5	},	// Assumed Value - Not Calibrated
+{	1010	,	0	} 	//safety // Assumed Value - Not Calibrated
+};

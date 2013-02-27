@@ -71,7 +71,7 @@
 #define INVERT_X_DIR 0
 #define INVERT_Y_DIR 0
 #define INVERT_Z_DIR 0
-#define INVERT_E_DIR 0
+#define INVERT_E_DIR 1
 
 //-----------------------------------------------------------------------
 //// ENDSTOP SETTINGS:
@@ -283,13 +283,15 @@
 #define TEMP_HYSTERESIS 		2	// (°C) range of +/- temperatures considered "close" to the target one
 
 //// The minimal temperature defines the temperature below which the heater will not be enabled
-#define MINTEMP 5
+#define MINTEMP		5
+#define BEDMINTEMP 	5
 
 //// Experimental max temp
 // When temperature exceeds max temp, your heater will be switched off.
 // This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
 // You should use MINTEMP for thermistor short/failure protection.
-#define MAXTEMP 300
+#define MAXTEMP		300
+#define BEDMAXTEMP 	160
 
 // Select one of these only to define how the nozzle temp is read.
 #define HEATER_USES_THERMISTOR

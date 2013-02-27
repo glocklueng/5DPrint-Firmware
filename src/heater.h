@@ -30,9 +30,10 @@
 
 
 #define NUMTEMPS      61
-#define BNUMTEMPS     61
-#define bedtemptable  temptable
+#define BNUMTEMPS     30
+//#define bedtemptable  temptable
 extern const short temptable[NUMTEMPS][2];
+extern const short bedtemptable[BNUMTEMPS][2];
 
 
 #if defined HEATER_USES_THERMISTOR

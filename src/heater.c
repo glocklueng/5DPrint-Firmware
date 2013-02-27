@@ -461,16 +461,16 @@ void PID_autotune(int PIDAT_test_temp)
 	
 	//If tmp is lower then MINTEMP stop the Heater
 	//or it os better to deaktivate the uutput PIN or PWM ?
-	#ifdef MINTEMP
-		minttemp = temp2analogBed(MINTEMP);
+	#ifdef BEDMINTEMP
+		minttemp = temp2analogBed(BEDMINTEMP);
 		if(current_bed_raw <= minttemp)
 		{
 			target_bed_raw = 0;
 		}
 	#endif // #ifdef MINTEMP
   
-	#ifdef MAXTEMP
-		maxttemp = temp2analogBed(MAXTEMP);
+	#ifdef BEDMAXTEMP
+		maxttemp = temp2analogBed(BEDMAXTEMP);
 		if(current_bed_raw >= maxttemp)
 		{
 			target_bed_raw = 0;

@@ -7,6 +7,19 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	27 FEB 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+heater_table.h -> Rough calibration for Makibox A6 Hotbed (initial Beta version).
+Calibrated to temperature near centre of the Hotbed using a K-Type 
+Thermocouple.
+Note: temperature differences / gradients around other areas of the 
+Hotbed have been ignored for now.
+
+
+--------------------------
 DATE: 	25 FEB 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

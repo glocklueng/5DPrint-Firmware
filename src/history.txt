@@ -12,6 +12,16 @@ AUTHOR:	JTK WONG
 		XTRONTEC Limited
 		www.xtrontec.com
 --------------------------
+Slight adjustment to calibration table for hotbed. Looks like there is some 
+hysteresis in the hotbed so readings may not be as accurate when cooling down.
+
+
+--------------------------
+DATE: 	27 FEB 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
 heater_table.h -> Rough calibration for Makibox A6 Hotbed (initial Beta version).
 Calibrated to temperature near centre of the Hotbed using a K-Type 
 Thermocouple.

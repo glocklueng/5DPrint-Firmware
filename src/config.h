@@ -291,7 +291,7 @@
 // This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
 // You should use MINTEMP for thermistor short/failure protection.
 #define MAXTEMP		300
-#define BEDMAXTEMP 	160
+#define BEDMAXTEMP 	200
 
 // Select one of these only to define how the nozzle temp is read.
 #define HEATER_USES_THERMISTOR

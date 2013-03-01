@@ -59,6 +59,10 @@ extern float max_e_jerk;
 #define Ki_address (Kp_address + sizeof(unsigned int))
 #define Kd_address (Ki_address + sizeof(unsigned int))
 
+#define EEPROM_START_ADDR		EEPROM_OFFSET
+#define EEPROM_END_ADDR			(Kd_address + sizeof(unsigned int))
+#define EEPROM_CHECKSUM_ADDR	EEPROM_END_ADDR
+
 extern void EEPROM_RetrieveSettings(int def, int printout );
 extern void EEPROM_printSettings();
 extern void EEPROM_StoreSettings();

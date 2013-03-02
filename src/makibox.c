@@ -48,7 +48,7 @@
 
 #define  FORCE_INLINE __attribute__((always_inline)) inline
 
-#define BOOTLOADER_PASSCODE		34640180 
+#define BOOTLOADER_PASSCODE		U40
 
 // Minimum change in target temperature for 'WATCHPERIOD' to be activated
 // for hotend heater.

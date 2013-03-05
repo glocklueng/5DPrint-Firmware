@@ -7,6 +7,16 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	05 MAR 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Further tidying up of store_eeprom.c
+
+
+
+--------------------------
 DATE: 	01 MAR 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

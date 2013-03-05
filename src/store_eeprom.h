@@ -21,14 +21,9 @@
 
 #define EEPROM_OFFSET 100
 
-
-// IMPORTANT:  Whenever there are changes made to the variables stored in EEPROM
-// in the functions below, also increment the version number. This makes sure that
-// the default values are used whenever there is a change to the data, to prevent
-// wrong data being written to the variables.
-// ALSO:  always make sure the variables in the Store and retrieve sections are in the same order.
-#define EEPROM_VERSION "S03"
-
+// EEPROM_VERSION is not really used for checking anything now but left in here 
+// and saved to the EEPROM for the moment.
+#define EEPROM_VERSION "B00"
 
 extern float axis_steps_per_unit[4]; 
 extern float max_feedrate[4];
@@ -45,6 +40,8 @@ extern float max_e_jerk;
 	extern unsigned long minsegmenttime;
 #endif
 
+// EEPROM addresses for the various configuration values stored.
+// Take extra care when changing or modifying these.
 #define axis_steps_per_unit_address (EEPROM_OFFSET + 4*sizeof(char))
 #define max_feedrate_address (axis_steps_per_unit_address + 4*sizeof(float))
 #define max_acceleration_units_per_sq_second_address (max_feedrate_address + 4*sizeof(float))

@@ -34,18 +34,18 @@
 
 // Function Prototypes
 unsigned short EEPROM_Checksum(void);
-unsigned char EEPROM_read_setting(int address, void * value, size_t NumBytes);
-unsigned char EEPROM_write_setting(int address, void * value, size_t NumBytes);
+unsigned char EEPROM_read_setting(int address, void * valuePtr, size_t NumBytes);
+unsigned char EEPROM_write_setting(int address, void * valuePtr, size_t NumBytes);
 
 
 //======================================================================================
 //========================= Read / Write EEPROM =======================================
-unsigned char EEPROM_write_setting(int address, void * value, size_t NumBytes)
+unsigned char EEPROM_write_setting(int address, void * valuePtr, size_t NumBytes)
 {  
   unsigned char i;
   unsigned char *p;
   
-  p = value;
+  p = valuePtr;
   
   for (i = 0; i < NumBytes; i++)
     eeprom_write_byte((unsigned char *)address++, *p++);
@@ -53,12 +53,12 @@ unsigned char EEPROM_write_setting(int address, void * value, size_t NumBytes)
   return i;
 }
 
-unsigned char EEPROM_read_setting(int address, void * value, size_t NumBytes)
+unsigned char EEPROM_read_setting(int address, void * valuePtr, size_t NumBytes)
 {
   unsigned char i;
   unsigned char *p;
   
-  p = value;
+  p = valuePtr;
   
   for (i = 0; i < NumBytes; i++)
     *p++ = eeprom_read_byte((unsigned char *)address++);
@@ -70,7 +70,7 @@ unsigned char EEPROM_read_setting(int address, void * value, size_t NumBytes)
 
 void EEPROM_StoreSettings() 
 {
-  char ver[4]= "000";
+  char ver[4]= EEPROM_VERSION;
   EEPROM_write_setting(EEPROM_OFFSET, &ver, sizeof(ver)); // invalidate data first
   
   EEPROM_write_setting(axis_steps_per_unit_address, &axis_steps_per_unit, 
@@ -107,77 +107,69 @@ void EEPROM_StoreSettings()
    EEPROM_write_setting(Kd_address, &PID_Kd, sizeof(PID_Kd));   //Kd
   #else
    unsigned int kp, ki, kd;
-   kp = 2000;
-   ki = 15;
-   kd = 1000;
+   kp = PID_PGAIN;
+   ki = PID_IGAIN;
+   kd = PID_DGAIN;
    EEPROM_write_setting(Kp_address, &kp, sizeof(kp));     //Kp
    EEPROM_write_setting(Ki_address, &ki, sizeof(ki));     //Ki
    EEPROM_write_setting(Kd_address, &kd, sizeof(kd));     //Kd
   #endif
-  
-
-  char ver2[4] = EEPROM_VERSION;
-  EEPROM_write_setting(EEPROM_OFFSET, ver2, sizeof(ver2)); // validate data
 
   unsigned short checksum = EEPROM_Checksum();
   EEPROM_write_setting(EEPROM_CHECKSUM_ADDR, &checksum, sizeof(checksum));
   serial_send("Settings Stored\r\n");
- 
 }
 
 
 void EEPROM_printSettings()
 {
-    char str_buf1[10], str_buf2[10], str_buf3[10], str_buf4[10], str_buf5[10];
-	unsigned short stored_checksum, calculated_checksum;
+    char str_buf0[10], str_buf1[10], str_buf2[10], str_buf3[10], str_buf4[10];
+	unsigned short stored_checksum;
 	
   #ifdef PRINT_EEPROM_SETTINGS
       serial_send("Steps per unit:\r\n  M92 X%d Y%d Z%d E%d\r\n",
-        (unsigned short)axis_steps_per_unit[0],
-        (unsigned short)axis_steps_per_unit[1],
-        (unsigned short)axis_steps_per_unit[2],
-        (unsigned short)axis_steps_per_unit[3]
-      );
+									(unsigned short)axis_steps_per_unit[0],
+									(unsigned short)axis_steps_per_unit[1],
+									(unsigned short)axis_steps_per_unit[2],
+									(unsigned short)axis_steps_per_unit[3]);
       
-	  dtostrf(max_feedrate[0], 3, 3, str_buf1);
-	  dtostrf(max_feedrate[1], 3, 3, str_buf2);
-	  dtostrf(max_feedrate[2], 3, 3, str_buf3);
-	  dtostrf(max_feedrate[3], 3, 3, str_buf4);
+	  dtostrf(max_feedrate[0], 3, 3, str_buf0);
+	  dtostrf(max_feedrate[1], 3, 3, str_buf1);
+	  dtostrf(max_feedrate[2], 3, 3, str_buf2);
+	  dtostrf(max_feedrate[3], 3, 3, str_buf3);
 	  
       serial_send("Maximum feedrates (mm/s):\r\n  M202 X%s Y%s Z%s E%s\r\n",
-        str_buf1,
-        str_buf2,
-        str_buf3,
-        str_buf4
-      );
+																	str_buf0,
+																	str_buf1,
+																	str_buf2,
+																	str_buf3);
 
       serial_send("Maximum Acceleration (mm/s2):\r\n  M201 X%ld Y%ld Z%ld E%ld\r\n",
-        max_acceleration_units_per_sq_second[0],
-        max_acceleration_units_per_sq_second[1],
-        max_acceleration_units_per_sq_second[2],
-        max_acceleration_units_per_sq_second[3]
-      );
+										max_acceleration_units_per_sq_second[0],
+										max_acceleration_units_per_sq_second[1],
+										max_acceleration_units_per_sq_second[2],
+										max_acceleration_units_per_sq_second[3]);
 
       
-	  dtostrf(move_acceleration, 5, 3, str_buf1);
-	  dtostrf(retract_acceleration, 5, 3, str_buf2);
+	  dtostrf(move_acceleration, 5, 3, str_buf0);
+	  dtostrf(retract_acceleration, 5, 3, str_buf1);
 	  
 	  serial_send("Acceleration: S=acceleration, T=retract acceleration\r\n");
-      serial_send("  M204 S%s T%s\r\n", str_buf1, str_buf2);
+      serial_send("  M204 S%s T%s\r\n", str_buf0, str_buf1);
 
 
-      dtostrf(minimumfeedrate, 3, 3, str_buf1);
-	  dtostrf(mintravelfeedrate, 3,3, str_buf2);
-	  dtostrf(max_xy_jerk, 3, 3, str_buf3);
-	  dtostrf(max_z_jerk, 3, 3, str_buf4);
-	  dtostrf(max_e_jerk, 3, 3, str_buf5);
+      dtostrf(minimumfeedrate, 3, 3, str_buf0);
+	  dtostrf(mintravelfeedrate, 3,3, str_buf1);
+	  dtostrf(max_xy_jerk, 3, 3, str_buf2);
+	  dtostrf(max_z_jerk, 3, 3, str_buf3);
+	  dtostrf(max_e_jerk, 3, 3, str_buf4);
 	  
 	  serial_send("Advanced variables (mm/s): S=Min feedrate, T=Min travel feedrate, XY=max xY jerk,  Z=max Z jerk, E=max E jerk\r\n");
-      serial_send("  M205 S%s T%s XY%s Z%s E%s\r\n",	str_buf1,
+      serial_send("  M205 S%s T%s XY%s Z%s E%s\r\n",	str_buf0,
+														str_buf1,
 														str_buf2,
 														str_buf3,
-														str_buf4,
-														str_buf5);
+														str_buf4);
 
     #ifdef PIDTEMP
       serial_send("PID settings:\r\n  M301 P%d I%d D%d\r\n", PID_Kp, PID_Ki, PID_Kd); 
@@ -189,27 +181,19 @@ void EEPROM_printSettings()
 	EEPROM_read_setting(EEPROM_CHECKSUM_ADDR, &stored_checksum, 
 													sizeof(stored_checksum));
 	
-	calculated_checksum = EEPROM_Checksum();
-	
 	serial_send("Stored EEPROM Checksum: 0x%X\r\n", stored_checksum);
-	serial_send("Expected EEPROM Checksum: 0x%X\r\n", calculated_checksum);
+	serial_send("Expected EEPROM Checksum: 0x%X\r\n", EEPROM_Checksum());
 } 
 
 
 void EEPROM_RetrieveSettings(int def, int printout)
 {  // if def=true, the default values will be used
-
-    //char stored_ver[4];
-    //char ver[4]=EEPROM_VERSION;
 	
 	unsigned short stored_checksum = 0;
     
 	EEPROM_read_setting(EEPROM_CHECKSUM_ADDR, &stored_checksum, 
 													sizeof(stored_checksum));
-	
-    //EEPROM_read_setting(EEPROM_OFFSET,stored_ver); //read stored version
-    //if ((!def)&&(strncmp(ver,stored_ver,3)==0))
-	
+		
 	if ( (!def) && (stored_checksum == EEPROM_Checksum()) )
     {   // checksum match
       EEPROM_read_setting(axis_steps_per_unit_address, &axis_steps_per_unit, 

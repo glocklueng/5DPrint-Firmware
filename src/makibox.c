@@ -140,7 +140,7 @@ void do_position_report(void);
 
 // M500 - stores paramters in EEPROM
 // M501 - reads parameters from EEPROM (if you need to reset them after you changed them temporarily).
-// M502 - reverts to the default "factory settings". You still need to store them in EEPROM afterwards if you want to.
+// M502 - reverts to the default "factory settings".
 // M503 - Print settings
 
 // Debug feature / Testing the PID for Hotend
@@ -156,7 +156,7 @@ void do_position_report(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.24l-VCP / 28.02.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.24o-VCP / 05.03.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1073,7 +1073,7 @@ void execute_mcode(struct command *cmd) {
           {
 			serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
 							(int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ),
-							analog2temp(current_bed_raw),
+							analog2tempBed(current_bed_raw),
 							(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
 			
             codenum = millis(); 
@@ -1308,16 +1308,16 @@ void execute_mcode(struct command *cmd) {
 			PID_autotune((int)(cmd->S));
       break;
 #endif
-      case 400: // M400 finish all moves
+      case 400: // M400 - finish all moves
       	st_synchronize();	
       break;
 	  
 #ifdef USE_EEPROM_SETTINGS
-      case 500: // Store settings in EEPROM
+      case 500: // M500 - Store settings in EEPROM
         EEPROM_StoreSettings();
       break;
 	  
-      case 501: // Read settings from EEPROM
+      case 501: // M501 - Read settings from EEPROM
         EEPROM_RetrieveSettings(0, 1);
         for(int8_t i=0; i < NUM_AXIS; i++)
         {
@@ -1325,19 +1325,20 @@ void execute_mcode(struct command *cmd) {
         }
       break;
 	  
-      case 502: // Revert to default settings
-        EEPROM_RetrieveSettings(1, 1);
+      case 502: // M502 - Revert to default settings
+        EEPROM_RetrieveSettings(1, 0);
         for(int8_t i=0; i < NUM_AXIS; i++)
         {
           axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
         }
+		EEPROM_StoreSettings();
       break;
 	  
-      case 503: // print settings currently in memory
+      case 503: // M503 - print current settings
         EEPROM_printSettings();
       break;  
 #endif      
-      case 603: // M603  Free RAM
+      case 603: // M603 - Free RAM
 			serial_send("// Makibox Firmware Version: %s\r\n", VERSION_TEXT);
             serial_send("// Free Ram: %d\r\n", FreeRam1());
       break;

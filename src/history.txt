@@ -24,6 +24,9 @@ BOOTLOADER_PASSCODE changed to 3464 to make it more simple. The U40 code would
 probably not have been processed properly as the command parser looks for a 
 number after the letter 'F'
 
+plan_set_position() called when M92 is run in order to reset current position 
+since steps per mm have changed.
+
 
 --------------------------
 DATE: 	01 MAR 2013

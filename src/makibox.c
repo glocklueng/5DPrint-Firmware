@@ -156,7 +156,7 @@ void do_position_report(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.24p-VCP / 05.03.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.24q-VCP / 05.03.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1194,6 +1194,9 @@ void execute_mcode(struct command *cmd) {
 		
       case 92: // M92
         execute_m92(cmd);
+		// Update current position as steps per mm have been changed.
+		plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], 
+						current_position[Z_AXIS], current_position[E_AXIS]);
         break;
 		
       case 93: // M93 show current axis steps.

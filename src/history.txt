@@ -14,6 +14,8 @@ AUTHOR:	JTK WONG
 --------------------------
 Further tidying up of store_eeprom.c
 
+Fix M190 reporting bed temperature incorrectly - was essentially using the 
+wrong table during the waiting for bed temperature to reach target.
 
 
 --------------------------

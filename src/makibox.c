@@ -48,7 +48,7 @@
 
 #define  FORCE_INLINE __attribute__((always_inline)) inline
 
-#define BOOTLOADER_PASSCODE		U40
+#define BOOTLOADER_PASSCODE		3464
 
 // Minimum change in target temperature for 'WATCHPERIOD' to be activated
 // for hotend heater.
@@ -156,7 +156,7 @@ void do_position_report(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.24o-VCP / 05.03.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.24p-VCP / 05.03.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;

@@ -41,6 +41,7 @@ uint32_t timer1_compa_isr_exe_micros = 0;
 uint32_t timer1_compa_isr_exe_micros_min = 0xFFFFFFFF;
 uint32_t timer1_compa_isr_exe_micros_max = 0;
 
+
 // actual_steps_ are used to try and keep track of the actual positions of the
 // axes and extruder drive. System must first be 'homed' so we know where the
 // zero points are.
@@ -281,9 +282,10 @@ ISR(TIMER1_COMPA_vect)
 {
 	uint32_t isr_start_micros;
 	
-	PreemptionFlag |= 0x0001;
-	
 	isr_start_micros = micros();
+	
+	PreemptionFlag |= 0x0001;	
+	
 	
   // If there is no current block, attempt to pop one from the buffer
   if (current_block == NULL) {
@@ -639,16 +641,19 @@ ISR(TIMER1_COMPA_vect)
     }   
   }
 
-	timer1_compa_isr_exe_micros = (micros() - isr_start_micros);
-	
-	if (timer1_compa_isr_exe_micros > timer1_compa_isr_exe_micros_max)
+	if (DEBUG > -1)
 	{
-		timer1_compa_isr_exe_micros_max = timer1_compa_isr_exe_micros;
-	}
-	
-	if (timer1_compa_isr_exe_micros < timer1_compa_isr_exe_micros_min)
-	{
-		timer1_compa_isr_exe_micros_min = timer1_compa_isr_exe_micros;
+		timer1_compa_isr_exe_micros = (micros() - isr_start_micros);
+		
+		if (timer1_compa_isr_exe_micros > timer1_compa_isr_exe_micros_max)
+		{
+			timer1_compa_isr_exe_micros_max = timer1_compa_isr_exe_micros;
+		}
+		
+		if (timer1_compa_isr_exe_micros < timer1_compa_isr_exe_micros_min)
+		{
+			timer1_compa_isr_exe_micros_min = timer1_compa_isr_exe_micros;
+		}
 	}
 }
 

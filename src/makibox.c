@@ -156,7 +156,7 @@ void do_position_report(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.24q-VCP / 05.03.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.24r-VCP / 06.03.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -716,6 +716,7 @@ void process_command(const char *cmdstr)
   cmd.has_P = parse_int(cmdstr, 'P', &cmd.P);
   cmd.has_S = parse_int(cmdstr, 'S', &cmd.S);
   cmd.has_T = parse_int(cmdstr, 'T', &cmd.T);
+  cmd.has_D = parse_int(cmdstr, 'D', &cmd.D);
 
   // Dispatch command.
   unsigned long start_tm, end_tm;
@@ -1013,7 +1014,7 @@ void execute_mcode(struct command *cmd) {
           {
 			serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
 							(int)( (heater_duty * 100) / (float)(HEATER_CURRENT)),
-							analog2temp(current_bed_raw),
+							analog2tempBed(current_bed_raw),
 							(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
             
             codenum = millis();
@@ -1197,6 +1198,7 @@ void execute_mcode(struct command *cmd) {
 		// Update current position as steps per mm have been changed.
 		plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], 
 						current_position[Z_AXIS], current_position[E_AXIS]);
+		serial_send("-- Steps per mm settings changed (but not saved to memory).\r\n");
         break;
 		
       case 93: // M93 show current axis steps.
@@ -1299,10 +1301,11 @@ void execute_mcode(struct command *cmd) {
       break;
 #ifdef PIDTEMP
       case 301: // M301
-        //if(code_seen('P')) PID_Kp = code_value();
-        //if(code_seen('I')) PID_Ki = code_value();
-        //if(code_seen('D')) PID_Kd = code_value();
-        //updatePID();
+		if(cmd->has_P) PID_Kp = (unsigned int)cmd->P;
+        if(cmd->has_I) PID_Ki = (unsigned int)cmd->I;
+        if(cmd->has_D) PID_Kd = (unsigned int)cmd->D;
+        updatePID();
+		serial_send("-- PID settings changed (but not saved to memory).\r\n");
       break;
 #endif //PIDTEMP      
 #ifdef PID_AUTOTUNE
@@ -1347,18 +1350,32 @@ void execute_mcode(struct command *cmd) {
       break;
 	  
 	  case 604:	// M604 Show Timer 1 COMPA ISR Execution Time Debug Info
+		if (DEBUG > -1)
+		{
 			serial_send("// Last TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
 												timer1_compa_isr_exe_micros);
 			serial_send("// MIN TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
 												timer1_compa_isr_exe_micros_min);
 			serial_send("// MAX TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
 												timer1_compa_isr_exe_micros_max);
+		}
+		else
+		{
+			serial_send("// Timer 1 execution time debug info not availale in this version of firmaware.\r\n");
+		}
 	  break;
 	  
 	  case 605:	// M605 Reset Timer 1 COMPA ISR Execution Time Min / Max Values
+		if (DEBUG > -1)
+		{
 			timer1_compa_isr_exe_micros_min = 0xFFFFFFFF;
 			timer1_compa_isr_exe_micros_max = 0;
 			serial_send("// TIMER1_COMPA_vect ISR Execution Time MIN / MAX Reset.\r\n");
+		}
+		else
+		{
+			serial_send("// Timer 1 execution time debug info not availale in this version of firmaware.\r\n");
+		}
 	  break;
 	  
 	  case 606: // M606 - Show CPU loading information

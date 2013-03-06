@@ -8,6 +8,27 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	06 MAR 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Commented out #define PID_AUTOTUNE to remove PID autotune function. We have not 
+seen this work sucessfully yet with the Makibox A6 hardware. Perhaps we can add 
+this back in later once we have seen it work properly or adjusted the algorithm 
+slightly.
+
+Allow PID paramters for the hotend to be adjusted via the M301 command.
+
+Set #define DEBUG to -1 since we are not using the debug info or CPU loading 
+estimates at the moment. Saves the microprocessor from having to do these 
+calculations.
+
+Fix M109 reporting bed temperature incorrectly - was essentially using the 
+wrong table during the waiting for hotend temperature to reach target.
+
+
+--------------------------
 DATE: 	05 MAR 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

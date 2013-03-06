@@ -1,8 +1,9 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
-// Define DEBUG to > -1 to enable CPU loading calculations
-#define DEBUG 1
+// Define DEBUG to > -1 to enable CPU loading calculations and other debug 
+// info and functions.
+#define DEBUG -1
 
 // BASIC SETTINGS: select axis scaling, and endstop configuration
 
@@ -204,7 +205,7 @@
 
 // M303 - PID relay autotune S<temperature> sets the target temperature. 
 // (default target temperature = 150C)
-#define PID_AUTOTUNE
+//#define PID_AUTOTUNE
 
 // If the temperature difference between the target temperature and the current temperature
 // is more then PID_FUNCTIONAL_RANGE then the PID will operate with proportional control only.

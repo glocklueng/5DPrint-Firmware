@@ -20,6 +20,7 @@ struct command {
 	uint16_t has_P : 1;
 	uint16_t has_S : 1;
 	uint16_t has_T : 1;
+	uint16_t has_D : 1;
 	float X;
 	float Y;
 	float Z;
@@ -30,4 +31,5 @@ struct command {
 	int32_t P;
 	int32_t S;
 	int32_t T;
+	int32_t D;
 };

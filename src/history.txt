@@ -8,6 +8,16 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	07 MAR 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Added display of X Y Z max lengths to M119 command.
+ 
+
+
+--------------------------
 DATE: 	06 MAR 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

@@ -159,7 +159,7 @@ void do_position_report(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.24s-VCP / 07.03.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.24t-VCP / 07.03.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1244,6 +1244,9 @@ void execute_mcode(struct command *cmd) {
       	  serial_send("z_max:%s", (READ(Z_MAX_PIN)^Z_ENDSTOP_INVERT)?"H ":"L ");
       	#endif
         serial_send("\r\n"); 
+		serial_send("// X_MAX_LENGTH:%d ", X_MAX_LENGTH);
+		serial_send("Y_MAX_LENGTH:%d ", Y_MAX_LENGTH);
+		serial_send("Z_MAX_LENGTH:%d \r\n", Z_MAX_LENGTH);
       	break;
 		
       case 201: // M201  Set maximum acceleration in units/s^2 for print moves (M201 X1000 Y1000)

@@ -57,6 +57,7 @@ unsigned short virtual_steps_z = 0;
 uint8_t is_homing = 0;
 uint8_t x_homed, y_homed, z_homed = 0;
 
+uint8_t pause_print_req = 0;
 
 // Stepper
 
@@ -638,6 +639,24 @@ ISR(TIMER1_COMPA_vect)
     if (step_events_completed >= current_block->step_event_count) {
       current_block = NULL;
       plan_discard_current_block();
+	  
+	  if (pause_print_req)
+	  {	// Stop stepper motors and pause the print
+		DISABLE_STEPPER_DRIVER_INTERRUPT();
+		
+		// Get current positions and target temperatures
+		
+		// Copy remaining contents of plan buffer
+		// Copy current block_buffer_head and block_buffer_tail
+		
+		// Clear the plan buffer
+		
+		// de-assert 'pause_print_req' flag
+		pause_print_req = 0;
+		
+		// Enable stepper driver interrupt so user can adjust the printer
+		ENABLE_STEPPER_DRIVER_INTERRUPT();
+	  }
     }   
   }
 

@@ -14,6 +14,8 @@ extern unsigned short virtual_steps_z;
 extern uint8_t is_homing;
 extern uint8_t x_homed, y_homed, z_homed;
 
+extern uint8_t pause_print_req;
+
 typedef struct {
 	unsigned long x;
 	unsigned long y;

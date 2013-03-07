@@ -77,6 +77,7 @@ void get_coordinates(struct command *cmd);
 void get_arc_coordinates(struct command *cmd);
 void execute_m92(struct command *cmd);
 void execute_m201(struct command *cmd);
+void execute_m226(struct command *cmd);
 
 void do_position_report(void);
 
@@ -133,6 +134,8 @@ void do_position_report(void);
 // M220 - set speed factor override percentage S=factor in percent 
 // M221 - set extruder multiply factor S100 --> original Extrude Speed 
 
+// M226 - M226 / M226 P1 = Pause print  M226 P0 = resume print 
+
 // M301 - Set PID parameters P I and D
 // M303 - PID relay autotune S<temperature> sets the target temperature. (default target temperature = 150C)
 
@@ -156,7 +159,7 @@ void do_position_report(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.24r-VCP / 06.03.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.24s-VCP / 07.03.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1299,6 +1302,11 @@ void execute_mcode(struct command *cmd) {
         if(cmd->has_S) 
           extrudemultiply = CONSTRAIN(cmd->S, 40, 200);
       break;
+	  
+	  case 226:	// M226 - M226 / M226 P1 = Pause print  M226 P0 = resume print
+		execute_m226(cmd);
+	  break;
+	  
 #ifdef PIDTEMP
       case 301: // M301
 		if(cmd->has_P) PID_Kp = (unsigned int)cmd->P;
@@ -1516,6 +1524,27 @@ void execute_m201(struct command *cmd)
   if (cmd->has_E)
     update_max_acceleration(E_AXIS, cmd->E);
 }
+
+void execute_m226(struct command *cmd)
+{
+	if ((cmd->has_P) && (cmd->P == 0))
+	{	// Resume print
+		//destination[X_AXIS] = ;
+		//destination[Y_AXIS] = ;
+		//destination[Z_AXIS] = ;
+		//plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], current_position[E_AXIS], help_feedrate/6000.0);
+  
+		//for(int i=0; i < NUM_AXIS; i++)
+		//{
+		//	current_position[i] = destination[i];
+		//} 
+	}
+	else
+	{	// Pause print
+		pause_print_req = 1;
+	}
+}
+
 
 void update_axis_pos(int axis, float pos)
 {

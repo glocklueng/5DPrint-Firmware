@@ -159,7 +159,7 @@ void do_position_report(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.24s-VCP / 07.03.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.24u-VCP / 08.03.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -182,6 +182,8 @@ float current_position[NUM_AXIS] = {0.0, 0.0, 0.0, 0.0};
 float add_homing[3]={0,0,0};
 
 int home_all_axis = 1;
+uint8_t x_homed, y_homed, z_homed = 0;
+
 //unsigned ?? ToDo: Check
 int feedrate = 1500, next_feedrate, saved_feedrate;
 
@@ -213,6 +215,8 @@ int hotendtC = 0, bedtempC = 0;
 unsigned long previous_millis_cmd = 0;
 unsigned long max_inactive_time = 0;
 unsigned long stepper_inactive_time = 0;
+
+uint8_t print_paused = 0;
 
 //Temp Monitor for repetier
 unsigned char manage_monitor = 255;
@@ -1501,6 +1505,7 @@ void update_max_acceleration(int axis, float units_per_sq_second)
     units_per_sq_second * axis_steps_per_unit[axis];
 }
 
+
 void execute_m92(struct command *cmd)
 {
   if (cmd->has_X)
@@ -1512,6 +1517,7 @@ void execute_m92(struct command *cmd)
   if (cmd->has_E)
     update_axis_steps(E_AXIS, cmd->E);
 }
+
 
 void execute_m201(struct command *cmd)
 {
@@ -1525,9 +1531,10 @@ void execute_m201(struct command *cmd)
     update_max_acceleration(E_AXIS, cmd->E);
 }
 
+
 void execute_m226(struct command *cmd)
 {
-	if ((cmd->has_P) && (cmd->P == 0))
+	if ((cmd->has_P) && (cmd->P == 0) && (print_paused))
 	{	// Resume print
 		//destination[X_AXIS] = ;
 		//destination[Y_AXIS] = ;
@@ -1540,8 +1547,17 @@ void execute_m226(struct command *cmd)
 		//} 
 	}
 	else
-	{	// Pause print
+	{	// Pause print after current block has finished
 		pause_print_req = 1;
+		
+		serial_send("\r\n// .");
+		while (pause_print_req)
+		{	// Wait for current block to finish and printer state to be saved
+			// This prevents user from adding extra moves to the plan buffer 
+			// until we have saved the buffered moves from the print.
+			serial_send(".");
+		}
+		print_paused = 1;
 	}
 }
 
@@ -1760,13 +1776,12 @@ void do_position_report(void)
 	char y_mm_str[10];
 	char z_mm_str[10];
 	char e_mm_str[10];
-	
-	float axis_steps_per_mm[4] = _AXIS_STEP_PER_UNIT;
+
 	st_position_t pos = st_get_current_position();
-	float x_mm = pos.x ? (pos.x / (float)(axis_steps_per_mm[0])) : 0;
-	float y_mm = pos.y ? (pos.y / (float)(axis_steps_per_mm[1])) : 0;
-	float z_mm = pos.z ? (pos.z / (float)(axis_steps_per_mm[2])) : 0;
-	float e_mm = (pos.e != 0) ? (pos.e / (float)(axis_steps_per_mm[3])) : 0;
+	float x_mm = pos.x ? (pos.x / (float)(axis_steps_per_unit[X_AXIS])) : 0;
+	float y_mm = pos.y ? (pos.y / (float)(axis_steps_per_unit[Y_AXIS])) : 0;
+	float z_mm = pos.z ? (pos.z / (float)(axis_steps_per_unit[Z_AXIS])) : 0;
+	float e_mm = (pos.e != 0) ? (pos.e / (float)(axis_steps_per_unit[E_AXIS])) : 0;
 	
 	dtostrf(x_mm, 3, 5, x_mm_str);
 	dtostrf(y_mm, 3, 5, y_mm_str);

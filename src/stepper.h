@@ -15,6 +15,7 @@ extern uint8_t is_homing;
 extern uint8_t x_homed, y_homed, z_homed;
 
 extern uint8_t pause_print_req;
+extern uint8_t print_paused;
 
 typedef struct {
 	unsigned long x;
@@ -29,5 +30,7 @@ void st_sleep();
 void st_synchronize();
 void st_set_current_position(st_position_t new_position);
 st_position_t st_get_current_position(void);
+void get_current_printer_state(void);
+void clear_plan_buffer(void);
 
 #endif

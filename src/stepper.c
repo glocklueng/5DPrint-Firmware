@@ -29,6 +29,7 @@
 #include "speed_lookuptable.h"
 #include "planner.h"
 #include "stepper.h"
+#include "heater.h"
 
 
 #ifndef CRITICAL_SECTION_START
@@ -55,9 +56,10 @@ unsigned short virtual_steps_y = 0;
 unsigned short virtual_steps_z = 0;
 
 uint8_t is_homing = 0;
-uint8_t x_homed, y_homed, z_homed = 0;
 
 uint8_t pause_print_req = 0;
+paused_data_t paused_data;
+//block_t	resume_buffer[BLOCK_BUFFER_SIZE];
 
 // Stepper
 
@@ -644,12 +646,10 @@ ISR(TIMER1_COMPA_vect)
 	  {	// Stop stepper motors and pause the print
 		DISABLE_STEPPER_DRIVER_INTERRUPT();
 		
-		// Get current positions and target temperatures
-		
-		// Copy remaining contents of plan buffer
-		// Copy current block_buffer_head and block_buffer_tail
+		get_current_printer_state();
 		
 		// Clear the plan buffer
+		clear_plan_buffer();
 		
 		// de-assert 'pause_print_req' flag
 		pause_print_req = 0;
@@ -740,6 +740,49 @@ st_position_t st_get_current_position(void)
 	pos.e = actual_steps_e;
 	CRITICAL_SECTION_END;
 
-  return pos;
+	return pos;
 }
 
+
+void get_current_printer_state(void)
+{
+	// Get current positions and target temperatures
+	paused_data.paused_pos_x = actual_steps_x / (float)(axis_steps_per_unit[X_AXIS]);
+	paused_data.paused_pos_y = actual_steps_y / (float)(axis_steps_per_unit[Y_AXIS]);
+	paused_data.paused_pos_z = actual_steps_z / (float)(axis_steps_per_unit[Z_AXIS]);
+	
+	paused_data.hotend_target_temp = target_temp;
+	paused_data.hotend_target_temp_raw = target_raw;
+	paused_data.target_bed_temp_raw = target_bed_raw;
+	
+	// Copy remaining contents of plan buffer
+	/*for(int i = 0; i < BLOCK_BUFFER_SIZE; i++)
+	{
+		resume_buffer[i] = block_buffer[i];
+	}*/
+
+	// Copy current block_buffer_head and block_buffer_tail
+	paused_data.block_buffer_head = block_buffer_head; 
+	paused_data.block_buffer_tail = block_buffer_tail;
+}
+
+
+void clear_plan_buffer(void)
+{
+	st_position_t pos;
+	float current_pos_in_mm[NUM_AXIS];
+	
+	// Reset the plan buffer
+	plan_init();
+	
+	pos = st_get_current_position();
+	
+	current_pos_in_mm[X_AXIS] = pos.x / (float)(axis_steps_per_unit[X_AXIS]);
+	current_pos_in_mm[Y_AXIS] = pos.y / (float)(axis_steps_per_unit[Y_AXIS]);
+	current_pos_in_mm[Z_AXIS] = pos.z / (float)(axis_steps_per_unit[Z_AXIS]);
+	current_pos_in_mm[E_AXIS] = pos.e / (float)(axis_steps_per_unit[E_AXIS]);
+	
+	// 
+	plan_set_position(current_pos_in_mm[X_AXIS], current_pos_in_mm[Y_AXIS], 
+						current_pos_in_mm[Z_AXIS], current_pos_in_mm[E_AXIS]);
+}

@@ -42,5 +42,7 @@ makibox.elf: $(MAKIBOX_OBJS)
 #	@(printf "  .data  %8d bytes\n" 0x$$(readelf -S $@ | grep '\.data' | cut -c 58-63))
 #	@(printf "  .bss   %8d bytes\n" 0x$$(readelf -S $@ | grep '\.bss' | cut -c 58-63))
 
+	avr-size makibox.elf 
+
 makibox.hex: makibox.elf
 	$(OBJCOPY) -O ihex -R .eeprom $< $@

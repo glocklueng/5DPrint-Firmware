@@ -96,6 +96,7 @@ block_t block_buffer[BLOCK_BUFFER_SIZE];            // A ring buffer for motion 
 volatile unsigned char block_buffer_head;           // Index of the next block to be pushed
 volatile unsigned char block_buffer_tail;           // Index of the block to process now
 
+
 //===========================================================================
 //=============================private variables ============================
 //===========================================================================

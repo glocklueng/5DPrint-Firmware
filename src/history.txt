@@ -8,11 +8,13 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
-DATE: 	07 MAR 2013
+DATE: 	16 APR 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited
 		www.xtrontec.com
 --------------------------
+Snap shot of current state pushed to repository before having a go with 
+different approach for the pause-print feature.
 
 
 --------------------------

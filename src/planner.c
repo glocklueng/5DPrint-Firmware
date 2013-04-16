@@ -92,10 +92,14 @@ unsigned long axis_steps_per_sqr_second[NUM_AXIS];
  */
 
 
-block_t block_buffer[BLOCK_BUFFER_SIZE];            // A ring buffer for motion instructions
+block_t block_buffer[BLOCK_BUFFER_SIZE 
+					+ PRINT_PAUSED_BLOCK_BUF_SIZE]; // A ring buffer for motion instructions
 volatile unsigned char block_buffer_head;           // Index of the next block to be pushed
 volatile unsigned char block_buffer_tail;           // Index of the block to process now
 
+volatile unsigned char block_buffer_size = BLOCK_BUFFER_SIZE;
+volatile unsigned char block_buffer_mask = BLOCK_BUFFER_MASK;
+volatile unsigned char block_buffer_offset = 0;
 
 //===========================================================================
 //=============================private variables ============================
@@ -105,14 +109,17 @@ volatile unsigned char block_buffer_tail;           // Index of the block to pro
 // NOTE: Removed modulo (%) operator, which uses an expensive divide and multiplication.
 static int8_t next_block_index(int8_t block_index) {
   block_index++;
-  if (block_index == BLOCK_BUFFER_SIZE) { block_index = 0; }
+  if (block_index == block_buffer_size) { block_index -= block_buffer_size; }
   return(block_index);
 }
 
 
 // Returns the index of the previous block in the ring buffer
 static int8_t prev_block_index(int8_t block_index) {
-  if (block_index == 0) { block_index = BLOCK_BUFFER_SIZE; }
+  if (block_index == block_buffer_offset)
+  {
+	block_index = block_buffer_offset + block_buffer_size;
+  }
   block_index--;
   return(block_index);
 }
@@ -245,9 +252,9 @@ void planner_reverse_pass() {
   unsigned char tail = block_buffer_tail;
   CRITICAL_SECTION_END;
   
-  if(((block_buffer_head-tail + BLOCK_BUFFER_SIZE) & BLOCK_BUFFER_MASK) > 3) 
+  if(((block_buffer_head - tail + block_buffer_size) & block_buffer_mask) > 3) 
   {
-    block_index = (block_buffer_head - 3) & BLOCK_BUFFER_MASK; 
+    block_index = (block_buffer_head - 3) & block_buffer_mask; 
     block_t *block[3] = { NULL, NULL, NULL };
     while(block_index != tail) { 
       block_index = prev_block_index(block_index); 
@@ -391,7 +398,7 @@ uint8_t blocks_queued()
   if (head > tail) {
     return head - tail;
   } else if (head < tail) {
-    return head + (BLOCK_BUFFER_SIZE - tail);
+    return head + (block_buffer_size - tail - block_buffer_offset);
   } else {
     return 0;
   }
@@ -399,7 +406,7 @@ uint8_t blocks_queued()
 
 uint8_t blocks_available()
 {
-  return BLOCK_BUFFER_SIZE - blocks_queued();
+  return block_buffer_size - blocks_queued();
 }
 
 float junction_deviation = 0.1;
@@ -513,9 +520,9 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   } 
 
   // slow down when the buffer starts to empty, rather than wait at the corner for a buffer refill
-  int moves_queued=(block_buffer_head-block_buffer_tail + BLOCK_BUFFER_SIZE) & BLOCK_BUFFER_MASK;
+  int moves_queued=(block_buffer_head-block_buffer_tail-block_buffer_offset + block_buffer_size) & block_buffer_mask;
 #ifdef SLOWDOWN  
-  if(moves_queued < (BLOCK_BUFFER_SIZE * 0.5) && moves_queued > 1) feed_rate = feed_rate*moves_queued / (float)(BLOCK_BUFFER_SIZE * 0.5); 
+  if(moves_queued < (block_buffer_size * 0.5) && moves_queued > 1) feed_rate = feed_rate*moves_queued / (float)(block_buffer_size * 0.5); 
 #endif
 
   float delta_mm[4];
@@ -719,7 +726,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
 
 int calc_plannerpuffer_fill(void)
 {
-  int moves_queued=(block_buffer_head-block_buffer_tail + BLOCK_BUFFER_SIZE) & BLOCK_BUFFER_MASK;
+  int moves_queued=(block_buffer_head-block_buffer_tail + block_buffer_size) & block_buffer_mask;
   return(moves_queued);
 }
 

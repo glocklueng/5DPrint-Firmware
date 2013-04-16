@@ -59,7 +59,8 @@ uint8_t is_homing = 0;
 
 uint8_t pause_print_req = 0;
 paused_data_t paused_data;
-//block_t	resume_buffer[BLOCK_BUFFER_SIZE];
+
+
 
 // Stepper
 
@@ -759,7 +760,7 @@ void get_current_printer_state(void)
 	/*for(int i = 0; i < BLOCK_BUFFER_SIZE; i++)
 	{
 		resume_buffer[i] = block_buffer[i];
-	}*/
+	}*/ // Not enough SRAM to do this.
 
 	// Copy current block_buffer_head and block_buffer_tail
 	paused_data.block_buffer_head = block_buffer_head; 
@@ -782,7 +783,6 @@ void clear_plan_buffer(void)
 	current_pos_in_mm[Z_AXIS] = pos.z / (float)(axis_steps_per_unit[Z_AXIS]);
 	current_pos_in_mm[E_AXIS] = pos.e / (float)(axis_steps_per_unit[E_AXIS]);
 	
-	// 
 	plan_set_position(current_pos_in_mm[X_AXIS], current_pos_in_mm[Y_AXIS], 
 						current_pos_in_mm[Z_AXIS], current_pos_in_mm[E_AXIS]);
 }

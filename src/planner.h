@@ -49,9 +49,10 @@ typedef struct {
 	unsigned char block_buffer_tail;
 } paused_data_t;
 
-// This is used to make a copy of the plan buffer contents when print is 
-// paused.
-//extern block_t	resume_buffer[BLOCK_BUFFER_SIZE];
+// This is used adjust the circular plan buffer when the print has been paused
+extern unsigned char volatile block_buffer_size;
+extern unsigned char volatile block_buffer_mask;
+extern volatile unsigned char block_buffer_offset;
 
 void plan_init();
 void plan_buffer_line(float x, float y, float z, float e, float feed_rate);
@@ -61,7 +62,7 @@ void plan_discard_current_block();
 void check_axes_activity();
 
 
-extern block_t block_buffer[BLOCK_BUFFER_SIZE];
+extern block_t block_buffer[BLOCK_BUFFER_SIZE + PRINT_PAUSED_BLOCK_BUF_SIZE];
 extern volatile unsigned char block_buffer_head;
 extern volatile unsigned char block_buffer_tail;
 

@@ -94,8 +94,8 @@
 // Max Lengths
 //-----------------------------------------------------------------------
 #define X_MAX_LENGTH 115
-#define Y_MAX_LENGTH 165
-#define Z_MAX_LENGTH 100
+#define Y_MAX_LENGTH 155
+#define Z_MAX_LENGTH 90
 
 //-----------------------------------------------------------------------
 //// MOVEMENT SETTINGS
@@ -145,7 +145,7 @@
 //-----------------------------------------------------------------------
 // Planner buffer Size
 //-----------------------------------------------------------------------
-// The number of linear motions that can be in the plan at any give time.
+// The number of linear motions that can be in the plan at any given time.
 // This must be a power-of-two!  Currently, sizeof(struct block) is 72 
 // bytes.
 // 
@@ -157,6 +157,9 @@
 //    128     0x7F    9216
 #define BLOCK_BUFFER_SIZE 64
 #define BLOCK_BUFFER_MASK 0x3F
+
+#define PRINT_PAUSED_BLOCK_BUF_SIZE	8
+#define PRINT_PAUSED_BLOCK_BUF_MASK	0X07
 
 //-----------------------------------------------------------------------
 //// SETTINGS FOR ARC FUNCTION (Command G2/G2)

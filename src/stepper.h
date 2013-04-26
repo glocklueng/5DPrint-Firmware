@@ -31,6 +31,8 @@ void st_synchronize();
 void st_set_current_position(st_position_t new_position);
 st_position_t st_get_current_position(void);
 void get_current_printer_state(void);
+void set_print_paused_buffer(void);
 void clear_plan_buffer(void);
+void resume_normal_print_buffer(void);
 
 #endif

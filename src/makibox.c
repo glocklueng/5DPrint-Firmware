@@ -159,7 +159,7 @@ void do_position_report(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.24v-VCP / 16.04.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.24w-VCP / 26.04.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -736,7 +736,7 @@ void process_command(const char *cmdstr)
   end_tm = millis();
   uint8_t qfree = blocks_available();
   serial_send("ok %ld Q%d (%lums execute)\r\n", 
-    cmdseqnbr, qfree, end_tm - start_tm);
+								cmdseqnbr, qfree, end_tm - start_tm);
   cmdseqnbr++;
   previous_millis_cmd = end_tm;
 }
@@ -827,6 +827,14 @@ void execute_gcode(struct command *cmd)
   switch(cmd->code) {
       case 0: // G0 -> G1
       case 1: // G1
+		if (print_paused)
+		{
+			st_position_t pos = st_get_current_position();
+			current_position[X_AXIS] = pos.x ? (pos.x / (float)(axis_steps_per_unit[X_AXIS])) : 0;
+			current_position[Y_AXIS]= pos.y ? (pos.y / (float)(axis_steps_per_unit[Y_AXIS])) : 0;
+			current_position[Z_AXIS] = pos.z ? (pos.z / (float)(axis_steps_per_unit[Z_AXIS])) : 0;
+			current_position[E_AXIS] = (pos.e != 0) ? (pos.e / (float)(axis_steps_per_unit[E_AXIS])) : 0;
+		}
         get_coordinates(cmd); // For X Y Z E F
         prepare_move();
         previous_millis_cmd = millis();
@@ -1533,30 +1541,62 @@ void execute_m201(struct command *cmd)
 
 
 void execute_m226(struct command *cmd)
-{
-	if ((cmd->has_P) && (cmd->P == 0) && (print_paused))
+{	
+	if ((cmd->has_P) && (cmd->P == 0))
 	{	// Resume print
-		//destination[X_AXIS] = ;
-		//destination[Y_AXIS] = ;
-		//destination[Z_AXIS] = ;
-		//plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], current_position[E_AXIS], help_feedrate/6000.0);
-  
-		//for(int i=0; i < NUM_AXIS; i++)
-		//{
-		//	current_position[i] = destination[i];
-		//} 
+		if (print_paused)
+		{
+			// Ensure target temperatures set to same as when print was paused
+			target_temp = paused_data.hotend_target_temp;
+			target_raw = paused_data.hotend_target_temp_raw;
+			target_bed_raw = paused_data.target_bed_temp_raw;
+			
+			serial_send("\r\n//Resuming print. Please wait...");
+			
+			// Allow time for hot end to reach target
+			delay(10000);
+			
+			// Move print head and z-axis to position before print was paused
+			
+			// Move X and Y Axes
+			destination[X_AXIS] = paused_data.paused_pos_x;
+			destination[Y_AXIS] = paused_data.paused_pos_y;
+			destination[Z_AXIS] = current_position[Z_AXIS];
+			destination[E_AXIS] = current_position[E_AXIS];
+			
+			prepare_move();
+			
+			// Wait for moves to complete
+			st_synchronize();
+			
+			// Move Z-Axis
+			destination[X_AXIS] = current_position[X_AXIS];
+			destination[Y_AXIS] = current_position[Y_AXIS];
+			destination[Z_AXIS] = paused_data.paused_pos_z;
+			destination[E_AXIS] = current_position[E_AXIS];
+			
+			prepare_move();
+			
+			// Wait for moves to complete
+			st_synchronize();
+			/*
+			st_position_t pos = st_get_current_position();
+			current_position[X_AXIS] = pos.x ? (pos.x / (float)(axis_steps_per_unit[X_AXIS])) : 0;
+			current_position[Y_AXIS]= pos.y ? (pos.y / (float)(axis_steps_per_unit[Y_AXIS])) : 0;
+			current_position[Z_AXIS] = pos.z ? (pos.z / (float)(axis_steps_per_unit[Z_AXIS])) : 0;
+			current_position[E_AXIS] = (pos.e != 0) ? (pos.e / (float)(axis_steps_per_unit[E_AXIS])) : 0;
+			*/
+			resume_normal_print_buffer();
+			
+			print_paused = 0;
+		}
 	}
 	else
 	{	// Pause print after current block has finished
 		pause_print_req = 1;
 		
-		serial_send("\r\n// .");
-		while (pause_print_req)
-		{	// Wait for current block to finish and printer state to be saved
-			// This prevents user from adding extra moves to the plan buffer 
-			// until we have saved the buffered moves from the print.
-			serial_send(".");
-		}
+		serial_send("\r\n// Pausing print...\r\n");
+
 		print_paused = 1;
 	}
 }

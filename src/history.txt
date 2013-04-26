@@ -6,6 +6,33 @@ Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
 
+--------------------------
+DATE: 	26 APR 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+New attempt at pause-print feature. When a pause print is requested, a 
+pause_print_req flag is raised. The current buffer block is allowed to complete 
+printing then the current state of the printer is saved (including hot-end 
+target temp, hot-bed target temp, x y z positions, block_buffer_head, 
+block_buffer_tail). The first 8 blocks (starting at index 0) from the buffer 
+are copied. The buffer size is then reduced to PRINT_PAUSED_BLOCK_BUF_SIZE and 
+the buffer is re-initialised so that block_buffer_head and block_buffer_head are 
+0.
+
+To invoke the pause-print feature in Pronterface... Press the 'Pause' button to 
+stop Pronterface from sending further Gcodes from the file to the printer. Send 
+command M226 P1 to stop the printer from printing the rest of its print buffer 
+and save the printer state. The user should now be able to move the x y z axes 
+and extrude and fix any issues (e.g. jammed filament).
+
+To resume the print, send command M226 P0 to the printer and press the 'Resume' 
+button in Pronterface so that it will start sending Gcodes from the file to the 
+printer. The printer should move x y z axes to the positions they were at when 
+the pause was invoked and continue printing.
+
+Still work in progress! 
 
 --------------------------
 DATE: 	16 APR 2013

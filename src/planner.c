@@ -92,14 +92,12 @@ unsigned long axis_steps_per_sqr_second[NUM_AXIS];
  */
 
 
-block_t block_buffer[BLOCK_BUFFER_SIZE 
-					+ PRINT_PAUSED_BLOCK_BUF_SIZE]; // A ring buffer for motion instructions
+block_t block_buffer[BLOCK_BUFFER_SIZE]; // A ring buffer for motion instructions
 volatile unsigned char block_buffer_head;           // Index of the next block to be pushed
 volatile unsigned char block_buffer_tail;           // Index of the block to process now
 
 volatile unsigned char block_buffer_size = BLOCK_BUFFER_SIZE;
 volatile unsigned char block_buffer_mask = BLOCK_BUFFER_MASK;
-volatile unsigned char block_buffer_offset = 0;
 
 //===========================================================================
 //=============================private variables ============================
@@ -116,10 +114,6 @@ static int8_t next_block_index(int8_t block_index) {
 
 // Returns the index of the previous block in the ring buffer
 static int8_t prev_block_index(int8_t block_index) {
-  if (block_index == block_buffer_offset)
-  {
-	block_index = block_buffer_offset + block_buffer_size;
-  }
   block_index--;
   return(block_index);
 }
@@ -372,7 +366,7 @@ void plan_init() {
 
 void plan_discard_current_block() {
   if (block_buffer_head != block_buffer_tail) {
-    block_buffer_tail = (block_buffer_tail + 1) & BLOCK_BUFFER_MASK;  
+    block_buffer_tail = (block_buffer_tail + 1) & block_buffer_mask;  
   }
 }
 
@@ -398,7 +392,7 @@ uint8_t blocks_queued()
   if (head > tail) {
     return head - tail;
   } else if (head < tail) {
-    return head + (block_buffer_size - tail - block_buffer_offset);
+    return head + (block_buffer_size - tail);
   } else {
     return 0;
   }
@@ -520,7 +514,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   } 
 
   // slow down when the buffer starts to empty, rather than wait at the corner for a buffer refill
-  int moves_queued=(block_buffer_head-block_buffer_tail-block_buffer_offset + block_buffer_size) & block_buffer_mask;
+  int moves_queued=(block_buffer_head-block_buffer_tail + block_buffer_size) & block_buffer_mask;
 #ifdef SLOWDOWN  
   if(moves_queued < (block_buffer_size * 0.5) && moves_queued > 1) feed_rate = feed_rate*moves_queued / (float)(block_buffer_size * 0.5); 
 #endif
@@ -782,7 +776,7 @@ void getHighESpeed()
         high=se;
       }
     }
-    block_index = (block_index+1) & BLOCK_BUFFER_MASK;
+    block_index = (block_index+1) & block_buffer_mask;
   }
    
   float t=autotemp_min+high*autotemp_factor;
@@ -819,7 +813,7 @@ void check_axes_activity() {
       if(block->steps_y != 0) y_active++;
       if(block->steps_z != 0) z_active++;
       if(block->steps_e != 0) e_active++;
-      block_index = (block_index+1) & BLOCK_BUFFER_MASK;
+      block_index = (block_index+1) & block_buffer_mask;
     }
   }
   if((DISABLE_X) && (x_active == 0)) disable_x();

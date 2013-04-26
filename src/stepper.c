@@ -170,6 +170,8 @@ static volatile uint8_t endstop_x_hit=0;
 static volatile uint8_t endstop_y_hit=0;
 static volatile uint8_t endstop_z_hit=0;
 
+block_t resume_buffer[PRINT_PAUSED_BLOCK_BUF_SIZE];
+
 #if X_MIN_PIN > -1
   static uint8_t old_x_min_endstop=0;
 #endif
@@ -649,6 +651,8 @@ ISR(TIMER1_COMPA_vect)
 		
 		get_current_printer_state();
 		
+		set_print_paused_buffer();
+		
 		// Clear the plan buffer
 		clear_plan_buffer();
 		
@@ -660,21 +664,41 @@ ISR(TIMER1_COMPA_vect)
 	  }
     }   
   }
-
-	if (DEBUG > -1)
-	{
-		timer1_compa_isr_exe_micros = (micros() - isr_start_micros);
+  else
+  {
+	if (pause_print_req)
+	{	// Stop stepper motors and pause the print
+		DISABLE_STEPPER_DRIVER_INTERRUPT();
 		
-		if (timer1_compa_isr_exe_micros > timer1_compa_isr_exe_micros_max)
-		{
-			timer1_compa_isr_exe_micros_max = timer1_compa_isr_exe_micros;
-		}
+		get_current_printer_state();
 		
-		if (timer1_compa_isr_exe_micros < timer1_compa_isr_exe_micros_min)
-		{
-			timer1_compa_isr_exe_micros_min = timer1_compa_isr_exe_micros;
-		}
+		set_print_paused_buffer();
+		
+		// Clear the plan buffer
+		clear_plan_buffer();
+		
+		// de-assert 'pause_print_req' flag
+		pause_print_req = 0;
+		
+		// Enable stepper driver interrupt so user can adjust the printer
+		ENABLE_STEPPER_DRIVER_INTERRUPT();
 	}
+  }
+  
+  if (DEBUG > -1)
+  {
+	timer1_compa_isr_exe_micros = (micros() - isr_start_micros);
+	
+	if (timer1_compa_isr_exe_micros > timer1_compa_isr_exe_micros_max)
+	{
+		timer1_compa_isr_exe_micros_max = timer1_compa_isr_exe_micros;
+	}
+		
+	if (timer1_compa_isr_exe_micros < timer1_compa_isr_exe_micros_min)
+	{
+		timer1_compa_isr_exe_micros_min = timer1_compa_isr_exe_micros;
+	}
+  }
 }
 
 
@@ -751,20 +775,31 @@ void get_current_printer_state(void)
 	paused_data.paused_pos_x = actual_steps_x / (float)(axis_steps_per_unit[X_AXIS]);
 	paused_data.paused_pos_y = actual_steps_y / (float)(axis_steps_per_unit[Y_AXIS]);
 	paused_data.paused_pos_z = actual_steps_z / (float)(axis_steps_per_unit[Z_AXIS]);
+	paused_data.paused_pos_e = actual_steps_e / (float)(axis_steps_per_unit[E_AXIS]);
 	
 	paused_data.hotend_target_temp = target_temp;
 	paused_data.hotend_target_temp_raw = target_raw;
 	paused_data.target_bed_temp_raw = target_bed_raw;
 	
-	// Copy remaining contents of plan buffer
-	/*for(int i = 0; i < BLOCK_BUFFER_SIZE; i++)
+	// Copy first 8 buffer contents
+	for (int i = 0; i < PRINT_PAUSED_BLOCK_BUF_SIZE; i++)
 	{
 		resume_buffer[i] = block_buffer[i];
-	}*/ // Not enough SRAM to do this.
+	}
 
 	// Copy current block_buffer_head and block_buffer_tail
 	paused_data.block_buffer_head = block_buffer_head; 
 	paused_data.block_buffer_tail = block_buffer_tail;
+}
+
+
+void set_print_paused_buffer(void)
+{
+	block_buffer_size = PRINT_PAUSED_BLOCK_BUF_SIZE;
+	block_buffer_mask = PRINT_PAUSED_BLOCK_BUF_MASK;
+	
+	block_buffer_tail = 0;
+	block_buffer_head = 0;
 }
 
 
@@ -785,4 +820,21 @@ void clear_plan_buffer(void)
 	
 	plan_set_position(current_pos_in_mm[X_AXIS], current_pos_in_mm[Y_AXIS], 
 						current_pos_in_mm[Z_AXIS], current_pos_in_mm[E_AXIS]);
+}
+
+
+void resume_normal_print_buffer(void)
+{
+	block_buffer_size = BLOCK_BUFFER_SIZE;
+	block_buffer_mask = BLOCK_BUFFER_MASK;
+	
+	// Copy first 8 buffer contents from saved data
+	for (int i = 0; i < PRINT_PAUSED_BLOCK_BUF_SIZE; i++)
+	{
+		block_buffer[i] = resume_buffer[i];
+	}
+	
+	// Copy block_buffer_head and block_buffer_tail from saved data
+	block_buffer_head = paused_data.block_buffer_head; 
+	block_buffer_tail = paused_data.block_buffer_tail;
 }

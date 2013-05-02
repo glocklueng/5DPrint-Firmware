@@ -311,7 +311,54 @@ ISR(TIMER1_COMPA_vect)
   } 
 
   if (current_block != NULL) {
-    // Set directions TO DO This should be done once during init of trapezoid. Endstops -> interrupt
+    // Disable Motors If Not Used
+	// Reduces power dissipation in stepper motors
+	if (DISABLE_X)
+	{
+		if (current_block->steps_x > 0)
+		{
+			enable_x();
+		}
+		else
+		{
+			disable_x();
+		}
+	}
+	if (DISABLE_Y)
+	{
+		if (current_block->steps_y > 0)
+		{
+			enable_y();
+		}
+		else
+		{
+			disable_y();
+		}
+	}
+	if (DISABLE_Z)
+	{
+		if (current_block->steps_z > 0)
+		{
+			enable_z();
+		}
+		else
+		{
+			disable_z();
+		}
+	}
+	if (DISABLE_E)
+	{
+		if (current_block->steps_e > 0)
+		{
+			enable_e();
+		}
+		else
+		{
+			disable_e();
+		}
+	}
+	
+	// Set directions TO DO This should be done once during init of trapezoid. Endstops -> interrupt
     out_bits = current_block->direction_bits;
 
     // Set direction and check limit switches
@@ -463,10 +510,10 @@ ISR(TIMER1_COMPA_vect)
       if (counter_x > 0) {
         if(!endstop_x_hit)
         {
-          if(virtual_steps_x)
+		  if(virtual_steps_x)
             virtual_steps_x--;
           else
-            WRITE(X_STEP_PIN, HIGH);
+			WRITE(X_STEP_PIN, HIGH);
 			
 			// Keeping track of stepper positions
 			if (current_block->direction_bits & (1 << X_AXIS))
@@ -488,10 +535,10 @@ ISR(TIMER1_COMPA_vect)
       if (counter_y > 0) {
         if(!endstop_y_hit)
         {
-          if(virtual_steps_y)
+		  if(virtual_steps_y)
             virtual_steps_y--;
-          else
-            WRITE(Y_STEP_PIN, HIGH);
+          else			
+			WRITE(Y_STEP_PIN, HIGH);
 			
 			// Keeping track of stepper positions
 			if (current_block->direction_bits & (1 << Y_AXIS))
@@ -513,10 +560,10 @@ ISR(TIMER1_COMPA_vect)
       if (counter_z > 0) {
         if(!endstop_z_hit)
         {
-          if(virtual_steps_z)
+		  if(virtual_steps_z)
             virtual_steps_z--;
           else
-            WRITE(Z_STEP_PIN, HIGH);
+			WRITE(Z_STEP_PIN, HIGH);
 			
 			// Keeping track of stepper positions
 			if (current_block->direction_bits & (1 << Z_AXIS))
@@ -536,7 +583,7 @@ ISR(TIMER1_COMPA_vect)
 
       counter_e += current_block->steps_e;
       if (counter_e > 0) {
-        WRITE(E_STEP_PIN, HIGH);
+		WRITE(E_STEP_PIN, HIGH);
 		
 		// Keeping track of stepper positions
 		if (current_block->direction_bits & (1 << E_AXIS))
@@ -595,7 +642,6 @@ ISR(TIMER1_COMPA_vect)
 	 	asm volatile("nop");
 	  }
 	  // ******************* END OF DIRTY HACK *******************
-	  
 	  
       step_events_completed += 1;  
       if(step_events_completed >= current_block->step_event_count) break;

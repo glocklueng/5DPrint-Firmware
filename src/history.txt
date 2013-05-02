@@ -7,6 +7,20 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	02 MAY 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Added code in stepper.c to turn off x/y/z stepper motors if they are not 
+required for the current 'block'. This is in order to reduce the power 
+dissipation (heating) in the stepper motors.
+
+This code will be copied from the 'pause-print' development branch to the main /
+default branch since this is a feature request for the near future.
+
+
+--------------------------
 DATE: 	26 APR 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

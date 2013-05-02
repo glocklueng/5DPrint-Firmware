@@ -306,7 +306,57 @@ ISR(TIMER1_COMPA_vect)
   } 
 
   if (current_block != NULL) {
-    // Set directions TO DO This should be done once during init of trapezoid. Endstops -> interrupt
+    // Disable Motors If Not Used
+	// Reduces power dissipation in stepper motors
+	if (DISABLE_X)
+	{
+		if (current_block->steps_x > 0)
+		{
+			enable_x();
+		}
+		else
+		{
+			disable_x();
+		}
+	}
+	
+	if (DISABLE_Y)
+	{
+		if (current_block->steps_y > 0)
+		{
+			enable_y();
+		}
+		else
+		{
+			disable_y();
+		}
+	}
+	
+	if (DISABLE_Z)
+	{
+		if (current_block->steps_z > 0)
+		{
+			enable_z();
+		}
+		else
+		{
+			disable_z();
+		}
+	}
+	
+	if (DISABLE_E)
+	{
+		if (current_block->steps_e > 0)
+		{
+			enable_e();
+		}
+		else
+		{
+			disable_e();
+		}
+	}
+    
+	// Set directions TO DO This should be done once during init of trapezoid. Endstops -> interrupt
     out_bits = current_block->direction_bits;
 
     // Set direction and check limit switches

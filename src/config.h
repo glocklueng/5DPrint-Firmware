@@ -61,8 +61,8 @@
 //-----------------------------------------------------------------------
 // Disables axis when it's not being used.
 //-----------------------------------------------------------------------
-#define DISABLE_X 0
-#define DISABLE_Y 0
+#define DISABLE_X 1
+#define DISABLE_Y 1
 #define DISABLE_Z 1
 #define DISABLE_E 0
 

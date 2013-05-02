@@ -13,7 +13,7 @@
 // Makiox A6 standard stepper motors have 1.8 deg/step. However with micro-
 // stepping feature 1/16th step is achieved.
 // Therefore 1mm movement in x, y, z = (200 / 8) * 16 = 400 micro-steps.
-#define _AXIS_STEP_PER_UNIT {400, 400, 400, 210}
+#define _AXIS_STEP_PER_UNIT {400, 400, 400, 154}
 
 
 //// Endstop Settings

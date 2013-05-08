@@ -80,6 +80,7 @@ void execute_m201(struct command *cmd);
 void execute_m226(struct command *cmd);
 
 void do_position_report(void);
+void wait_extruder_target_temp(void);
 
 #ifndef CRITICAL_SECTION_START
 #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli()
@@ -159,7 +160,7 @@ void do_position_report(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.24x-VCP / 02.05.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.24z-VCP / 08.05.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -824,16 +825,21 @@ FORCE_INLINE void homing_routine(unsigned char axis)
 void execute_gcode(struct command *cmd)
 {
   unsigned long codenum; //throw away variable
+  st_position_t pos;
+  
   switch(cmd->code) {
       case 0: // G0 -> G1
       case 1: // G1
 		if (print_paused)
 		{
-			st_position_t pos = st_get_current_position();
+			pos = st_get_current_position();
 			current_position[X_AXIS] = pos.x ? (pos.x / (float)(axis_steps_per_unit[X_AXIS])) : 0;
-			current_position[Y_AXIS]= pos.y ? (pos.y / (float)(axis_steps_per_unit[Y_AXIS])) : 0;
+			current_position[Y_AXIS] = pos.y ? (pos.y / (float)(axis_steps_per_unit[Y_AXIS])) : 0;
 			current_position[Z_AXIS] = pos.z ? (pos.z / (float)(axis_steps_per_unit[Z_AXIS])) : 0;
 			current_position[E_AXIS] = (pos.e != 0) ? (pos.e / (float)(axis_steps_per_unit[E_AXIS])) : 0;
+			
+			plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],
+								current_position[Z_AXIS], current_position[E_AXIS]);
 		}
         get_coordinates(cmd); // For X Y Z E F
         prepare_move();
@@ -1000,74 +1006,8 @@ void execute_mcode(struct command *cmd) {
                 watchmillis = 0;
             }
         #endif
-        codenum = millis(); 
-       
-        /* See if we are heating up or cooling down */
-        // true if heating, false if cooling
-		int target_direction = (current_raw < target_raw) ? 1 : 0;
         
-		int target_raw_low = temp2analogh(target_temp - TEMP_HYSTERESIS);
-		int target_raw_high = temp2analogh(target_temp + TEMP_HYSTERESIS);
-		
-		serial_send("\r\n// Target Temperature: %ddegC", target_temp);
-		serial_send("\r\n// Waiting for extruder heater to reach target temperature...\r\n");
-		
-		long hotend_timeout = millis();
-		
-      #ifdef TEMP_RESIDENCY_TIME
-        long residencyStart;
-        residencyStart = -1;
-        /* continue to loop until we have reached the target temp   
-           _and_ until TEMP_RESIDENCY_TIME hasn't passed since we reached it */
-        while( (target_direction ? (current_raw < target_raw_low) : (current_raw > target_raw_high))
-            || (residencyStart > -1 && (millis() - residencyStart) < TEMP_RESIDENCY_TIME*1000)
-			|| (residencyStart == -1) ) {
-      #else
-        while ( target_direction ? (current_raw < target_raw_low) : (current_raw > target_raw_high) ) {
-      #endif
-          if( (millis() - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up/cooling down
-          {
-			serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
-							(int)( (heater_duty * 100) / (float)(HEATER_CURRENT)),
-							analog2tempBed(current_bed_raw),
-							(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
-            
-            codenum = millis();
-          }
-          #if (MINIMUM_FAN_START_SPEED > 0)
-            manage_fan_start_speed();
-          #endif
-          #ifdef TEMP_RESIDENCY_TIME
-            /* start/restart the TEMP_RESIDENCY_TIME timer whenever we reach target temp for the first time
-               or when current temp falls outside the hysteresis after target temp was reached */
-            if (   (residencyStart == -1)
-                || (residencyStart > -1 && labs(analog2temp(current_raw) - analog2temp(target_raw)) > TEMP_HYSTERESIS) ) {
-              residencyStart = millis();
-            }
-          #endif
-		  
-		  // Timeout if target not reached after HOTEND_HEATUP_TIMEOUT 
-		  // milli-seconds has passed. Exit loop if timeout reached.
-		  if ( (millis() - hotend_timeout) > HOTEND_HEATUP_TIMEOUT )
-		  {
-			serial_send("\r\n// *** Hot-end heater took too long to reach target. Timed Out!\r\n");
-			break;
-		  }
-		  
-		  if ( (target_temp == 0) || (target_raw == 0) )
-		  {
-			serial_send("\r\n// *** Hot-end heater does not appear to be responding.\r\n");
-			serial_send("// *** STOP PRINT!!! - Power Off Printer - Disconnect and close host software.\r\n");
-			serial_send("//*** Check hot-end and hot-end thermistor connections!!!\r\n");
-			
-			serial_send("\r\n// *** Firmware will continue operation after 30 seconds...\r\n");
-			
-			delay(30000);
-			
-			serial_send("// *** Continuing...\r\n");
-			break;
-		  }
-	    }
+		wait_extruder_target_temp();
       break;
 	  
       case 190: // M190 - Wait for bed heater to reach target temperature.
@@ -1546,6 +1486,8 @@ void execute_m226(struct command *cmd)
 	{	// Resume print
 		if (print_paused)
 		{
+			feedrate = 1000;
+			
 			// Ensure target temperatures set to same as when print was paused
 			target_temp = paused_data.hotend_target_temp;
 			target_raw = paused_data.hotend_target_temp_raw;
@@ -1554,15 +1496,17 @@ void execute_m226(struct command *cmd)
 			serial_send("\r\n//Resuming print. Please wait...");
 			
 			// Allow time for hot end to reach target
-			delay(10000);
+			wait_extruder_target_temp();		
 			
 			// Move print head and z-axis to position before print was paused
+			
+			st_position_t pos = st_get_current_position();
 			
 			// Move X and Y Axes
 			destination[X_AXIS] = paused_data.paused_pos_x;
 			destination[Y_AXIS] = paused_data.paused_pos_y;
-			destination[Z_AXIS] = current_position[Z_AXIS];
-			destination[E_AXIS] = current_position[E_AXIS];
+			destination[Z_AXIS] = pos.z ? (pos.z / (float)(axis_steps_per_unit[Z_AXIS])) : 0;
+			destination[E_AXIS] = (pos.e != 0) ? (pos.e / (float)(axis_steps_per_unit[E_AXIS])) : 0;
 			
 			prepare_move();
 			
@@ -1570,34 +1514,45 @@ void execute_m226(struct command *cmd)
 			st_synchronize();
 			
 			// Move Z-Axis
-			destination[X_AXIS] = current_position[X_AXIS];
-			destination[Y_AXIS] = current_position[Y_AXIS];
 			destination[Z_AXIS] = paused_data.paused_pos_z;
-			destination[E_AXIS] = current_position[E_AXIS];
 			
 			prepare_move();
 			
 			// Wait for moves to complete
 			st_synchronize();
-			/*
-			st_position_t pos = st_get_current_position();
-			current_position[X_AXIS] = pos.x ? (pos.x / (float)(axis_steps_per_unit[X_AXIS])) : 0;
-			current_position[Y_AXIS]= pos.y ? (pos.y / (float)(axis_steps_per_unit[Y_AXIS])) : 0;
-			current_position[Z_AXIS] = pos.z ? (pos.z / (float)(axis_steps_per_unit[Z_AXIS])) : 0;
-			current_position[E_AXIS] = (pos.e != 0) ? (pos.e / (float)(axis_steps_per_unit[E_AXIS])) : 0;
-			*/
+			
+			
+			current_position[X_AXIS] = paused_data.current_position_x;
+			current_position[Y_AXIS] = paused_data.current_position_y;
+			current_position[Z_AXIS] = paused_data.current_position_z;
+			current_position[E_AXIS] = paused_data.current_position_e;
+			
+			plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], 
+								current_position[Z_AXIS], current_position[E_AXIS]);
+
+			st_set_current_position(pos);
+			
 			resume_normal_print_buffer();
 			
 			print_paused = 0;
 		}
 	}
 	else
-	{	// Pause print after current block has finished
-		pause_print_req = 1;
-		
-		serial_send("\r\n// Pausing print...\r\n");
+	{
+		if (!print_paused)
+		{
+			// Pause print after current block has finished
+			pause_print_req = 1;
+			
+			serial_send("\r\n// Pausing print...\r\n");
+			
+			paused_data.current_position_x = current_position[X_AXIS];
+			paused_data.current_position_y = current_position[Y_AXIS];
+			paused_data.current_position_z = current_position[Z_AXIS];
+			paused_data.current_position_e = current_position[E_AXIS];
 
-		print_paused = 1;
+			print_paused = 1;
+		}
 	}
 }
 
@@ -1839,6 +1794,88 @@ void do_position_report(void)
 	if (!x_homed || !y_homed || !z_homed)
 	{
 		serial_send("-- *Not all axes homed! Positions reported may be incorrect!!!\r\n");
+	}
+}
+
+
+/***************************************************
+* wait_extruder_target_temp(void)
+*
+* Waits for extruder heater to reach target 
+* temperature (defined by target_temp variable).
+*
+****************************************************/
+void wait_extruder_target_temp(void)
+{
+	unsigned long timer;
+	
+	timer = millis(); 
+       
+	/* See if we are heating up or cooling down */
+	// true if heating, false if cooling
+	int target_direction = (current_raw < target_raw) ? 1 : 0;
+	
+	int target_raw_low = temp2analogh(target_temp - TEMP_HYSTERESIS);
+	int target_raw_high = temp2analogh(target_temp + TEMP_HYSTERESIS);
+	
+	serial_send("\r\n// Target Temperature: %ddegC", target_temp);
+	serial_send("\r\n// Waiting for extruder heater to reach target temperature...\r\n");
+	
+	long hotend_timeout = millis();
+	
+  #ifdef TEMP_RESIDENCY_TIME
+	long residencyStart;
+	residencyStart = -1;
+	/* continue to loop until we have reached the target temp   
+	   _and_ until TEMP_RESIDENCY_TIME hasn't passed since we reached it */
+	while( (target_direction ? (current_raw < target_raw_low) : (current_raw > target_raw_high))
+		|| (residencyStart > -1 && (millis() - residencyStart) < TEMP_RESIDENCY_TIME*1000)
+		|| (residencyStart == -1) ) {
+  #else
+	while ( target_direction ? (current_raw < target_raw_low) : (current_raw > target_raw_high) ) {
+  #endif
+	  if( (millis() - timer) > 1000 ) //Print Temp Reading every 1 second while heating up/cooling down
+	  {
+		serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
+						(int)( (heater_duty * 100) / (float)(HEATER_CURRENT)),
+						analog2tempBed(current_bed_raw),
+						(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
+		
+		timer = millis();
+	  }
+	  #if (MINIMUM_FAN_START_SPEED > 0)
+		manage_fan_start_speed();
+	  #endif
+	  #ifdef TEMP_RESIDENCY_TIME
+		/* start/restart the TEMP_RESIDENCY_TIME timer whenever we reach target temp for the first time
+		   or when current temp falls outside the hysteresis after target temp was reached */
+		if (   (residencyStart == -1)
+			|| (residencyStart > -1 && labs(analog2temp(current_raw) - analog2temp(target_raw)) > TEMP_HYSTERESIS) ) {
+		  residencyStart = millis();
+		}
+	  #endif
+	  
+	  // Timeout if target not reached after HOTEND_HEATUP_TIMEOUT 
+	  // milli-seconds has passed. Exit loop if timeout reached.
+	  if ( (millis() - hotend_timeout) > HOTEND_HEATUP_TIMEOUT )
+	  {
+		serial_send("\r\n// *** Hot-end heater took too long to reach target. Timed Out!\r\n");
+		break;
+	  }
+	  
+	  if ( (target_temp == 0) || (target_raw == 0) )
+	  {
+		serial_send("\r\n// *** Hot-end heater does not appear to be responding.\r\n");
+		serial_send("// *** STOP PRINT!!! - Power Off Printer - Disconnect and close host software.\r\n");
+		serial_send("// *** Check hot-end and hot-end thermistor connections!!!\r\n");
+		
+		serial_send("\r\n// *** Firmware will continue operation after 30 seconds...\r\n");
+		
+		delay(30000);
+		
+		serial_send("// *** Continuing...\r\n");
+		break;
+	  }
 	}
 }
 

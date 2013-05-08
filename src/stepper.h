@@ -1,6 +1,8 @@
 #ifndef STEPPER_H
 #define STEPPER_H
 
+#define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
+#define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
 
 extern uint32_t timer1_compa_isr_exe_micros;
 extern uint32_t timer1_compa_isr_exe_micros_min;

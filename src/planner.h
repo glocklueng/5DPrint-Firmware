@@ -48,6 +48,10 @@ typedef struct {
 	int target_bed_temp_raw;
 	unsigned char block_buffer_head;
 	unsigned char block_buffer_tail;
+	float current_position_x;
+	float current_position_y;
+	float current_position_z;
+	float current_position_e;
 } paused_data_t;
 
 // This is used adjust the circular plan buffer when the print has been paused

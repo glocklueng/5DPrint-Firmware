@@ -136,9 +136,6 @@ asm volatile ( \
 
 // Some useful constants
 
-#define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
-#define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
-
 uint8_t check_endstops = 1;
 void enable_endstops(uint8_t check)
 {
@@ -692,9 +689,7 @@ ISR(TIMER1_COMPA_vect)
       plan_discard_current_block();
 	  
 	  if (pause_print_req)
-	  {	// Stop stepper motors and pause the print
-		DISABLE_STEPPER_DRIVER_INTERRUPT();
-		
+	  {	
 		get_current_printer_state();
 		
 		set_print_paused_buffer();
@@ -704,18 +699,13 @@ ISR(TIMER1_COMPA_vect)
 		
 		// de-assert 'pause_print_req' flag
 		pause_print_req = 0;
-		
-		// Enable stepper driver interrupt so user can adjust the printer
-		ENABLE_STEPPER_DRIVER_INTERRUPT();
 	  }
     }   
   }
   else
   {
 	if (pause_print_req)
-	{	// Stop stepper motors and pause the print
-		DISABLE_STEPPER_DRIVER_INTERRUPT();
-		
+	{	
 		get_current_printer_state();
 		
 		set_print_paused_buffer();
@@ -725,9 +715,6 @@ ISR(TIMER1_COMPA_vect)
 		
 		// de-assert 'pause_print_req' flag
 		pause_print_req = 0;
-		
-		// Enable stepper driver interrupt so user can adjust the printer
-		ENABLE_STEPPER_DRIVER_INTERRUPT();
 	}
   }
   

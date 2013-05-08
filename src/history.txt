@@ -7,6 +7,20 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	08 MAY 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+'pause-print' feature development.
+
+Added wait_extruder_target_temp() and wait_bed_target_temp() functions in 
+makibox.c. Waits for target temperatures to be reached before continuing. Same 
+code as used in M109 and M190 previously. Can now be used in other areas of code 
+such as the resume from a paused print in M226.
+
+
+--------------------------
 DATE: 	02 MAY 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited
@@ -47,6 +61,7 @@ printer. The printer should move x y z axes to the positions they were at when
 the pause was invoked and continue printing.
 
 Still work in progress! 
+
 
 --------------------------
 DATE: 	16 APR 2013

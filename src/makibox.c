@@ -81,6 +81,7 @@ void execute_m226(struct command *cmd);
 
 void do_position_report(void);
 void wait_extruder_target_temp(void);
+void wait_bed_target_temp(void);
 
 #ifndef CRITICAL_SECTION_START
 #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli()
@@ -160,7 +161,7 @@ void wait_extruder_target_temp(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.24z-VCP / 08.05.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25a-VCP / 08.05.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -746,6 +747,7 @@ void process_command(const char *cmdstr)
 FORCE_INLINE void homing_routine(unsigned char axis)
 {
   int min_pin, max_pin, home_dir, max_length, home_bounce;
+  st_position_t pos;
 
   switch(axis){
     case X_AXIS:
@@ -799,6 +801,11 @@ FORCE_INLINE void homing_routine(unsigned char axis)
     current_position[axis] = (home_dir == -1) ? 0 : max_length;
     current_position[axis] += add_homing[axis];
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+	pos.x = current_position[X_AXIS];
+	pos.y = current_position[Y_AXIS];
+	pos.z = current_position[Z_AXIS];
+	pos.e = current_position[E_AXIS];
+	st_set_current_position(pos);
     destination[axis] = current_position[axis];
     feedrate = 0;
   }
@@ -928,7 +935,7 @@ void execute_gcode(struct command *cmd)
 
 
 void execute_mcode(struct command *cmd) {
-    unsigned long codenum; //throw away variable
+    //unsigned long codenum; //throw away variable
     switch(cmd->code) {
       case 104: // M104
 #ifdef CHAIN_OF_COMMAND
@@ -1017,42 +1024,7 @@ void execute_mcode(struct command *cmd) {
       #if TEMP_1_PIN > -1
         if (cmd->has_S) target_bed_raw = temp2analogBed(cmd->S);
 		
-		serial_send("\r\n// Target Temperature: %ddegC", (int)cmd->S);
-		serial_send("\r\n// Waiting for hot-bed heater to reach target temperature...\r\n");
-		
-		long bed_timeout = millis();
-		
-        codenum = millis(); 
-        while(current_bed_raw < target_bed_raw) 
-        {
-          if( (millis()-codenum) > 1000 ) //Print Temp Reading every 1 second while heating up.
-          {
-			serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
-							(int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ),
-							analog2tempBed(current_bed_raw),
-							(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
-			
-            codenum = millis(); 
-          }
-          #if (MINIMUM_FAN_START_SPEED > 0)
-            manage_fan_start_speed();
-          #endif
-		  
-		  // Timeout if target not reached after HOTEND_HEATUP_TIMEOUT 
-		  // milli-seconds has passed. Exit loop if timeout reached.
-		  if ( (millis() - bed_timeout) > BED_HEATUP_TIMEOUT )
-		  {
-			serial_send("\r\n// *** Hot bed heater took too long to reach target. Timed Out!\r\n");
-			break;
-		  }
-		  
-		  if (target_bed_raw == 0)
-		  {
-			serial_send("\r\n// *** Hot-bed heater does not appear to be responding.\r\n");
-			serial_send("// *** Check hot-bed and hot-bed thermistor connections!!!\r\n");
-			break;
-		  }
-        }
+		wait_bed_target_temp();
       #endif
       break;
 	  
@@ -1151,8 +1123,15 @@ void execute_mcode(struct command *cmd) {
       case 92: // M92
         execute_m92(cmd);
 		// Update current position as steps per mm have been changed.
-		plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], 
-						current_position[Z_AXIS], current_position[E_AXIS]);
+		st_position_t pos;
+		pos.x = current_position[X_AXIS];
+		pos.y = current_position[Y_AXIS];
+		pos.z = current_position[Z_AXIS];
+		pos.e = current_position[E_AXIS];
+		st_set_current_position(pos);
+		
+		//plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], 
+		//				current_position[Z_AXIS], current_position[E_AXIS]);
 		serial_send("-- Steps per mm settings changed (but not saved to memory).\r\n");
         break;
 		
@@ -1495,7 +1474,8 @@ void execute_m226(struct command *cmd)
 			
 			serial_send("\r\n//Resuming print. Please wait...");
 			
-			// Allow time for hot end to reach target
+			// Allow time for hot-bed and hot-end to reach target
+			wait_bed_target_temp();
 			wait_extruder_target_temp();		
 			
 			// Move print head and z-axis to position before print was paused
@@ -1529,8 +1509,6 @@ void execute_m226(struct command *cmd)
 			
 			plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], 
 								current_position[Z_AXIS], current_position[E_AXIS]);
-
-			st_set_current_position(pos);
 			
 			resume_normal_print_buffer();
 			
@@ -1550,6 +1528,8 @@ void execute_m226(struct command *cmd)
 			paused_data.current_position_y = current_position[Y_AXIS];
 			paused_data.current_position_z = current_position[Z_AXIS];
 			paused_data.current_position_e = current_position[E_AXIS];
+			
+			feedrate = 1000;
 
 			print_paused = 1;
 		}
@@ -1874,6 +1854,54 @@ void wait_extruder_target_temp(void)
 		delay(30000);
 		
 		serial_send("// *** Continuing...\r\n");
+		break;
+	  }
+	}
+}
+
+
+/***************************************************
+* wait_bed_target_temp(void)
+*
+* Waits for hotbed heater to reach target 
+* temperature (defined by target_temp variable).
+*
+****************************************************/
+void wait_bed_target_temp(void)
+{
+	unsigned long timer = millis();
+	unsigned long bed_timeout = millis();
+	
+	serial_send("\r\n// Target Temperature: %ddegC", analog2tempBed(target_bed_raw));
+	serial_send("\r\n// Waiting for hot-bed heater to reach target temperature...\r\n");
+
+	while(current_bed_raw < target_bed_raw) 
+	{
+	  if( (millis()-timer) > 1000 ) //Print Temp Reading every 1 second while heating up.
+	  {
+		serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
+						(int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ),
+						analog2tempBed(current_bed_raw),
+						(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
+		
+		timer = millis(); 
+	  }
+	  #if (MINIMUM_FAN_START_SPEED > 0)
+		manage_fan_start_speed();
+	  #endif
+	  
+	  // Timeout if target not reached after HOTEND_HEATUP_TIMEOUT 
+	  // milli-seconds has passed. Exit loop if timeout reached.
+	  if ( (millis() - bed_timeout) > BED_HEATUP_TIMEOUT )
+	  {
+		serial_send("\r\n// *** Hot bed heater took too long to reach target. Timed Out!\r\n");
+		break;
+	  }
+	  
+	  if (target_bed_raw == 0)
+	  {
+		serial_send("\r\n// *** Hot-bed heater does not appear to be responding.\r\n");
+		serial_send("// *** Check hot-bed and hot-bed thermistor connections!!!\r\n");
 		break;
 	  }
 	}

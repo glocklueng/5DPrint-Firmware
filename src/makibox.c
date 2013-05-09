@@ -161,7 +161,7 @@ void wait_bed_target_temp(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25a-VCP / 08.05.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25c-VCP / 09.05.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1472,11 +1472,17 @@ void execute_m226(struct command *cmd)
 			target_raw = paused_data.hotend_target_temp_raw;
 			target_bed_raw = paused_data.target_bed_temp_raw;
 			
-			serial_send("\r\n//Resuming print. Please wait...");
+			serial_send("\r\n// Resuming print. Please wait...");
 			
 			// Allow time for hot-bed and hot-end to reach target
-			wait_bed_target_temp();
-			wait_extruder_target_temp();		
+			if ( target_bed_raw > temp2analogBed(BEDMINTEMP) )
+			{
+				wait_bed_target_temp();
+			}
+			if ( target_temp > MINTEMP )
+			{
+				wait_extruder_target_temp();
+			}
 			
 			// Move print head and z-axis to position before print was paused
 			
@@ -1500,7 +1506,6 @@ void execute_m226(struct command *cmd)
 			
 			// Wait for moves to complete
 			st_synchronize();
-			
 			
 			current_position[X_AXIS] = paused_data.current_position_x;
 			current_position[Y_AXIS] = paused_data.current_position_y;

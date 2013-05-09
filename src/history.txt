@@ -6,6 +6,18 @@ Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
 
+--------------------------
+DATE: 	09 MAY 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Updated MAXTEMP from 300 to	260 - limits maximum temperature of hot-end to 
+260 degC. Updated BEDMAXTEMP from 200 to 140 - limits maximum temperature of 
+hot-bed to 260 degC. Note that when these temperatures are exceeded the firmware 
+automatically sets the target temperature to 0 degC (i.e. switch off) for 
+safety.
+
 
 --------------------------
 DATE: 	02 MAY 2013

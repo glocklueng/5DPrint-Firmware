@@ -161,7 +161,7 @@ void wait_bed_target_temp(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25c-VCP / 09.05.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25d-VCP / 10.05.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1771,7 +1771,7 @@ void do_position_report(void)
 	serial_send("-- C: X:%s Y:%s Z:%s E:%s (mm)\r\n", 
 									x_mm_str, y_mm_str, z_mm_str, e_mm_str);
 									
-	serial_send("-- X:%lu Y:%lu Z:%lu E:%ld (steps)\r\n", 
+	serial_send("-- X:%ld Y:%ld Z:%ld E:%ld (steps)\r\n", 
 												pos.x, pos.y, pos.z, pos.e);
 												
 	serial_send("-- Axes Homed X:%d Y:%d Z:%d\r\n", x_homed, y_homed, z_homed);

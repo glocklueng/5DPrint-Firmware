@@ -20,9 +20,9 @@ extern uint8_t pause_print_req;
 extern uint8_t print_paused;
 
 typedef struct {
-	unsigned long x;
-	unsigned long y;
-	unsigned long z;
+	long x;
+	long y;
+	long z;
 	long e;
 } st_position_t;
 

@@ -85,7 +85,7 @@
 //#define ENDSTOPS_ONLY_FOR_HOMING // If defined the endstops will only be used for homing
 
 // If true, axis won't move to coordinates less than zero.
-#define MIN_SOFTWARE_ENDSTOPS 0
+#define MIN_SOFTWARE_ENDSTOPS 1
 // If true, axis won't move to coordinates greater than the defined lengths below.
 #define MAX_SOFTWARE_ENDSTOPS 1
 

@@ -7,6 +7,22 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	10 MAY 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+MIN_SOFTWARE_ENDSTOPS set to 1 in config.h. This is to prevent the printer from 
+moving to positions less than zero.
+
+Also changed actual_steps_x, actual_steps_y, and actual_steps_z to signed long. 
+This is so that they can be used to detect steps / moves less than zero. 
+Sometimes when attempting to move to positions less than zero, the point at 
+which the  end-stop switches are actuated and detected may vary resulting in 
+the motors moving in to negative steps.
+
+
+--------------------------
 DATE: 	08 MAY 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

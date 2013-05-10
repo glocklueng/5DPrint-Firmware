@@ -46,9 +46,9 @@ uint32_t timer1_compa_isr_exe_micros_max = 0;
 // actual_steps_ are used to try and keep track of the actual positions of the
 // axes and extruder drive. System must first be 'homed' so we know where the
 // zero points are.
-unsigned long actual_steps_x = 0;
-unsigned long actual_steps_y = 0;
-unsigned long actual_steps_z = 0;
+long actual_steps_x = 0;
+long actual_steps_y = 0;
+long actual_steps_z = 0;
 long actual_steps_e = 0;
 
 unsigned short virtual_steps_x = 0;
@@ -508,22 +508,29 @@ ISR(TIMER1_COMPA_vect)
         if(!endstop_x_hit)
         {
 		  if(virtual_steps_x)
+		  {
             virtual_steps_x--;
-          else
+          }
+		  else
+		  {
 			WRITE(X_STEP_PIN, HIGH);
 			
 			// Keeping track of stepper positions
 			if (current_block->direction_bits & (1 << X_AXIS))
 			{
-				actual_steps_x ? actual_steps_x-- : 0;
+				//actual_steps_x ? actual_steps_x-- : 0;
+				actual_steps_x--;
 			}
 			else
 			{
 				actual_steps_x++;
 			}
+		  }
         }
         else
+		{
           virtual_steps_x++;
+		}
           
         counter_x -= current_block->step_event_count;
       }
@@ -533,22 +540,29 @@ ISR(TIMER1_COMPA_vect)
         if(!endstop_y_hit)
         {
 		  if(virtual_steps_y)
+		  {
             virtual_steps_y--;
-          else			
+          }
+		  else
+		  {
 			WRITE(Y_STEP_PIN, HIGH);
 			
 			// Keeping track of stepper positions
 			if (current_block->direction_bits & (1 << Y_AXIS))
 			{
-				actual_steps_y ? actual_steps_y-- : 0;
+				//actual_steps_y ? actual_steps_y-- : 0;
+				actual_steps_y--;
 			}
 			else
 			{
 				actual_steps_y++;
 			}
+		  }
         }
         else
+		{
           virtual_steps_y++;
+		}
             
         counter_y -= current_block->step_event_count;
       }
@@ -558,22 +572,29 @@ ISR(TIMER1_COMPA_vect)
         if(!endstop_z_hit)
         {
 		  if(virtual_steps_z)
+		  {
             virtual_steps_z--;
-          else
+          }
+		  else
+		  {
 			WRITE(Z_STEP_PIN, HIGH);
 			
 			// Keeping track of stepper positions
 			if (current_block->direction_bits & (1 << Z_AXIS))
 			{
-				actual_steps_z ? actual_steps_z-- : 0;
+				//actual_steps_z ? actual_steps_z-- : 0;
+				actual_steps_z--;
 			}
 			else
 			{
 				actual_steps_z++;
 			}
+		  }
         }
         else
+		{
           virtual_steps_z++;
+		}
           
         counter_z -= current_block->step_event_count;        
       }

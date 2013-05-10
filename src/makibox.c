@@ -161,7 +161,7 @@ void wait_bed_target_temp(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25d-VCP / 10.05.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25e-VCP / 10.05.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1606,9 +1606,20 @@ void prepare_move()
 
   if(!is_homing){
     #if MIN_SOFTWARE_ENDSTOPS
-    if (destination[X_AXIS] < 0) destination[X_AXIS] = 0.0;
-    if (destination[Y_AXIS] < 0) destination[Y_AXIS] = 0.0;
-    if (destination[Z_AXIS] < 0) destination[Z_AXIS] = 0.0;
+	if (x_homed)
+	{
+		if (destination[X_AXIS] < 0) destination[X_AXIS] = 0.0;
+	}
+	
+	if (y_homed)
+	{
+		if (destination[Y_AXIS] < 0) destination[Y_AXIS] = 0.0;
+	}
+	
+	if (z_homed)
+	{
+		if (destination[Z_AXIS] < 0) destination[Z_AXIS] = 0.0;
+	}
     #endif
 
     #if MAX_SOFTWARE_ENDSTOPS

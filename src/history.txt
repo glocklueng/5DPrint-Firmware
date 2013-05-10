@@ -13,7 +13,8 @@ AUTHOR:	JTK WONG
 		www.xtrontec.com
 --------------------------
 MIN_SOFTWARE_ENDSTOPS set to 1 in config.h. This is to prevent the printer from 
-moving to positions less than zero.
+moving to positions less than zero. Only prevent moves to negative positions if 
+the axis has been homed.
 
 Also changed actual_steps_x, actual_steps_y, and actual_steps_z to signed long. 
 This is so that they can be used to detect steps / moves less than zero. 

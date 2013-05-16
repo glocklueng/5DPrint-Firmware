@@ -121,7 +121,7 @@
 #define _MAX_Z_JERK		0.4
 #define _MAX_E_JERK		5.0    // (mm/sec)
 // X, Y, Z and E max acceleration in mm/s^2 for printing moves or retracts
-#define _MAX_ACCELERATION_UNITS_PER_SQ_SECOND {5000,5000,50,5000}    
+#define _MAX_ACCELERATION_UNITS_PER_SQ_SECOND {200,200,50,5000}    
 
 
 // Minimum planner junction speed. Sets the default minimum speed the planner plans for at the end

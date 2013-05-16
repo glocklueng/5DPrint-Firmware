@@ -7,6 +7,23 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	16 MAY 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+heater.c
+Only allow extruder heater to be turned on with 100% duty if bed temperature has 
+reached MIN_BED_TEMP_FOR_HOTEND_FULL_PWR (defined in heater.h). The extruder 
+heater will be limited to a 33% duty until then. This is to try and limit the 
+max/peak power drawn from the power supply.
+
+config.h
+Changed X and Y max acceleration settings so that they are now:
+_MAX_ACCELERATION_UNITS_PER_SQ_SECOND {200,200,50,5000}
+
+
+--------------------------
 DATE: 	09 MAY 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

@@ -159,7 +159,7 @@ void do_position_report(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25f-VCP / 16.05.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25g-VCP / 17.05.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -912,11 +912,20 @@ void execute_gcode(struct command *cmd)
 void execute_mcode(struct command *cmd) {
     unsigned long codenum; //throw away variable
     switch(cmd->code) {
-      case 104: // M104
+      case 104: // M104 - Set Extruder Temperature
 #ifdef CHAIN_OF_COMMAND
           st_synchronize(); // wait for all movements to finish
 #endif
-        if (cmd->has_S) target_raw = temp2analogh(target_temp = cmd->S);
+        if (cmd->has_S)
+		{	
+			if (cmd->S > HOTEND_MAX_TARGET_TEMP)
+			{
+				serial_send("// Max allowed hotend temperature is %ddegC\r\n", HOTEND_MAX_TARGET_TEMP);
+				serial_send("// Setting target hotend temperature to %ddegC\r\n", HOTEND_MAX_TARGET_TEMP);
+			}
+			target_temp = (cmd->S <= HOTEND_MAX_TARGET_TEMP) ? cmd->S : HOTEND_MAX_TARGET_TEMP;
+			target_raw = temp2analogh(target_temp);
+
         #ifdef WATCHPERIOD
             if( target_temp > (analog2temp(current_raw) + MIN_TARGET_TEMP_CHANGE) )
             {
@@ -926,9 +935,9 @@ void execute_mcode(struct command *cmd) {
             else
             {
                 watchmillis = 0;
-            }
-		
+            }		
         #endif
+		}
         break;
 		
       case 140: // M140 set bed temp
@@ -936,7 +945,16 @@ void execute_mcode(struct command *cmd) {
           st_synchronize(); // wait for all movements to finish
 #endif
         #if TEMP_1_PIN > -1
-            if (cmd->has_S) target_bed_raw = temp2analogBed(cmd->S);
+            if (cmd->has_S)
+			{
+				if (cmd->S > BED_MAX_TARGET_TEMP)
+				{
+					serial_send("// Max allowed bed temperature is %ddegC\r\n", BED_MAX_TARGET_TEMP);
+					serial_send("// Setting target bed temperature to %ddegC\r\n", BED_MAX_TARGET_TEMP);
+				}
+				target_bed_raw = temp2analogBed( (cmd->S <= BED_MAX_TARGET_TEMP) ? 
+													cmd->S : BED_MAX_TARGET_TEMP );
+			}
         #endif
         break;
 		
@@ -976,7 +994,16 @@ void execute_mcode(struct command *cmd) {
 #ifdef CHAIN_OF_COMMAND
          st_synchronize(); // wait for all movements to finish
 #endif
-        if (cmd->has_S) target_raw = temp2analogh(target_temp = cmd->S);
+        if (cmd->has_S)
+		{
+			if (cmd->S > HOTEND_MAX_TARGET_TEMP)
+			{
+				serial_send("// Max allowed hotend temperature is %ddegC\r\n", HOTEND_MAX_TARGET_TEMP);
+				serial_send("// Setting target hotend temperature to %ddegC\r\n", HOTEND_MAX_TARGET_TEMP);
+			}
+			target_temp = (cmd->S <= HOTEND_MAX_TARGET_TEMP) ? cmd->S : HOTEND_MAX_TARGET_TEMP;
+			target_raw = temp2analogh(target_temp);
+			
         #ifdef WATCHPERIOD
             if( target_temp > (analog2temp(current_raw) + MIN_TARGET_TEMP_CHANGE) )
             {
@@ -988,74 +1015,75 @@ void execute_mcode(struct command *cmd) {
                 watchmillis = 0;
             }
         #endif
-        codenum = millis(); 
-       
-        /* See if we are heating up or cooling down */
-        // true if heating, false if cooling
-		int target_direction = (current_raw < target_raw) ? 1 : 0;
-        
-		int target_raw_low = temp2analogh(target_temp - TEMP_HYSTERESIS);
-		int target_raw_high = temp2analogh(target_temp + TEMP_HYSTERESIS);
-		
-		serial_send("\r\n// Target Temperature: %ddegC", target_temp);
-		serial_send("\r\n// Waiting for extruder heater to reach target temperature...\r\n");
-		
-		long hotend_timeout = millis();
-		
-      #ifdef TEMP_RESIDENCY_TIME
-        long residencyStart;
-        residencyStart = -1;
-        /* continue to loop until we have reached the target temp   
-           _and_ until TEMP_RESIDENCY_TIME hasn't passed since we reached it */
-        while( (target_direction ? (current_raw < target_raw_low) : (current_raw > target_raw_high))
-            || (residencyStart > -1 && (millis() - residencyStart) < TEMP_RESIDENCY_TIME*1000)
-			|| (residencyStart == -1) ) {
-      #else
-        while ( target_direction ? (current_raw < target_raw_low) : (current_raw > target_raw_high) ) {
-      #endif
-          if( (millis() - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up/cooling down
-          {
-			serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
-							(int)( (heater_duty * 100) / (float)(HEATER_CURRENT)),
-							analog2tempBed(current_bed_raw),
-							(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
-            
-            codenum = millis();
-          }
-          #if (MINIMUM_FAN_START_SPEED > 0)
-            manage_fan_start_speed();
-          #endif
-          #ifdef TEMP_RESIDENCY_TIME
-            /* start/restart the TEMP_RESIDENCY_TIME timer whenever we reach target temp for the first time
-               or when current temp falls outside the hysteresis after target temp was reached */
-            if (   (residencyStart == -1)
-                || (residencyStart > -1 && labs(analog2temp(current_raw) - analog2temp(target_raw)) > TEMP_HYSTERESIS) ) {
-              residencyStart = millis();
-            }
-          #endif
-		  
-		  // Timeout if target not reached after HOTEND_HEATUP_TIMEOUT 
-		  // milli-seconds has passed. Exit loop if timeout reached.
-		  if ( (millis() - hotend_timeout) > HOTEND_HEATUP_TIMEOUT )
-		  {
-			serial_send("\r\n// *** Hot-end heater took too long to reach target. Timed Out!\r\n");
-			break;
-		  }
-		  
-		  if ( (target_temp == 0) || (target_raw == 0) )
-		  {
-			serial_send("\r\n// *** Hot-end heater does not appear to be responding.\r\n");
-			serial_send("// *** STOP PRINT!!! - Power Off Printer - Disconnect and close host software.\r\n");
-			serial_send("//*** Check hot-end and hot-end thermistor connections!!!\r\n");
+			codenum = millis(); 
+		   
+			/* See if we are heating up or cooling down */
+			// true if heating, false if cooling
+			int target_direction = (current_raw < target_raw) ? 1 : 0;
 			
-			serial_send("\r\n// *** Firmware will continue operation after 30 seconds...\r\n");
+			int target_raw_low = temp2analogh(target_temp - TEMP_HYSTERESIS);
+			int target_raw_high = temp2analogh(target_temp + TEMP_HYSTERESIS);
 			
-			delay(30000);
+			serial_send("\r\n// Target Temperature: %ddegC", target_temp);
+			serial_send("\r\n// Waiting for extruder heater to reach target temperature...\r\n");
 			
-			serial_send("// *** Continuing...\r\n");
-			break;
-		  }
-	    }
+			long hotend_timeout = millis();
+			
+		  #ifdef TEMP_RESIDENCY_TIME
+			long residencyStart;
+			residencyStart = -1;
+			/* continue to loop until we have reached the target temp   
+			   _and_ until TEMP_RESIDENCY_TIME hasn't passed since we reached it */
+			while( (target_direction ? (current_raw < target_raw_low) : (current_raw > target_raw_high))
+				|| (residencyStart > -1 && (millis() - residencyStart) < TEMP_RESIDENCY_TIME*1000)
+				|| (residencyStart == -1) ) {
+		  #else
+			while ( target_direction ? (current_raw < target_raw_low) : (current_raw > target_raw_high) ) {
+		  #endif
+			  if( (millis() - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up/cooling down
+			  {
+				serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
+								(int)( (heater_duty * 100) / (float)(HEATER_CURRENT)),
+								analog2tempBed(current_bed_raw),
+								(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
+				
+				codenum = millis();
+			  }
+			  #if (MINIMUM_FAN_START_SPEED > 0)
+				manage_fan_start_speed();
+			  #endif
+			  #ifdef TEMP_RESIDENCY_TIME
+				/* start/restart the TEMP_RESIDENCY_TIME timer whenever we reach target temp for the first time
+				   or when current temp falls outside the hysteresis after target temp was reached */
+				if (   (residencyStart == -1)
+					|| (residencyStart > -1 && labs(analog2temp(current_raw) - analog2temp(target_raw)) > TEMP_HYSTERESIS) ) {
+				  residencyStart = millis();
+				}
+			  #endif
+			  
+			  // Timeout if target not reached after HOTEND_HEATUP_TIMEOUT 
+			  // milli-seconds has passed. Exit loop if timeout reached.
+			  if ( (millis() - hotend_timeout) > HOTEND_HEATUP_TIMEOUT )
+			  {
+				serial_send("\r\n// *** Hot-end heater took too long to reach target. Timed Out!\r\n");
+				break;
+			  }
+			  
+			  if ( (target_temp == 0) || (target_raw == 0) )
+			  {
+				serial_send("\r\n// *** Hot-end heater does not appear to be responding.\r\n");
+				serial_send("// *** STOP PRINT!!! - Power Off Printer - Disconnect and close host software.\r\n");
+				serial_send("//*** Check hot-end and hot-end thermistor connections!!!\r\n");
+				
+				serial_send("\r\n// *** Firmware will continue operation after 30 seconds...\r\n");
+				
+				delay(30000);
+				
+				serial_send("// *** Continuing...\r\n");
+				break;
+			  }
+			}
+		}
       break;
 	  
       case 190: // M190 - Wait for bed heater to reach target temperature.
@@ -1063,44 +1091,54 @@ void execute_mcode(struct command *cmd) {
           st_synchronize(); // wait for all movements to finish
 #endif
       #if TEMP_1_PIN > -1
-        if (cmd->has_S) target_bed_raw = temp2analogBed(cmd->S);
-		
-		serial_send("\r\n// Target Temperature: %ddegC", (int)cmd->S);
-		serial_send("\r\n// Waiting for hot-bed heater to reach target temperature...\r\n");
-		
-		long bed_timeout = millis();
-		
-        codenum = millis(); 
-        while(current_bed_raw < target_bed_raw) 
-        {
-          if( (millis()-codenum) > 1000 ) //Print Temp Reading every 1 second while heating up.
-          {
-			serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
-							(int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ),
-							analog2tempBed(current_bed_raw),
-							(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
+        if (cmd->has_S)
+		{
+			if (cmd->S > BED_MAX_TARGET_TEMP)
+			{
+				serial_send("// Max allowed bed temperature is %ddegC\r\n", BED_MAX_TARGET_TEMP);
+				serial_send("// Setting target bed temperature to %ddegC\r\n", BED_MAX_TARGET_TEMP);
+			}
 			
-            codenum = millis(); 
-          }
-          #if (MINIMUM_FAN_START_SPEED > 0)
-            manage_fan_start_speed();
-          #endif
-		  
-		  // Timeout if target not reached after HOTEND_HEATUP_TIMEOUT 
-		  // milli-seconds has passed. Exit loop if timeout reached.
-		  if ( (millis() - bed_timeout) > BED_HEATUP_TIMEOUT )
-		  {
-			serial_send("\r\n// *** Hot bed heater took too long to reach target. Timed Out!\r\n");
-			break;
-		  }
-		  
-		  if (target_bed_raw == 0)
-		  {
-			serial_send("\r\n// *** Hot-bed heater does not appear to be responding.\r\n");
-			serial_send("// *** Check hot-bed and hot-bed thermistor connections!!!\r\n");
-			break;
-		  }
-        }
+			target_bed_raw = temp2analogBed( (cmd->S <= BED_MAX_TARGET_TEMP) ? 
+													cmd->S : BED_MAX_TARGET_TEMP );
+		
+			serial_send("\r\n// Target Temperature: %ddegC", (int)cmd->S);
+			serial_send("\r\n// Waiting for hot-bed heater to reach target temperature...\r\n");
+			
+			long bed_timeout = millis();
+			
+			codenum = millis(); 
+			while(current_bed_raw < target_bed_raw) 
+			{
+			  if( (millis()-codenum) > 1000 ) //Print Temp Reading every 1 second while heating up.
+			  {
+				serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
+								(int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ),
+								analog2tempBed(current_bed_raw),
+								(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
+				
+				codenum = millis(); 
+			  }
+			  #if (MINIMUM_FAN_START_SPEED > 0)
+				manage_fan_start_speed();
+			  #endif
+			  
+			  // Timeout if target not reached after HOTEND_HEATUP_TIMEOUT 
+			  // milli-seconds has passed. Exit loop if timeout reached.
+			  if ( (millis() - bed_timeout) > BED_HEATUP_TIMEOUT )
+			  {
+				serial_send("\r\n// *** Hot bed heater took too long to reach target. Timed Out!\r\n");
+				break;
+			  }
+			  
+			  if (target_bed_raw == 0)
+			  {
+				serial_send("\r\n// *** Hot-bed heater does not appear to be responding.\r\n");
+				serial_send("// *** Check hot-bed and hot-bed thermistor connections!!!\r\n");
+				break;
+			  }
+			}
+		}
       #endif
       break;
 	  

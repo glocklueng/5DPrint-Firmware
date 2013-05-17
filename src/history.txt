@@ -5,6 +5,25 @@ Makibox A6 Firmware - History / Change Log
 Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
+--------------------------
+DATE: 	17 MAY 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+config.h  makibox.c
+Added the following defines...
+
+#define HOTEND_MAX_TARGET_TEMP	260
+#define BED_MAX_TARGET_TEMP		140
+
+These are used to limit the maximum target temperatures of the hotend and hoted 
+that can be set by the host / user. Requests for targets greater than these 
+temperatures result in the target temperature eing set to the max values defined.
+
+Changed X and Y max acceleration settings so that they are now:
+_MAX_ACCELERATION_UNITS_PER_SQ_SECOND {600,600,50,5000}
+
 
 --------------------------
 DATE: 	16 MAY 2013

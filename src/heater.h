@@ -34,6 +34,9 @@
 extern const short temptable[NUMTEMPS][2];
 extern const short bedtemptable[BNUMTEMPS][2];
 
+// Bed temperature must be greater than this value for hotend heater to be allowed
+// to draw 100% power. Only 1/3 of power will be allowed otherwise.
+#define MIN_BED_TEMP_FOR_HOTEND_FULL_PWR 	50		// degC
 
 #if defined HEATER_USES_THERMISTOR
 #define temp2analogh( c ) temp2analog_thermistor(c,temptable,NUMTEMPS)

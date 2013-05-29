@@ -161,7 +161,7 @@ void wait_bed_target_temp(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25e-VCP / 10.05.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25h-VCP/ 29.05.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -738,7 +738,7 @@ void process_command(const char *cmdstr)
   end_tm = millis();
   uint8_t qfree = blocks_available();
   serial_send("ok %ld Q%d (%lums execute)\r\n", 
-								cmdseqnbr, qfree, end_tm - start_tm);
+					cmdseqnbr, qfree, end_tm - start_tm);
   cmdseqnbr++;
   previous_millis_cmd = end_tm;
 }
@@ -937,11 +937,20 @@ void execute_gcode(struct command *cmd)
 void execute_mcode(struct command *cmd) {
     //unsigned long codenum; //throw away variable
     switch(cmd->code) {
-      case 104: // M104
+      case 104: // M104 - Set Extruder Temperature
 #ifdef CHAIN_OF_COMMAND
           st_synchronize(); // wait for all movements to finish
 #endif
-        if (cmd->has_S) target_raw = temp2analogh(target_temp = cmd->S);
+        if (cmd->has_S)
+		{	
+			if (cmd->S > HOTEND_MAX_TARGET_TEMP)
+			{
+				serial_send("// Max allowed hotend temperature is %ddegC\r\n", HOTEND_MAX_TARGET_TEMP);
+				serial_send("// Setting target hotend temperature to %ddegC\r\n", HOTEND_MAX_TARGET_TEMP);
+			}
+			target_temp = (cmd->S <= HOTEND_MAX_TARGET_TEMP) ? cmd->S : HOTEND_MAX_TARGET_TEMP;
+			target_raw = temp2analogh(target_temp);
+
         #ifdef WATCHPERIOD
             if( target_temp > (analog2temp(current_raw) + MIN_TARGET_TEMP_CHANGE) )
             {
@@ -951,9 +960,9 @@ void execute_mcode(struct command *cmd) {
             else
             {
                 watchmillis = 0;
-            }
-		
+            }		
         #endif
+		}
         break;
 		
       case 140: // M140 set bed temp
@@ -961,7 +970,16 @@ void execute_mcode(struct command *cmd) {
           st_synchronize(); // wait for all movements to finish
 #endif
         #if TEMP_1_PIN > -1
-            if (cmd->has_S) target_bed_raw = temp2analogBed(cmd->S);
+            if (cmd->has_S)
+			{
+				if (cmd->S > BED_MAX_TARGET_TEMP)
+				{
+					serial_send("// Max allowed bed temperature is %ddegC\r\n", BED_MAX_TARGET_TEMP);
+					serial_send("// Setting target bed temperature to %ddegC\r\n", BED_MAX_TARGET_TEMP);
+				}
+				target_bed_raw = temp2analogBed( (cmd->S <= BED_MAX_TARGET_TEMP) ? 
+													cmd->S : BED_MAX_TARGET_TEMP );
+			}
         #endif
         break;
 		
@@ -1001,7 +1019,16 @@ void execute_mcode(struct command *cmd) {
 #ifdef CHAIN_OF_COMMAND
          st_synchronize(); // wait for all movements to finish
 #endif
-        if (cmd->has_S) target_raw = temp2analogh(target_temp = cmd->S);
+        if (cmd->has_S)
+		{
+			if (cmd->S > HOTEND_MAX_TARGET_TEMP)
+			{
+				serial_send("// Max allowed hotend temperature is %ddegC\r\n", HOTEND_MAX_TARGET_TEMP);
+				serial_send("// Setting target hotend temperature to %ddegC\r\n", HOTEND_MAX_TARGET_TEMP);
+			}
+			target_temp = (cmd->S <= HOTEND_MAX_TARGET_TEMP) ? cmd->S : HOTEND_MAX_TARGET_TEMP;
+			target_raw = temp2analogh(target_temp);
+			
         #ifdef WATCHPERIOD
             if( target_temp > (analog2temp(current_raw) + MIN_TARGET_TEMP_CHANGE) )
             {
@@ -1015,6 +1042,7 @@ void execute_mcode(struct command *cmd) {
         #endif
         
 		wait_extruder_target_temp();
+		}
       break;
 	  
       case 190: // M190 - Wait for bed heater to reach target temperature.
@@ -1022,9 +1050,19 @@ void execute_mcode(struct command *cmd) {
           st_synchronize(); // wait for all movements to finish
 #endif
       #if TEMP_1_PIN > -1
-        if (cmd->has_S) target_bed_raw = temp2analogBed(cmd->S);
+        if (cmd->has_S)
+		{
+			if (cmd->S > BED_MAX_TARGET_TEMP)
+			{
+				serial_send("// Max allowed bed temperature is %ddegC\r\n", BED_MAX_TARGET_TEMP);
+				serial_send("// Setting target bed temperature to %ddegC\r\n", BED_MAX_TARGET_TEMP);
+			}
+			
+			target_bed_raw = temp2analogBed( (cmd->S <= BED_MAX_TARGET_TEMP) ? 
+													cmd->S : BED_MAX_TARGET_TEMP );
 		
 		wait_bed_target_temp();
+		}
       #endif
       break;
 	  
@@ -1175,6 +1213,9 @@ void execute_mcode(struct command *cmd) {
       	  serial_send("z_max:%s", (READ(Z_MAX_PIN)^Z_ENDSTOP_INVERT)?"H ":"L ");
       	#endif
         serial_send("\r\n"); 
+		serial_send("// X_MAX_LENGTH:%d ", X_MAX_LENGTH);
+		serial_send("Y_MAX_LENGTH:%d ", Y_MAX_LENGTH);
+		serial_send("Z_MAX_LENGTH:%d \r\n", Z_MAX_LENGTH);
       	break;
 		
       case 201: // M201  Set maximum acceleration in units/s^2 for print moves (M201 X1000 Y1000)

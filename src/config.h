@@ -121,7 +121,7 @@
 #define _MAX_Z_JERK		0.4
 #define _MAX_E_JERK		5.0    // (mm/sec)
 // X, Y, Z and E max acceleration in mm/s^2 for printing moves or retracts
-#define _MAX_ACCELERATION_UNITS_PER_SQ_SECOND {5000,5000,50,5000}    
+#define _MAX_ACCELERATION_UNITS_PER_SQ_SECOND {600,600,50,5000}    
 
 
 // Minimum planner junction speed. Sets the default minimum speed the planner plans for at the end
@@ -290,12 +290,19 @@
 #define MINTEMP		5
 #define BEDMINTEMP 	5
 
-//// Experimental max temp
+//// Safety Max Temp
 // When temperature exceeds max temp, your heater will be switched off.
 // This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
 // You should use MINTEMP for thermistor short/failure protection.
-#define MAXTEMP		260
-#define BEDMAXTEMP 	140
+#define MAXTEMP		270
+#define BEDMAXTEMP 	150
+
+// User Max Temp
+// These are the maximum target temperatures that the user can request.
+// Requests greater than these values result in the target being set at the 
+// max values defined here.
+#define HOTEND_MAX_TARGET_TEMP	260
+#define BED_MAX_TARGET_TEMP		140
 
 // Select one of these only to define how the nozzle temp is read.
 #define HEATER_USES_THERMISTOR

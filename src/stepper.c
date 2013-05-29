@@ -321,6 +321,7 @@ ISR(TIMER1_COMPA_vect)
 			disable_x();
 		}
 	}
+	
 	if (DISABLE_Y)
 	{
 		if (current_block->steps_y > 0)
@@ -332,6 +333,7 @@ ISR(TIMER1_COMPA_vect)
 			disable_y();
 		}
 	}
+	
 	if (DISABLE_Z)
 	{
 		if (current_block->steps_z > 0)
@@ -343,6 +345,7 @@ ISR(TIMER1_COMPA_vect)
 			disable_z();
 		}
 	}
+	
 	if (DISABLE_E)
 	{
 		if (current_block->steps_e > 0)
@@ -354,7 +357,7 @@ ISR(TIMER1_COMPA_vect)
 			disable_e();
 		}
 	}
-	
+    
 	// Set directions TO DO This should be done once during init of trapezoid. Endstops -> interrupt
     out_bits = current_block->direction_bits;
 

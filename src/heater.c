@@ -47,8 +47,6 @@ int target_temp = 0;
 int current_raw = 0;
 int current_raw_maxval = -32000;
 int current_raw_minval = 32000;
-int tt_maxval;
-int tt_minval;
 int target_bed_raw = 0;
 int current_bed_raw = 0;
 unsigned long previous_millis_heater, previous_millis_bed_heater, previous_millis_monitor;
@@ -382,7 +380,9 @@ void PID_autotune(int PIDAT_test_temp)
   if ( (TEMP_0_PIN > -1) 
 			&& (millis() - previous_millis_heater >= HEATER_CHECK_INTERVAL) )
   {
-	PreemptionFlag |= 0x0008;
+	#if (DEBUG > -1)
+		PreemptionFlag |= 0x0008;
+	#endif
 	
 	previous_millis_heater = millis();
   
@@ -473,8 +473,10 @@ void PID_autotune(int PIDAT_test_temp)
   
   if ( (TEMP_1_PIN > -1) 
 			&& (millis() - previous_millis_bed_heater >= BED_CHECK_INTERVAL) )
-  {  
-	PreemptionFlag |= 0x0010;
+  {
+	#if (DEBUG > -1)
+		PreemptionFlag |= 0x0010;
+	#endif
 	
 	previous_millis_bed_heater = millis();
 	

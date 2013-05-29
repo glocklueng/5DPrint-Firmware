@@ -806,7 +806,9 @@ ISR(USB_GEN_vect)
 {
 	uint8_t intbits, t;
 	
-	PreemptionFlag |= 0x8000;
+	#if (DEBUG > -1)
+		PreemptionFlag |= 0x8000;
+	#endif
 
         intbits = UDINT;
         UDINT = 0;
@@ -910,7 +912,9 @@ ISR(USB_COM_vect)
 	const uint8_t *desc_addr;
 	uint8_t	desc_length;
 
-	PreemptionFlag |= 0x4000;
+	#if (DEBUG > -1)
+		PreemptionFlag |= 0x4000;
+	#endif
 	
 	UENUM = 0;
 	intbits = UEINTX;

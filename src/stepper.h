@@ -4,10 +4,11 @@
 #define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
 #define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
 
-extern uint32_t timer1_compa_isr_exe_micros;
-extern uint32_t timer1_compa_isr_exe_micros_min;
-extern uint32_t timer1_compa_isr_exe_micros_max;
-
+#if (DEBUG > -1)
+	extern uint32_t timer1_compa_isr_exe_micros;
+	extern uint32_t timer1_compa_isr_exe_micros_min;
+	extern uint32_t timer1_compa_isr_exe_micros_max;
+#endif
 
 extern unsigned short virtual_steps_x;
 extern unsigned short virtual_steps_y;

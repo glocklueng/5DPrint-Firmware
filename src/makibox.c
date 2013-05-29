@@ -161,7 +161,7 @@ void wait_bed_target_temp(void);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25h-VCP/ 29.05.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25i-VCP/ 29.05.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -498,7 +498,9 @@ void read_command()
   
   while (usb_serial_available() > 0)
   {
-	PreemptionFlag |= 0x0002;
+	#if (DEBUG > -1)
+		PreemptionFlag |= 0x0002;
+	#endif
 	
     int16_t ch = usb_serial_read();
 	
@@ -1330,58 +1332,46 @@ void execute_mcode(struct command *cmd) {
       break;
 	  
 	  case 604:	// M604 Show Timer 1 COMPA ISR Execution Time Debug Info
-		if (DEBUG > -1)
-		{
+		#if (DEBUG > -1)
 			serial_send("// Last TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
 												timer1_compa_isr_exe_micros);
 			serial_send("// MIN TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
 												timer1_compa_isr_exe_micros_min);
 			serial_send("// MAX TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
 												timer1_compa_isr_exe_micros_max);
-		}
-		else
-		{
+		#else
 			serial_send("// Timer 1 execution time debug info not availale in this version of firmaware.\r\n");
-		}
+		#endif
 	  break;
 	  
 	  case 605:	// M605 Reset Timer 1 COMPA ISR Execution Time Min / Max Values
-		if (DEBUG > -1)
-		{
+		#if (DEBUG > -1)
 			timer1_compa_isr_exe_micros_min = 0xFFFFFFFF;
 			timer1_compa_isr_exe_micros_max = 0;
 			serial_send("// TIMER1_COMPA_vect ISR Execution Time MIN / MAX Reset.\r\n");
-		}
-		else
-		{
+		#else
 			serial_send("// Timer 1 execution time debug info not availale in this version of firmaware.\r\n");
-		}
+		#endif
 	  break;
 	  
 	  case 606: // M606 - Show CPU loading information
-			if (DEBUG > -1)
-			{
+			#if (DEBUG > -1)
 				serial_send("// Current CPU Loading:	%d %%\r\n", cpu_loading);
 				serial_send("// Peak CPU Load:		%d %%\r\n", peak_cpu_load);
 				serial_send("// Average CPU Load: 	%d %%\r\n", average_cpu_load);
-			}
-			else
-			{
+			#else
 				serial_send("// CPU loading info not available in this version of firmware.\r\n");
-			}
+			#endif
 	  break;
 	  
 	  case 607: // M607 - Reset Peak and Average CPU load values
-			if (DEBUG > -1)
-			{
+			#if (DEBUG > -1)
 				peak_cpu_load = 0;
 				average_cpu_load = 0;
 				serial_send("// Peak and Average CPU Load Values Reset.\r\n");
-			}
-			else
-			{
+			#else
 				serial_send("// CPU loading info not available in this version of firmware.\r\n");
-			}
+			#endif
 	  break;
 	  
 	  case 608: // M608
@@ -1750,7 +1740,10 @@ void manage_inactivity(unsigned char debug)
   
   if( (millis()-previous_millis_cmd) >  stepper_inactive_time ) if(stepper_inactive_time) 
   { 
-	PreemptionFlag |= 0x0004;
+	#if (DEBUG > -1)
+		PreemptionFlag |= 0x0004;
+	#endif
+	
     disable_x(); 
     disable_y(); 
     disable_z(); 

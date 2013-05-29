@@ -58,8 +58,6 @@ extern int target_temp;
 extern int current_raw;
 extern int current_raw_maxval;
 extern int current_raw_minval;
-extern int tt_maxval;
-extern int tt_minval;
 extern int target_bed_raw;
 extern int current_bed_raw;
 extern unsigned long previous_millis_heater, previous_millis_bed_heater;

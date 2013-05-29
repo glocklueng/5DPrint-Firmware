@@ -314,11 +314,13 @@
 
 
 // Global Variables for CPU Loading Calculation
-extern uint16_t PreemptionFlag;
-extern uint32_t previous_bckgnd_task_start_time;
-extern uint32_t bckgnd_task_time;
-extern unsigned char cpu_loading, peak_cpu_load, average_cpu_load;
-extern uint32_t previous_millis_cpu_util;
-extern uint32_t bckgnd_loop_count;
+#if (DEBUG > -1)
+	extern uint16_t PreemptionFlag;
+	extern uint32_t previous_bckgnd_task_start_time;
+	extern uint32_t bckgnd_task_time;
+	extern unsigned char cpu_loading, peak_cpu_load, average_cpu_load;
+	extern uint32_t previous_millis_cpu_util;
+	extern uint32_t bckgnd_loop_count;
+#endif
 
 #endif

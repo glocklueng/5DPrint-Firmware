@@ -37,10 +37,11 @@
 #define CRITICAL_SECTION_END    SREG = _sreg
 #endif //CRITICAL_SECTION_START
 
-
-uint32_t timer1_compa_isr_exe_micros = 0;
-uint32_t timer1_compa_isr_exe_micros_min = 0xFFFFFFFF;
-uint32_t timer1_compa_isr_exe_micros_max = 0;
+#if (DEBUG > -1)
+	uint32_t timer1_compa_isr_exe_micros = 0;
+	uint32_t timer1_compa_isr_exe_micros_min = 0xFFFFFFFF;
+	uint32_t timer1_compa_isr_exe_micros_max = 0;
+#endif
 
 
 // actual_steps_ are used to try and keep track of the actual positions of the
@@ -283,11 +284,13 @@ void trapezoid_generator_reset()
 // It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately. 
 ISR(TIMER1_COMPA_vect)
 {
-	uint32_t isr_start_micros;
+	#if (DEBUG > -1)
+		uint32_t isr_start_micros;
+		
+		isr_start_micros = micros();
 	
-	isr_start_micros = micros();
-	
-	PreemptionFlag |= 0x0001;	
+		PreemptionFlag |= 0x0001;
+	#endif
 	
 	
   // If there is no current block, attempt to pop one from the buffer
@@ -742,8 +745,7 @@ ISR(TIMER1_COMPA_vect)
 	}
   }
   
-  if (DEBUG > -1)
-  {
+#if (DEBUG > -1)
 	timer1_compa_isr_exe_micros = (micros() - isr_start_micros);
 	
 	if (timer1_compa_isr_exe_micros > timer1_compa_isr_exe_micros_max)
@@ -755,7 +757,7 @@ ISR(TIMER1_COMPA_vect)
 	{
 		timer1_compa_isr_exe_micros_min = timer1_compa_isr_exe_micros;
 	}
-  }
+#endif
 }
 
 

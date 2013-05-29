@@ -5,6 +5,23 @@ Makibox A6 Firmware - History / Change Log
 Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
+
+--------------------------
+DATE: 	29 MAY 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Merged the 'default' branch and the 'pause-resume' development branch.
+
+Note SRAM usage is currently rather high. Bear this in mind when adding further 
+features and adding more variables / strings / arrays. You may run in to stack 
+overflow problems. Reducing the plan buffer size may be a way to go if 
+difficulties are enountered BUT the plan buffer size was set to 64 to prevent 
+it from being completely run dry when there are a series of relatively short 
+move.
+
+
 --------------------------
 DATE: 	17 MAY 2013
 AUTHOR:	JTK WONG
@@ -19,7 +36,7 @@ Added the following defines...
 
 These are used to limit the maximum target temperatures of the hotend and hoted 
 that can be set by the host / user. Requests for targets greater than these 
-temperatures result in the target temperature eing set to the max values defined.
+temperatures result in the target temperature being set to the max values defined.
 
 Changed X and Y max acceleration settings so that they are now:
 _MAX_ACCELERATION_UNITS_PER_SQ_SECOND {600,600,50,5000}

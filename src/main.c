@@ -7,7 +7,10 @@
 
 void setup();
 void loop();
-void CPU_Util_Calc(void);
+
+#if (DEBUG > -1)
+	void CPU_Util_Calc(void);
+#endif
 
 #if F_CPU != 16000000L
 #error "Prescaler values are only valid for F_CPU=16MHZ"
@@ -19,12 +22,15 @@ void CPU_Util_Calc(void);
 
 #define CPU_UTIL_CHECK_PERIOD	25L // ms
 
-uint32_t bckgnd_loop_count = 0;
-uint32_t previous_bckgnd_task_start_time = 0;
-uint32_t bckgnd_task_time = 0;
-unsigned char cpu_loading = 0, peak_cpu_load = 0, average_cpu_load = 0;
-uint32_t previous_millis_cpu_util = 0;
-uint16_t PreemptionFlag = 0;
+#if (DEBUG > -1)
+	uint32_t bckgnd_loop_count = 0;
+	uint32_t previous_bckgnd_task_start_time = 0;
+	uint32_t bckgnd_task_time = 0;
+	unsigned char cpu_loading = 0, peak_cpu_load = 0, average_cpu_load = 0;
+	uint32_t previous_millis_cpu_util = 0;
+	uint16_t PreemptionFlag = 0;
+#endif
+
 unsigned char reset_flags;
 
 void board_init(void)
@@ -60,14 +66,16 @@ void board_init(void)
 
 int main(void)
 {
-	unsigned char first_loop = 1;
+	#if (DEBUG > -1)
+		unsigned char first_loop = 1;
+	#endif
+	
 	board_init();
 
 	setup();
     
 	while (1) {
-		if (DEBUG > -1)
-		{
+		#if (DEBUG > -1)
 			CPU_Util_Calc();
 			
 			if (first_loop > 0)
@@ -76,7 +84,7 @@ int main(void)
 				average_cpu_load = 0;
 				first_loop = 0;
 			}
-		}
+		#endif
 
 		loop();
 	}
@@ -99,6 +107,7 @@ int main(void)
 * CPU_UTIL_CHECK_PERIOD. The CPU loading is then taken
 * to be [100% - (percentage idle time)].
 ****************************************************/
+#if (DEBUG > -1)
 void CPU_Util_Calc(void)
 {
 	unsigned char interrupted = 1;
@@ -153,3 +162,4 @@ void CPU_Util_Calc(void)
 	
 	previous_bckgnd_task_start_time = bckgnd_task_start_time;
 }
+#endif

@@ -60,7 +60,7 @@ unsigned long previous_millis_heater, previous_millis_bed_heater, previous_milli
   int dTerm;
   int error;
   int heater_duty = 0;
-  int max_heater_duty = HEATER_CURRENT;
+  int max_heater_duty = HEATER_CURRENT, user_max_heater_duty = HEATER_CURRENT;
   int temp_iState_min = (int)( 256L * -PID_INTEGRAL_DRIVE_MAX / (float)(PID_IGAIN) );
   int temp_iState_max = (int)( 256L * PID_INTEGRAL_DRIVE_MAX / (float)(PID_IGAIN) );
 #endif
@@ -450,15 +450,15 @@ void PID_autotune(int PIDAT_test_temp)
 		if ( ( analog2tempBed(current_bed_raw) > MIN_BED_TEMP_FOR_HOTEND_FULL_PWR )
 				&& ( analog2tempBed(target_bed_raw) > BEDMINTEMP ) )
 		{
-			max_heater_duty = HEATER_CURRENT;
+			max_heater_duty = user_max_heater_duty;
 		}
 		else if ( analog2tempBed(target_bed_raw) < BEDMINTEMP )
 		{
-			max_heater_duty = HEATER_CURRENT;
+			max_heater_duty = user_max_heater_duty;
 		}
 		else
 		{
-			max_heater_duty = HEATER_CURRENT / 3.0;
+			max_heater_duty = user_max_heater_duty / 3.0;
 		}
 	  
 		service_ExtruderHeaterPIDControl(current_temp, target_temp);

@@ -82,6 +82,7 @@ void execute_m226(struct command *cmd);
 void do_position_report(void);
 void wait_extruder_target_temp(void);
 void wait_bed_target_temp(void);
+void set_extruder_heater_max_current(struct command *cmd);
 
 #ifndef CRITICAL_SECTION_START
 #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli()
@@ -148,9 +149,7 @@ void wait_bed_target_temp(void);
 // M502 - reverts to the default "factory settings".
 // M503 - Print settings
 
-// Debug feature / Testing the PID for Hotend
-// M601 - Show Temp jitter from Extruder (min / max value from Hotend Temperature while printing)
-// M602 - Reset Temp jitter from Extruder (min / max val) --> Don't use it while Printing
+// Debug feature
 // M603 - Show Free Ram
 // M604 - Show Timer 1 COMPA ISR Execution Time Debug Info
 // M605 - Reset Timer 1 COMPA ISR Execution Time Min / Max Values
@@ -158,10 +157,11 @@ void wait_bed_target_temp(void);
 // M607 - Reset Peak and Average CPU load values
 // M608 - Show Firmware Version Info
 // M609 - Show last reset flags
+// M610 - Set Extruder Heater Max Current P = 0 - 100%.
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25i-VCP/ 29.05.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25j-VCP/ 30.05.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -208,7 +208,6 @@ float offset[3] = {0.0, 0.0, 0.0};
 char cmdbuf[MAX_CMD_SIZE+1];
 unsigned char bufpos = 0;
 uint32_t cmdseqnbr = 0;
-uint8_t cmdready = 0;
 
 //Send Temperature in °C to Host
 int hotendtC = 0, bedtempC = 0;
@@ -803,10 +802,10 @@ FORCE_INLINE void homing_routine(unsigned char axis)
     current_position[axis] = (home_dir == -1) ? 0 : max_length;
     current_position[axis] += add_homing[axis];
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-	pos.x = current_position[X_AXIS];
-	pos.y = current_position[Y_AXIS];
-	pos.z = current_position[Z_AXIS];
-	pos.e = current_position[E_AXIS];
+	pos.x = current_position[X_AXIS] * axis_steps_per_unit[X_AXIS];
+	pos.y = current_position[Y_AXIS] * axis_steps_per_unit[Y_AXIS];
+	pos.z = current_position[Z_AXIS] * axis_steps_per_unit[Z_AXIS];
+	pos.e = current_position[E_AXIS] * axis_steps_per_unit[E_AXIS];
 	st_set_current_position(pos);
     destination[axis] = current_position[axis];
     feedrate = 0;
@@ -1376,6 +1375,10 @@ void execute_mcode(struct command *cmd) {
 	  
 	  case 608: // M608
 			serial_send("// Makibox Firmware Version: %s\r\n", VERSION_TEXT);
+	  break;
+	  
+	  case 610:	// M610 - Set Extruder Heater Max Current P = 0 - 100%.
+			set_extruder_heater_max_current(cmd);
 	  break;
 	  
 	  case 852: // M852 - Enter Boot Loader Command
@@ -1954,6 +1957,21 @@ void wait_bed_target_temp(void)
 		serial_send("// *** Check hot-bed and hot-bed thermistor connections!!!\r\n");
 		break;
 	  }
+	}
+}
+
+
+void set_extruder_heater_max_current(struct command *cmd)
+{
+	if (cmd->has_P)
+	{
+		serial_send("// Existing Extruder Heater Max Current: %d%%\r\n", (int)(user_max_heater_duty * 100 / 250.0));
+		serial_send("// Setting Extruder Heater Max Current: %d%%\r\n", (int)(cmd->P));
+		user_max_heater_duty = (int)(cmd->P * 2.5);
+	}
+	else
+	{
+		serial_send("// Existing Extruder Heater Max Current: %d%%\r\n", (int)(user_max_heater_duty * 100 / 250.0));
 	}
 }
 

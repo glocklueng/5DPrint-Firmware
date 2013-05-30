@@ -24,9 +24,10 @@
 #include "store_eeprom.h"
 #include "config.h"
 #include "usb.h"
+#include "heater.h"
 
 #ifdef PIDTEMP
- extern unsigned int PID_Kp, PID_Ki, PID_Kd;
+ //extern unsigned int PID_Kp, PID_Ki, PID_Kd;
 #endif
 
 

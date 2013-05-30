@@ -7,6 +7,19 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	30 MAY 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+makibox.c
+Fixed bug in homing_routine() where we were setting the actual steps count using 
+the absolute positions in mm instead of number of steps.
+
+Added some further configurable settings for development and testing activities.
+
+
+--------------------------
 DATE: 	29 MAY 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited
@@ -19,7 +32,7 @@ features and adding more variables / strings / arrays. You may run in to stack
 overflow problems. Reducing the plan buffer size may be a way to go if 
 difficulties are enountered BUT the plan buffer size was set to 64 to prevent 
 it from being completely run dry when there are a series of relatively short 
-move.
+moves.
 
 
 --------------------------

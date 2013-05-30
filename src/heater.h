@@ -72,7 +72,7 @@ extern unsigned char manage_monitor;
 	extern int dTerm;
 	extern int error;
 	extern int heater_duty;
-
+	extern int user_max_heater_duty;
 	extern unsigned int PID_Kp, PID_Ki, PID_Kd;
 #endif
 

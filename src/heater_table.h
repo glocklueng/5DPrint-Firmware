@@ -69,34 +69,34 @@ const short temptable[NUMTEMPS][2] = {
 // Note: temperature differences / gradients around other areas of the 
 // Hotbed have been ignored for now.
 const short bedtemptable[BNUMTEMPS][2] = {
-{	39	,	200	},		// Extrapolated Value - Test Hotbed can not reach this temp
-{	435	,	140	},
-{	533	,	135	},
-{	566	,	130	},
-{	597	,	125	},
-{	622	,	120	},
-{	648	,	115	},
-{	672	,	110	},
-{	703	,	105	},
-{	732	,	100	},
-{	752	,	95	},
-{	776	,	90	},
-{	799	,	85	},
-{	826	,	80	},
-{	845	,	75	},
-{	861	,	70	},
-{	882	,	65	},
-{	897	,	60	},
-{	912	,	55	},
-{	925	,	50	},
-{	939	,	45	},
-{	949	,	40	},
-{	960	,	35	},
-{	968	,	30	},
-{	976	,	25	},
-{	987	,	20	},		// Assumed Value - Not Calibrated 
-{	994	,	15	},		// Assumed Value - Not Calibrated
-{	1001	,	10	},	// Assumed Value - Not Calibrated
+{	109	,	200	},		// Extrapolated Value - Test Hotbed can not reach this temp
+{	320	,	140	},
+{	348	,	135	},
+{	379	,	130	},
+{	411	,	125	},
+{	445	,	120	},
+{	480	,	115	},
+{	516	,	110	},
+{	553	,	105	},
+{	591	,	100	},
+{	628	,	95	},
+{	665	,	90	},
+{	702	,	85	},
+{	737	,	80	},
+{	770	,	75	},
+{	801	,	70	},
+{	830	,	65	},
+{	857	,	60	},
+{	881	,	55	},
+{	903	,	50	},
+{	922	,	45	},
+{	939	,	40	},
+{	954	,	35	},
+{	966	,	30	},
+{	977	,	25	},
+{	985	,	20	},		// Assumed Value - Not Calibrated 
+{	993	,	15	},		// Assumed Value - Not Calibrated
+{	999	,	10	},		// Assumed Value - Not Calibrated
 {	1006	,	5	},	// Assumed Value - Not Calibrated
 {	1010	,	0	} 	//safety // Assumed Value - Not Calibrated
 };

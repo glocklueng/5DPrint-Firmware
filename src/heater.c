@@ -24,7 +24,6 @@
 
 
 #include <avr/interrupt.h>
-#include "pgmspace.h"
 #include <math.h>
 #include <stdlib.h>
 

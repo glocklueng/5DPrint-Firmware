@@ -13,6 +13,14 @@ AUTHOR:	JTK WONG
 		www.xtrontec.com
 --------------------------
 heater.h
+Did not seem to like it when the bed thermistor table was removed. Firmware 
+seemed to crash, reset, or exhibit unexpected behaviour during print. Putting 
+the table back appears to fix the problem for now. There is some unknown memory 
+issue going here. Got it working for now (Version 1.3.25l-VCP) and it seems 
+stable. Need to come back at some point to figure out what the memory issue is 
+and fix/identify it properly.
+
+heater.h
 Change bed thermistor to use same lookup table as the extruder thermistor. This 
 is for the new hot bed - the thermistor has been relocated to the centre of the 
 bed on the underside.

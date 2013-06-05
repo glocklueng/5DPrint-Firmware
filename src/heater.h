@@ -44,8 +44,10 @@ extern const short bedtemptable[BNUMTEMPS][2];
 #endif
 
 #if defined BED_USES_THERMISTOR
-#define temp2analogBed( c ) temp2analog_thermistor((c),bedtemptable,BNUMTEMPS)
-#define analog2tempBed( c ) analog2temp_thermistor((c),bedtemptable,BNUMTEMPS)
+//#define temp2analogBed( c ) temp2analog_thermistor((c),bedtemptable,BNUMTEMPS)
+//#define analog2tempBed( c ) analog2temp_thermistor((c),bedtemptable,BNUMTEMPS)
+#define temp2analogBed( c ) temp2analog_thermistor((c),temptable,NUMTEMPS)
+#define analog2tempBed( c ) analog2temp_thermistor((c),temptable,NUMTEMPS)
 #endif
 
 #if defined (HEATER_USES_THERMISTOR) || defined (BED_USES_THERMISTOR)

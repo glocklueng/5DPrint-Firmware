@@ -7,6 +7,18 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	05 June 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+heater.h
+Change bed thermistor to use same lookup table as the extruder thermistor. This 
+is for the new hot bed - the thermistor has been relocated to the centre of the 
+bed on the underside.
+
+
+--------------------------
 DATE: 	30 MAY 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

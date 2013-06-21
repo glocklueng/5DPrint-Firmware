@@ -7,6 +7,22 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	21 June 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Added support for M18 (to turn off / disable motors). This operates in exactly 
+the same way as M84 which is already implemented. Users have reported that the 
+OctoPrint host software sends a M18 command when trying the stop / disable motors. 
+Pronterface / PrintRun sends a M84 when the 'Motors Off' button is pressed.
+
+NOTE: Please remember that the bed thermistor table is for the newer hot-bed 
+where the thermistor has been located on the bottom of the board and positioned 
+at the centre.
+
+
+--------------------------
 DATE: 	05 June 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

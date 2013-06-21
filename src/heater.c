@@ -17,7 +17,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 /*
- This softwarepart for Heatercontrol is based on Sprinter
+ This software part for Heater control is based on Sprinter
  big thanks to kliment (https://github.com/kliment/Sprinter)
 */
 

@@ -114,6 +114,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 // M114 - Display current position
 
 //Custom M Codes
+// M18	- Disable steppers until next move. Same as M84.
 // M80  - Turn on Power Supply
 // M81  - Turn off Power Supply
 // M82  - Set E codes absolute (default)
@@ -161,7 +162,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25l-VCP/ 05.06.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25m-VCP/ 21.06.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1127,7 +1128,8 @@ void execute_mcode(struct command *cmd) {
         axis_relative_modes[3] = 1;
         break;
 		
-      case 84: // M84
+      case 18:	// M18
+	  case 84:	// M84
         st_synchronize(); // wait for all movements to finish
         if(cmd->has_S)
         {

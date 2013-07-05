@@ -47,10 +47,10 @@
 // actual_steps_ are used to try and keep track of the actual positions of the
 // axes and extruder drive. System must first be 'homed' so we know where the
 // zero points are.
-long actual_steps_x = 0;
-long actual_steps_y = 0;
-long actual_steps_z = 0;
-long actual_steps_e = 0;
+static long actual_steps_x = 0;
+static long actual_steps_y = 0;
+static long actual_steps_z = 0;
+static long actual_steps_e = 0;
 
 unsigned short virtual_steps_x = 0;
 unsigned short virtual_steps_y = 0;

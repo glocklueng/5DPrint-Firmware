@@ -129,12 +129,13 @@
 // if unwanted behavior is observed on a user's machine when running at very slow speeds.
 #define MINIMUM_PLANNER_SPEED 0.05 // (mm/sec)
 
-#define DEFAULT_MINIMUMFEEDRATE       0.0     // minimum feedrate
-#define DEFAULT_MINTRAVELFEEDRATE     0.0
+#define DEFAULT_MINIMUMFEEDRATE       		0.0     // minimum feedrate
+#define DEFAULT_MINTRAVELFEEDRATE     		0.0
 
 
 // If defined the movements slow down when the look ahead buffer is only half full
 #define SLOWDOWN
+#define MIN_MOVES_QUEUED_FOR_SLOWDOWN		8
 
 
 // everything with less than this number of steps will be ignored as move and

@@ -3,6 +3,10 @@
 	why double up on these macros? see http://gcc.gnu.org/onlinedocs/cpp/Stringification.html
 */
 
+#ifndef BOARD_IO_H
+#define BOARD_IO_H
+
+
 #include	<avr/io.h>
 
 #define HIGH 0x1
@@ -692,3 +696,5 @@ pins
 #define PF7_WPORT		PORTF
 #define PF7_PWM			NULL
 #define PF7_DDR			DDRF
+
+#endif

@@ -1,6 +1,8 @@
+#ifndef HEATER_TABLE_H
+#define HEATER_TABLE_H
+
 const short temptable[NUMTEMPS][2] = {
 {	23	,	300	},
-{	25	,	295	},
 {	27	,	290	},
 {	28	,	285	},
 {	31	,	280	},
@@ -58,8 +60,8 @@ const short temptable[NUMTEMPS][2] = {
 {	985	,	20	},
 {	993	,	15	},
 {	999	,	10	},
-{	1004	,	5	},
-{	1008	,	0	} //safety
+{	1008	,	0	}, //safety
+{	1023	, 	-40	}
 };
 
 
@@ -97,6 +99,8 @@ const short bedtemptable[BNUMTEMPS][2] = {
 {	985	,	20	},		// Assumed Value - Not Calibrated 
 {	993	,	15	},		// Assumed Value - Not Calibrated
 {	999	,	10	},		// Assumed Value - Not Calibrated
-{	1006	,	5	},	// Assumed Value - Not Calibrated
-{	1010	,	0	} 	//safety // Assumed Value - Not Calibrated
+{	1010	,	0	}, 	//safety // Assumed Value - Not Calibrated
+{	1023	,	-40	}
 };
+
+#endif

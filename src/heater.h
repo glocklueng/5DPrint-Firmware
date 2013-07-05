@@ -21,15 +21,14 @@
  
 */
 
-
-#include "config.h"
-
-
 #ifndef HEATER_H
 #define HEATER_H
 
 
-#define NUMTEMPS      61
+#include "config.h"
+
+
+#define NUMTEMPS      60
 #define BNUMTEMPS     30
 extern const short temptable[NUMTEMPS][2];
 extern const short bedtemptable[BNUMTEMPS][2];

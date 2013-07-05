@@ -2,6 +2,8 @@
 
 /* TODO:  insert BSD license here. */
 
+#ifndef COMMAND_H
+#define COMMAND_H
 
 #include <stdint.h>
 
@@ -33,3 +35,5 @@ struct command {
 	int32_t T;
 	int32_t D;
 };
+
+#endif

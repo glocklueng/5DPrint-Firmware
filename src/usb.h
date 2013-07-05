@@ -1,3 +1,6 @@
+#ifndef USB_H
+#define USB_H
+
 #include <stddef.h>
 #include <stdint.h>
 #include "pgmspace.h"
@@ -50,3 +53,5 @@ void inline __dummy_usb_serial_printf(const char *fmt, ...) { return; }
         __dummy_usb_serial_printf((fmt), ##args);   \
         usb_serial_printf_P(__c, ##args);           \
     } while(0)
+
+#endif

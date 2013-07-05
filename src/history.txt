@@ -7,6 +7,34 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	05 July 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Adjusted 'SLOWDOWN' feature in planner.c. Previously the slowdown was invoked if 
+the plan buffer was less than half full and the number of moves queued in the 
+buffer was greater than 1. This sometimes caused annoying slow down of movements 
+when manually adjusting the printer using host software such as Pronterface. 
+When the plan buffer is filled with more than 1 movement (e.g. sending multiple 
+movement commands in quick succession or pressing a movement key multiple times 
+quickly) then the moves can take a long time to complete. 
+
+Now the SLOWDOWN feature is only invoked if there are more than 
+MIN_MOVES_QUEUED_FOR_SLOWDOWN moves in the plan buffer and it is less than half 
+full. MIN_MOVES_QUEUED_FOR_SLOWDOWN is defined in config.h and is initially set 
+to 8. This should provide a happy medium between user experience when operating 
+the printer manually from host software and preventing buffer under-run 
+situations during a print.
+
+Adjusted heater_table.h so that readings down to -40 degC are read for the 
+hot-bed and the hot-end. Allows for better thermistor error / fault indication 
+(e.g. disconnected thermistor). A reading of -40 degC will very likely indicate 
+a fault. Previously the lowest reading reported was 0 degC. Starting the printer 
+on a particularly cold winter day could generate a genuine of 0 degC.
+
+
+--------------------------
 DATE: 	21 June 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

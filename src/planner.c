@@ -516,7 +516,10 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   // slow down when the buffer starts to empty, rather than wait at the corner for a buffer refill
   int moves_queued=(block_buffer_head-block_buffer_tail + block_buffer_size) & block_buffer_mask;
 #ifdef SLOWDOWN  
-  if(moves_queued < (block_buffer_size * 0.5) && moves_queued > 1) feed_rate = feed_rate*moves_queued / (float)(block_buffer_size * 0.5); 
+  if(moves_queued < (block_buffer_size * 0.5) && moves_queued > MIN_MOVES_QUEUED_FOR_SLOWDOWN)
+  {
+		feed_rate = feed_rate*moves_queued / (float)(block_buffer_size * 0.5); 
+  }
 #endif
 
   float delta_mm[4];

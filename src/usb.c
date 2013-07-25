@@ -252,7 +252,7 @@ extern void _restart_Teensyduino_(void) __attribute__((noreturn));
  **************************************************************************/
 
 
-static const uint8_t PROGMEM endpoint_config_table[] = {
+static const uint8_t endpoint_config_table[] PROGMEM = {
 	0,
 	1, EP_TYPE_INTERRUPT_IN,  EP_SIZE(CDC_ACM_SIZE) | CDC_ACM_BUFFER,
 	1, EP_TYPE_BULK_OUT,      EP_SIZE(CDC_RX_SIZE) | CDC_RX_BUFFER,
@@ -272,7 +272,7 @@ static const uint8_t PROGMEM endpoint_config_table[] = {
 // in here should only be done by those who've read chapter 9 of the USB
 // spec and relevant portions of any USB class specifications!
 
-static const uint8_t PROGMEM device_descriptor[] = {
+static const uint8_t device_descriptor[] PROGMEM = {
 	18,					// bLength
 	1,					// bDescriptorType
 	0x00, 0x02,				// bcdUSB
@@ -290,7 +290,7 @@ static const uint8_t PROGMEM device_descriptor[] = {
 };
 
 #define CONFIG1_DESC_SIZE (9+9+5+5+4+5+7+9+7+7)
-static const uint8_t PROGMEM config1_descriptor[CONFIG1_DESC_SIZE] = {
+static const uint8_t config1_descriptor[CONFIG1_DESC_SIZE] PROGMEM = {
 	// configuration descriptor, USB spec 9.6.3, page 264-266, Table 9-10
 	9, 					// bLength;
 	2,					// bDescriptorType;
@@ -374,22 +374,22 @@ struct usb_string_descriptor_struct {
 	uint8_t bDescriptorType;
 	int16_t wString[];
 };
-static const struct usb_string_descriptor_struct PROGMEM string0 = {
+static const struct usb_string_descriptor_struct string0 PROGMEM = {
 	4,
 	3,
 	{0x0409}
 };
-static const struct usb_string_descriptor_struct PROGMEM string1 = {
+static const struct usb_string_descriptor_struct string1 PROGMEM = {
 	sizeof(STR_MANUFACTURER),
 	3,
 	STR_MANUFACTURER
 };
-static const struct usb_string_descriptor_struct PROGMEM string2 = {
+static const struct usb_string_descriptor_struct string2 PROGMEM = {
 	sizeof(STR_PRODUCT),
 	3,
 	STR_PRODUCT
 };
-static const struct usb_string_descriptor_struct PROGMEM string3 = {
+static const struct usb_string_descriptor_struct string3 PROGMEM = {
 	sizeof(STR_SERIAL_NUMBER),
 	3,
 	STR_SERIAL_NUMBER
@@ -403,7 +403,7 @@ struct descriptor_list_struct {
 	const uint8_t	*addr;
 	uint8_t		length;
 };
-static const struct descriptor_list_struct PROGMEM descriptor_list[] = {
+static const struct descriptor_list_struct descriptor_list[] PROGMEM = {
 	{0x0100, 0x0000, device_descriptor, sizeof(device_descriptor)},
 	{0x0200, 0x0000, config1_descriptor, sizeof(config1_descriptor)},
 	{0x0300, 0x0000, (const uint8_t *)&string0, 4},

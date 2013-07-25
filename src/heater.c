@@ -623,7 +623,8 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 	}
 	else
 	{
-		setHeaterPWMDuty(HEATER_0_PIN, 0);
+		heater_duty = 0;
+		setHeaterPWMDuty(HEATER_0_PIN, heater_duty);
 	}
 }
 
@@ -633,13 +634,20 @@ void service_ExtruderHeaterSimpleControl(int current_raw, int target_raw)
 	if(current_raw >= target_raw)
     {
 		WRITE(HEATER_0_PIN,LOW);
+		heater_duty = 0;
     }
     else 
     {
 		if(target_raw != 0)
         {
 			WRITE(HEATER_0_PIN,HIGH);
+			heater_duty = 100;
         }
+		else
+		{
+			WRITE(HEATER_0_PIN,LOW);
+			heater_duty = 0;
+		}
     }
 }
 
@@ -695,7 +703,8 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 	}
 	else
 	{
-		setHeaterPWMDuty(HEATER_1_PIN, 0);
+		bed_heater_duty = 0;
+		setHeaterPWMDuty(HEATER_1_PIN, bed_heater_duty);
 	}
 }
 
@@ -709,10 +718,12 @@ void service_BedHeaterSimpleControl(int current_bed_raw, int target_bed_raw)
 	#endif // #ifdef MINTEMP
 		{
 			WRITE(HEATER_1_PIN,LOW);
+			bed_heater_duty = 0;
 		}
 		else 
 		{
 			WRITE(HEATER_1_PIN,HIGH);
+			bed_heater_duty = 100;
 		}
 }
 

@@ -162,7 +162,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25n-VCP/ 05.07.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25o-VCP/ 25.07.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -996,11 +996,6 @@ void execute_mcode(struct command *cmd) {
           serial_send("ok T:%d", hotendtC);
           #ifdef PIDTEMP
             serial_send(" D%d%%", (int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ));
-            /*
-            serial_send(",P:%d", pTerm);
-            serial_send(",I:%d", iTerm);
-            serial_send(",D:%d", dTerm);
-            */
             #ifdef AUTOTEMP
               serial_send(" A%d", autotemp_setpoint);
             #endif

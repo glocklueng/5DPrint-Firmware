@@ -68,7 +68,7 @@ const static uint8_t SCL  = CORE_SCL0_PIN;
 #define portModeRegister(P) (portInputRegister(P) + 1)
 #define portOutputRegister(P) (portInputRegister(P) + 2)
 #define digitalPinToBitMask(P) (pgm_read_byte(digital_pin_table_PGM+(P)*2))
-extern const uint8_t PROGMEM digital_pin_table_PGM[];
+extern const uint8_t digital_pin_table_PGM[] PROGMEM;
 
 #define analogInputToDigitalPin(ch)	((ch) <= 7 ? (ch) - 38 : -1)
 #define digitalPinHasPWM(p)		(((p) >= 14 && (p) <= 16) || ((p) >= 24 && (p) <= 27) || (p) == 0 || (p) == 1)
@@ -128,7 +128,7 @@ int analogRead(uint8_t pin)
 		: "z" (digital_pin_table_PGM), "2" (pin))
 
 
-static const uint8_t PROGMEM didr_table_PGM[] = {
+static const uint8_t didr_table_PGM[] PROGMEM = {
 	(int)&DIDR0, ~0x01,
 	(int)&DIDR0, ~0x02,
 	(int)&DIDR0, ~0x04,
@@ -151,7 +151,7 @@ static const uint8_t PROGMEM didr_table_PGM[] = {
 		: "z" (didr_table_PGM), "r" (pin))
 
 
-const uint8_t PROGMEM digital_pin_table_PGM[] = {
+const uint8_t digital_pin_table_PGM[] PROGMEM = {
 	CORE_PIN0_BITMASK,	(int)&CORE_PIN0_PINREG,
 	CORE_PIN1_BITMASK,	(int)&CORE_PIN1_PINREG,
 	CORE_PIN2_BITMASK,	(int)&CORE_PIN2_PINREG,

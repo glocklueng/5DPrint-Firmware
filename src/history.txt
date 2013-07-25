@@ -7,6 +7,26 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	25 July 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Re-order the call to PROGMEM in usb.c for descriptors, strings, and other tables.
+PROGMEM was positioned before the variable / array name. The general description 
+and examples of using PROGMEM from AVR related websites show PROGMEM after the 
+variable / array name declaration but before the initialised data. Not sure if 
+this was causing any issues (the compiler may have still interpretted everything 
+as intended) but have updated these declarations for consistency. Similar in 
+pins_teensy.c.
+
+heater.c PID control functions for hot-bed and hot-end now update their 
+respective duty cycle variables to zero when the target temperature is set to 
+0 degrees and the PWM output is set to 0% duty (i.e. off). Allows correct 
+reporting of duty cycle to host.
+
+
+--------------------------
 DATE: 	05 July 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

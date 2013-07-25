@@ -7,13 +7,3 @@ which is itself based on the Tonokips firmware.
 
 Licensed under the GNU GPLv3.
 
-
-Makibox A6 Firmware - Virtual COM Port based USB Comms
-======================================================
-
-Makible is working on a new USB comms protocol.
-
-This version uses the virtual COM port USB comms that most of the existing tools 
-(e.g. Pronterface) interface to. This will allow the use of existing software 
-tools such as Pronterface until a set of new tools are developed and tested 
-to work with the new USB comms protocol.

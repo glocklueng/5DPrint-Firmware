@@ -36,6 +36,7 @@ extern const short bedtemptable[BNUMTEMPS][2];
 // Bed temperature must be greater than this value for hotend heater to be allowed
 // to draw 100% power. Only 1/3 of power will be allowed otherwise.
 #define MIN_BED_TEMP_FOR_HOTEND_FULL_PWR 	50		// degC
+#define MIN_BED_TEMP_FOR_HOTBED_FULL_PWR 	70		// degC
 
 #if defined HEATER_USES_THERMISTOR
 #define temp2analogh( c ) temp2analog_thermistor(c,temptable,NUMTEMPS)
@@ -85,7 +86,7 @@ extern unsigned char manage_monitor;
 	extern int bed_dTerm;
 	extern int bed_error;
 	extern int bed_heater_duty;
-
+	extern int user_max_bed_heater_duty;
 	extern unsigned int bed_PID_Kp, bed_PID_Ki, bed_PID_Kd;
 #endif
 

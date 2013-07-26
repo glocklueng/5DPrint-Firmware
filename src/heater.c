@@ -73,7 +73,7 @@ unsigned long previous_millis_heater, previous_millis_bed_heater, previous_milli
   int bed_dTerm;
   int bed_error;
   int bed_heater_duty = 0;
-
+  int max_bed_heater_duty = BED_HEATER_CURRENT, user_max_bed_heater_duty = BED_HEATER_CURRENT;
   int temp_bed_iState_min = (int)( 256L * -BED_PID_INTEGRAL_DRIVE_MAX / (float)(BED_PID_IGAIN) );
   int temp_bed_iState_max = (int)( 256L * BED_PID_INTEGRAL_DRIVE_MAX / (float)(BED_PID_IGAIN) );
 #endif
@@ -507,7 +507,24 @@ void PID_autotune(int PIDAT_test_temp)
 	  
 	// PID Control for HOT BED
 	if (BED_PIDTEMP > -1)
-	{		
+	{
+		// Only allow bed heater to be run at full power if its temperature is 
+		// greater than MIN_BED_TEMP_FOR_HOTBED_FULL_PWR. This is to limit the 
+		// max current drawn by the bed
+		if ( ( analog2tempBed(current_bed_raw) > MIN_BED_TEMP_FOR_HOTBED_FULL_PWR )
+				&& ( analog2tempBed(target_bed_raw) > BEDMINTEMP ) )
+		{
+			max_bed_heater_duty = user_max_bed_heater_duty;
+		}
+		else if ( analog2tempBed(target_bed_raw) < BEDMINTEMP )
+		{
+			max_bed_heater_duty = user_max_bed_heater_duty;
+		}
+		else
+		{
+			max_bed_heater_duty = user_max_bed_heater_duty * 0.8;
+		}
+		
 		service_BedHeaterPIDControl(analog2tempBed(current_bed_raw), 
 												analog2tempBed(target_bed_raw));
 	} 
@@ -692,9 +709,9 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 		bed_heater_duty = 0;
 	}
 	
-	if (bed_heater_duty > BED_HEATER_CURRENT)
+	if (bed_heater_duty > max_bed_heater_duty)
 	{
-		bed_heater_duty = BED_HEATER_CURRENT;
+		bed_heater_duty = max_bed_heater_duty;
 	}
 
 	if(target_bed_temp != 0)

@@ -7,6 +7,26 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	26 July 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+NOTE: FOR THE NEW / LATEST R&D (as at 25 JULY 2013) HOT-BED ONLY! THIS FIRMWARE 
+MUST BE MATCHED TO THE CORRECT HOT-BED TO PROPER OPERATION.
+
+New hot-bed design / layout introduced. heater_table.h updated with new 
+calibration values for the hot-bed. Care has to be taken that the latest hot-bed 
+design is matched with the latest firmware / heater_table. Calibration was done 
+using a prototype level hot-bed. Re-calibration may be required for the 
+production hot-bed since thermal properties may differ due to the prescence of 
+sodler mask and the thermistor having epoxy encasing it (that is the current 
+plan).
+
+Hot-Bed current / duty-cycle is limited to 80% of the maximum when the hot-bed 
+is less than MIN_BED_TEMP_FOR_HOTBED_FULL_PWR (currently set to 70 degC).
+
+--------------------------
 DATE: 	25 July 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

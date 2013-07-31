@@ -42,9 +42,9 @@
 #define PS_ON_PIN          -1
 #define KILL_PIN           -1
 
-#define SCK_PIN          21
-#define MISO_PIN         22
-#define MOSI_PIN         23
+#define SCK_PIN            21
+#define MISO_PIN           22
+#define MOSI_PIN           23
 
 
 #endif      // PINS_H

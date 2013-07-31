@@ -415,6 +415,7 @@ ISR(TIMER1_COMPA_vect)
       CHECK_ENDSTOPS
       {
         #if Y_MIN_PIN > -1
+		  SET_INPUT(Y_MIN_PIN);
           uint8_t y_min_endstop=(READ(Y_MIN_PIN) != Y_ENDSTOP_INVERT);
           if(y_min_endstop && old_y_min_endstop && (current_block->steps_y > 0)) {
             if(!is_homing)
@@ -437,6 +438,7 @@ ISR(TIMER1_COMPA_vect)
       CHECK_ENDSTOPS
       {
         #if Y_MAX_PIN > -1
+		  SET_INPUT(Y_MAX_PIN);
           uint8_t y_max_endstop=(READ(Y_MAX_PIN) != Y_ENDSTOP_INVERT);
           if(y_max_endstop && old_y_max_endstop && (current_block->steps_y > 0)){
             if(!is_homing)

@@ -37,6 +37,15 @@
 #include "planner.h"
 #include "stepper.h"
 
+// SD Card includes
+#ifdef SDSUPPORT
+	#include "sdcard/fat.h"
+	#include "sdcard/fat_config.h"
+	#include "sdcard/partition.h"
+	#include "sdcard/sd_raw.h"
+	#include "sdcard/sd_raw_config.h"
+#endif
+
 #ifdef USE_ARC_FUNCTION
   #include "arc_func.h"
 #endif
@@ -84,6 +93,8 @@ void wait_extruder_target_temp(void);
 void wait_bed_target_temp(void);
 void set_extruder_heater_max_current(struct command *cmd);
 
+uint8_t print_disk_info(const struct fat_fs_struct* fs);
+
 #ifndef CRITICAL_SECTION_START
 #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli()
 #define CRITICAL_SECTION_END    SREG = _sreg
@@ -115,6 +126,17 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 //Custom M Codes
 // M18	- Disable steppers until next move. Same as M84.
+// M20  - List SD card
+// M21  - Init SD card
+// M22  - Release SD card
+// M23  - Select SD file (M23 filename.g)
+// M24  - Start/resume SD print
+// M25  - Pause SD print
+// M26  - Set SD position in bytes (M26 S12345)
+// M27  - Report SD print status
+// M28  - Start SD write (M28 filename.g)
+// M29  - Stop SD write
+// M30  - Delete file from SD (M30 filename.g)
 // M80  - Turn on Power Supply
 // M81  - Turn off Power Supply
 // M82  - Set E codes absolute (default)
@@ -162,7 +184,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25p-VCP/ 26.07.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25q-VCP/ 31.07.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -222,6 +244,9 @@ uint8_t print_paused = 0;
 
 //Temp Monitor for repetier
 unsigned char manage_monitor = 255;
+
+static struct partition_struct* partition;
+static struct fat_fs_struct* fs;
 
 
 void enable_x()
@@ -939,6 +964,128 @@ void execute_gcode(struct command *cmd)
 void execute_mcode(struct command *cmd) {
     //unsigned long codenum; //throw away variable
     switch(cmd->code) {
+#ifdef SDSUPPORT
+    /*case 20: // M20 - list SD card
+      //SERIAL_PROTOCOLLNPGM(MSG_BEGIN_FILE_LIST);
+      //card.ls();
+      //SERIAL_PROTOCOLLNPGM(MSG_END_FILE_LIST);
+      break;*/
+	  
+    case 21: // M21 - init SD card
+      if( !sd_raw_init() )
+      {
+			serial_send("-- *** SD Card Initialisation Failed.\r\n");
+			//break;
+	  }
+	  else
+	  {		
+			serial_send("-- SD Card Initialised.\r\n");
+	  }
+	  
+	  /* open first partition */
+        partition = partition_open(sd_raw_read,
+                                    sd_raw_read_interval,
+		#if SD_RAW_WRITE_SUPPORT
+                                    sd_raw_write,
+                                    sd_raw_write_interval,
+		#else
+                                    0,
+                                    0,
+		#endif
+                                    0
+                                    );
+
+        if(!partition)
+        {
+            /* If the partition did not open, assume the storage device
+             * is a "superfloppy", i.e. has no MBR.
+             */
+            partition = partition_open(sd_raw_read,
+                                       sd_raw_read_interval,
+		#if SD_RAW_WRITE_SUPPORT
+                                       sd_raw_write,
+                                       sd_raw_write_interval,
+		#else
+                                       0,
+                                       0,
+		#endif
+                                       -1
+                                      );
+            if(!partition)
+            {
+                serial_send("-- *** Failed to open partition.\r\n");
+				break;
+            }
+        }
+
+        /* open file system */
+        fs = fat_open(partition);
+        if(!fs)
+        {
+            serial_send("-- *** Opening filesystem failed\r\n");
+			break;
+        }
+      break;
+	  
+ /*   case 22: //M22 - release SD card
+      card.release();
+      break;
+	  
+    case 23: //M23 - Select file
+      starpos = (strchr(strchr_pointer + 4,'*'));
+      if(starpos!=NULL)
+        *(starpos-1)='\0';
+      card.openFile(strchr_pointer + 4,true);
+      break;
+	  
+    case 24: //M24 - Start SD print
+      card.startFileprint();
+      starttime=millis();
+      break;
+	  
+    case 25: //M25 - Pause SD print
+      card.pauseSDPrint();
+      break;
+	  
+    case 26: //M26 - Set SD index
+      if(card.cardOK && code_seen('S')) {
+        card.setIndex(code_value_long());
+      }
+      break;
+*/	  
+    case 27: //M27 - Get SD status
+	  print_disk_info(fs);
+      break;
+	  
+/*    case 28: //M28 - Start SD write
+      starpos = (strchr(strchr_pointer + 4,'*'));
+      if(starpos != NULL){
+        char* npos = strchr(cmdbuffer[bufindr], 'N');
+        strchr_pointer = strchr(npos,' ') + 1;
+        *(starpos-1) = '\0';
+      }
+      card.openFile(strchr_pointer+4,false);
+      break;
+	  
+    case 29: //M29 - Stop SD write
+      //processed in write to file routine above
+      card,saving = false;
+      break;
+	  
+    case 30: //M30 <filename> Delete File 
+	if (card.cardOK){
+		card.closefile();
+		starpos = (strchr(strchr_pointer + 4,'*'));
+                if(starpos != NULL){
+                char* npos = strchr(cmdbuffer[bufindr], 'N');
+                strchr_pointer = strchr(npos,' ') + 1;
+                *(starpos-1) = '\0';
+         }
+	 card.removeFile(strchr_pointer + 4);
+	}
+	break;	*/
+#endif //SDSUPPORT
+	
       case 104: // M104 - Set Extruder Temperature
 #ifdef CHAIN_OF_COMMAND
           st_synchronize(); // wait for all movements to finish
@@ -1199,9 +1346,11 @@ void execute_mcode(struct command *cmd) {
       	  serial_send("x_max:%s", (READ(X_MAX_PIN)^X_ENDSTOP_INVERT)?"H ":"L ");
       	#endif
       	#if (Y_MIN_PIN > -1)
+		  SET_INPUT(Y_MIN_PIN);
       	  serial_send("y_min:%s", (READ(Y_MIN_PIN)^Y_ENDSTOP_INVERT)?"H ":"L ");
       	#endif
       	#if (Y_MAX_PIN > -1)
+		  SET_INPUT(Y_MAX_PIN);
       	  serial_send("y_max:%s", (READ(Y_MAX_PIN)^Y_ENDSTOP_INVERT)?"H ":"L ");
       	#endif
       	#if (Z_MIN_PIN > -1)
@@ -2003,4 +2152,29 @@ void JumpToBootloader(void)
 	// Jump to Bootloader start address
 	asm volatile("jmp 0xF000");
 	while (1) ;
+}
+
+
+uint8_t print_disk_info(const struct fat_fs_struct* fs)
+{
+    if(!fs)
+        return 0;
+
+    struct sd_raw_info disk_info;
+    if(!sd_raw_get_info(&disk_info))
+        return 0;
+
+    serial_send("-- Manufacturer: 0x%04X\r\n", disk_info.manufacturer);
+    serial_send("-- OEM: %s\r\n", (char*) disk_info.oem);
+    serial_send("-- Product: %s\r\n", (char*) disk_info.product);
+    serial_send("-- Revision:  0x%04X\r\n", disk_info.revision);
+    serial_send("-- Serial: 0x%X\r\n", (unsigned int)(disk_info.serial));
+    serial_send("-- Date: %02d / %02d\r\n", disk_info.manufacturing_month, disk_info.manufacturing_year);
+    serial_send("-- Size: %dMB\r\n", (int)(disk_info.capacity / 1024.0 / 1024.0));
+    serial_send("-- Copy: %d\r\n", disk_info.flag_copy);
+    serial_send("-- Write Protect: %d / %d\r\n", disk_info.flag_write_protect_temp, disk_info.flag_write_protect);
+    serial_send("-- Format: %d\r\n", disk_info.format);
+    serial_send("-- Free Space: %lu / %lu Bytes\r\n", (unsigned long)(fat_get_fs_free(fs)), (unsigned long)(fat_get_fs_size(fs)));
+
+    return 1;
 }

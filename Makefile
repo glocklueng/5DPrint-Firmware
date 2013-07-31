@@ -5,7 +5,9 @@ F_CPU=16000000
 
 
 MAKIBOX_OBJS   = arc_func.o heater.o main.o makibox.o pins_teensy.o \
-                 planner.o stepper.o store_eeprom.o usb.o
+                 planner.o stepper.o store_eeprom.o usb.o \
+				 sdcard/byteordering.o sdcard/fat.o sdcard/partition.o \
+				 sdcard/sd_raw.o
 
 
 CC=avr-gcc

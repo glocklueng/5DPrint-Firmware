@@ -27,7 +27,6 @@
 
 #include "config.h"
 
-
 #define NUMTEMPS      60
 #define BNUMTEMPS     30
 extern const short temptable[NUMTEMPS][2];
@@ -50,7 +49,7 @@ extern const short bedtemptable[BNUMTEMPS][2];
 
 #if defined (HEATER_USES_THERMISTOR) || defined (BED_USES_THERMISTOR)
 int temp2analog_thermistor(int celsius, const short table[][2], int numtemps);
-int analog2temp_thermistor(int raw,const short table[][2], int numtemps);
+int analog2temp_thermistor(int raw, const short table[][2], int numtemps);
 #endif
 
 extern int target_raw;

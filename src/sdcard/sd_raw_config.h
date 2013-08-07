@@ -107,20 +107,20 @@ extern "C"
     #define select_card() PORTB &= ~(1 << PORTB0)
     #define unselect_card() PORTB |= (1 << PORTB0)
 #elif defined(__AVR_AT90USB1286__)		// For Makibox A6 / PrintRBoard
-	#define configure_pin_mosi()			DDRB |= (1 << DDB2)
-    #define configure_pin_sck() 			DDRB |= (1 << DDB1)
-    #define configure_pin_ss() 				DDRB |= (1 << DDB6)
-    #define configure_pin_miso() 			DDRB &= ~(1 << DDB3)
+	#define configure_pin_mosi()			DDRB |= (1 << PINB2)
+    #define configure_pin_sck() 			DDRB |= (1 << PINB1)
+    #define configure_pin_ss() 				DDRB |= (1 << PINB6)
+    #define configure_pin_miso() 			DDRB &= ~(1 << PINB3)
 
-    #define select_card() 					PORTB &= ~(1 << PORTB6)
-    #define unselect_card() 				PORTB |= (1 << PORTB6)
+    #define select_card() 					PORTB &= ~(1 << PINB6)
+    #define unselect_card() 				PORTB |= (1 << PINB6)
 	
 	// SS Pin (B0) used as Y-Stop input.
 	// When SPI is active and SS input is low this forces the SPI in to slave 
 	// mode! Set the pin to operate as an output prior to SPI operations. 
 	// Then set back to input when exiting from SPI operation.
-	#define configure_ss_pin_as_output()	{DDRB |= (1 << DDB0); PORTB |= (1 << PORTB0);}
-	#define configure_ss_pin_as_input()		DDRB &= ~(1 << DDB0)
+	#define configure_ss_pin_as_output()	{DDRB |= (1 << PINB0); PORTB |= (1 << PINB0);}
+	#define configure_ss_pin_as_input()		DDRB &= ~(1 << PINB0)
 #else
     #error "no sd/mmc pin mapping available!"
 #endif

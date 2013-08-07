@@ -1,5 +1,8 @@
+
 #ifndef HEATER_TABLE_H
 #define HEATER_TABLE_H
+
+#include "heater.h"
 
 const short temptable[NUMTEMPS][2] = {
 {	23	,	300	},

@@ -26,15 +26,15 @@
 #include <avr/interrupt.h>
 #include <math.h>
 #include <stdlib.h>
-
+#include "heater_table.h"
 #include "heater.h"
 #include "board_io.h"
 #include "pins.h"
 #include "pins_teensy.h"
-#include "makibox.h"
+//#include "makibox.h"
 #include "usb.h"
 
-#include "heater_table.h"
+#include "pgmspace.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -544,12 +544,12 @@ int temp2analog_thermistor(int celsius, const short table[][2], int numtemps)
     
     for (i=1; i<numtemps; i++)
     {
-      if (table[i][1] < celsius)
+      if ( table[i][1] < celsius )
       {
         raw = table[i-1][0] + 
-          (celsius - table[i-1][1]) * 
-          (table[i][0] - table[i-1][0]) /
-          (float)(table[i][1] - table[i-1][1]);
+          ( celsius - table[i-1][1] ) * 
+          ( table[i][0] - table[i-1][0] ) /
+          (float)( table[i][1] - table[i-1][1] );
       
         break;
       }
@@ -571,12 +571,12 @@ int analog2temp_thermistor(int raw,const short table[][2], int numtemps) {
 
     for (i=1; i<numtemps; i++)
     {
-      if (table[i][0] > raw)
+      if ( table[i][0] > raw )
       {
         celsius  = table[i-1][1] + 
-          (raw - table[i-1][0]) * 
-          (table[i][1] - table[i-1][1]) /
-          (float)(table[i][0] - table[i-1][0]);
+          ( raw - table[i-1][0] ) * 
+          ( table[i][1] - table[i-1][1] ) /
+          (float)( table[i][0] - table[i-1][0] );
 
         break;
       }

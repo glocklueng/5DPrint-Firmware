@@ -93,7 +93,11 @@ void wait_extruder_target_temp(void);
 void wait_bed_target_temp(void);
 void set_extruder_heater_max_current(struct command *cmd);
 
-uint8_t print_disk_info(const struct fat_fs_struct* fs);
+#ifdef SDSUPPORT
+	uint8_t print_disk_info(const struct fat_fs_struct* fs);
+	void sdcard_list_root(void);
+	void sdcard_release(void);
+#endif
 
 #ifndef CRITICAL_SECTION_START
 #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli()
@@ -184,7 +188,7 @@ uint8_t print_disk_info(const struct fat_fs_struct* fs);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25q-VCP/ 31.07.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25r-VCP/ 07.08.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -228,9 +232,12 @@ float offset[3] = {0.0, 0.0, 0.0};
 // comm variables and Commandbuffer
 // MAX_CMD_SIZE does not include the trailing \0 that terminates the string.
 #define MAX_CMD_SIZE 95
-char cmdbuf[MAX_CMD_SIZE+1];
-unsigned char bufpos = 0;
+static char cmdbuf[MAX_CMD_SIZE + 1];
+//unsigned char bufpos = 0;
 uint32_t cmdseqnbr = 0;
+// Create the 'struct command'.
+struct command cmd;
+uint32_t code = -1;
 
 //Send Temperature in °C to Host
 int hotendtC = 0, bedtempC = 0;
@@ -245,8 +252,12 @@ uint8_t print_paused = 0;
 //Temp Monitor for repetier
 unsigned char manage_monitor = 255;
 
-static struct partition_struct* partition;
-static struct fat_fs_struct* fs;
+// SD Card Variables
+#ifdef SDSUPPORT
+	static struct partition_struct* partition;
+	static struct fat_fs_struct* fs;
+	static struct fat_dir_struct* sdcard_dir_desc;
+#endif
 
 
 void enable_x()
@@ -520,6 +531,7 @@ void loop()
 void read_command() 
 { 
   unsigned char ignore_comments = 0;
+  unsigned char bufpos = 0;
   
   while (usb_serial_available() > 0)
   {
@@ -539,6 +551,7 @@ void read_command()
 	  // TODO:  do something?
       continue;
     }
+	
     if (ch == '\n' || ch == '\r')
     {
       // Newline marks end of this command;  terminate
@@ -550,23 +563,24 @@ void read_command()
 	  }
 	  ignore_comments = 0;
       bufpos = 0;
+	  cmdbuf[bufpos] = '\0';
       // Flush any output which may not have been sent 
       // at the end of command execution.
       usb_serial_flush();
-      break;
+      return; //break;
     }
 	
 	if (ignore_comments < 1)
 	{
-	   cmdbuf[bufpos++] = (uint8_t)ch;
-	}
+	  cmdbuf[bufpos++] = (uint8_t)ch;
 	
-    if (bufpos > MAX_CMD_SIZE)
-    {
-        // TODO:  can we do something more intelligent than
-        // just silently truncating the command?
-        bufpos--;
-    }
+	  if (bufpos > MAX_CMD_SIZE)
+	  {
+		// TODO:  can we do something more intelligent than
+		// just silently truncating the command?
+		bufpos--;
+	  }
+	}
   }
 }
 
@@ -718,7 +732,7 @@ void process_command(const char *cmdstr)
   // Validate that the command has a single G or M code.
   int has_gcode;
   int has_mcode;
-  uint32_t code = -1;
+  //uint32_t code = -1;
   has_gcode = parse_uint(cmdstr, 'G', &code);
   has_mcode = parse_uint(cmdstr, 'M', &code);
   if (has_gcode && has_mcode)
@@ -738,7 +752,7 @@ void process_command(const char *cmdstr)
   }
 
   // Create the 'struct command'.
-  struct command cmd;
+  //struct command cmd;
   cmd.seqnbr = seqnbr;
   cmd.type = has_gcode ? 'G' : 'M';
   cmd.code = code;
@@ -761,7 +775,9 @@ void process_command(const char *cmdstr)
   switch (cmd.type) {
   case 'G':  execute_gcode(&cmd);  break;
   case 'M':  execute_mcode(&cmd);  break;
+  default:	break;
   }
+  
   end_tm = millis();
   uint8_t qfree = blocks_available();
   serial_send("ok %ld Q%d (%lums execute)\r\n", 
@@ -965,11 +981,9 @@ void execute_mcode(struct command *cmd) {
     //unsigned long codenum; //throw away variable
     switch(cmd->code) {
 #ifdef SDSUPPORT
-    /*case 20: // M20 - list SD card
-      //SERIAL_PROTOCOLLNPGM(MSG_BEGIN_FILE_LIST);
-      //card.ls();
-      //SERIAL_PROTOCOLLNPGM(MSG_END_FILE_LIST);
-      break;*/
+    case 20: // M20 - list SD card
+	  sdcard_list_root();
+      break;
 	  
     case 21: // M21 - init SD card
       if( !sd_raw_init() )
@@ -1027,11 +1041,11 @@ void execute_mcode(struct command *cmd) {
         }
       break;
 	  
- /*   case 22: //M22 - release SD card
-      card.release();
+    case 22: //M22 - release SD card
+		sdcard_release();
       break;
 	  
-    case 23: //M23 - Select file
+/*    case 23: //M23 - Select file
       starpos = (strchr(strchr_pointer + 4,'*'));
       if(starpos!=NULL)
         *(starpos-1)='\0';
@@ -1053,7 +1067,7 @@ void execute_mcode(struct command *cmd) {
       }
       break;
 */	  
-    case 27: //M27 - Get SD status
+    case 27: //M27 - Get SD print status
 	  print_disk_info(fs);
       break;
 	  
@@ -2155,8 +2169,11 @@ void JumpToBootloader(void)
 }
 
 
+#ifdef SDSUPPORT
 uint8_t print_disk_info(const struct fat_fs_struct* fs)
 {
+	//configure_ss_pin_as_output();
+	
     if(!fs)
         return 0;
 
@@ -2178,3 +2195,62 @@ uint8_t print_disk_info(const struct fat_fs_struct* fs)
 
     return 1;
 }
+
+
+void sdcard_release(void)
+{
+	/* close directory */
+	if (sdcard_dir_desc != 0)
+	{
+		fat_close_dir(sdcard_dir_desc);
+	}
+	
+	if (fs != 0)
+	{
+		// close file system
+		fat_close(fs);
+
+		// close partition
+		partition_close(partition);
+	}
+	
+	serial_send("-- SD Card Released.\r\n");
+}
+
+
+void sdcard_list_root(void)
+{
+	struct fat_dir_entry_struct dir_entry;
+	struct fat_dir_entry_struct directory;
+	
+	if (fs != NULL)
+	{
+		fat_get_dir_entry_of_path(fs, "/", &directory);
+
+		sdcard_dir_desc = fat_open_dir(fs, &directory);
+		
+		if(!sdcard_dir_desc)
+		{
+			serial_send("-- Opening directory failed.\r\n");
+		}
+		
+		/* print directory listing */
+		while(fat_read_dir(sdcard_dir_desc, &dir_entry))
+		{
+			uint8_t spaces = sizeof(dir_entry.long_name) - strlen(dir_entry.long_name) + 4;
+
+			serial_send("-- %s", dir_entry.long_name);
+			serial_send("%s", (dir_entry.attributes & FAT_ATTRIB_DIR ? "/" : " "));
+			
+			while(spaces--)
+			{
+				serial_send(" ");
+			}
+			
+			serial_send("%lu\r\n", dir_entry.file_size);
+		}
+		
+		fat_close_dir(sdcard_dir_desc);
+	}
+}
+#endif

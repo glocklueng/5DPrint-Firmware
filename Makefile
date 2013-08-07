@@ -14,11 +14,11 @@ CC=avr-gcc
 OBJCOPY=avr-objcopy
 
 
-CPPFLAGS       = -mmcu=$(MCU) -DF_CPU=$(F_CPU)L -Os \
+CPPFLAGS       = -mmcu=$(MCU) -DF_CPU=$(F_CPU)L -O1 \
                  -ffunction-sections -fdata-sections -g \
                  -Wall -Wformat=2 -Werror
 CFLAGS         = -std=gnu99
-LDFLAGS        = -mmcu=$(MCU) -Wl,--gc-sections -Os
+LDFLAGS        = -mmcu=$(MCU) -Wl,-Map=makibox.map,--gc-sections -Os
 
 
 %.o: %.c

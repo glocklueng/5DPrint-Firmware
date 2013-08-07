@@ -43,10 +43,9 @@ void inline __dummy_usb_serial_printf(const char *fmt, ...) { return; }
 
 
 // Note that this macro *EVALUATES ITS ARGUMENTS TWICE*.  This is (sadly) an
-// unavoidable consequence of needing to call __dummy_printf().  However, if you
-// are doing silly stuff such as:
+// unavoidable consequence of needing to call __dummy_printf().  Do not do things
+// such as:
 //     serial_send("i=%d\n", i++);
-// then you quite honestly deserve what you get.
 #define serial_send(fmt, args...)                   \
     do {                                            \
         static const char __c[] PROGMEM = (fmt);    \

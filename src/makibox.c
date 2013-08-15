@@ -36,15 +36,8 @@
 #include "command.h"
 #include "planner.h"
 #include "stepper.h"
+#include "sdcard/makibox_sdcard.h"
 
-// SD Card includes
-#ifdef SDSUPPORT
-	#include "sdcard/fat.h"
-	#include "sdcard/fat_config.h"
-	#include "sdcard/partition.h"
-	#include "sdcard/sd_raw.h"
-	#include "sdcard/sd_raw_config.h"
-#endif
 
 #ifdef USE_ARC_FUNCTION
   #include "arc_func.h"
@@ -63,8 +56,8 @@
 // for hotend heater.
 #define MIN_TARGET_TEMP_CHANGE	10
 
-void cmdbuf_read_serial();
-void cmdbuf_process();
+//void cmdbuf_read_serial();
+//void cmdbuf_process();
 void execute_command();
 void prepare_move();
 void prepare_arc_move(char isclockwise);
@@ -92,12 +85,6 @@ void do_position_report(void);
 void wait_extruder_target_temp(void);
 void wait_bed_target_temp(void);
 void set_extruder_heater_max_current(struct command *cmd);
-
-#ifdef SDSUPPORT
-	uint8_t print_disk_info(const struct fat_fs_struct* fs);
-	void sdcard_list_root(void);
-	void sdcard_release(void);
-#endif
 
 #ifndef CRITICAL_SECTION_START
 #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli()
@@ -188,7 +175,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25r-VCP/ 07.08.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25s-VCP/ 15.08.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -251,13 +238,6 @@ uint8_t print_paused = 0;
 
 //Temp Monitor for repetier
 unsigned char manage_monitor = 255;
-
-// SD Card Variables
-#ifdef SDSUPPORT
-	static struct partition_struct* partition;
-	static struct fat_fs_struct* fs;
-	static struct fat_dir_struct* sdcard_dir_desc;
-#endif
 
 
 void enable_x()
@@ -532,6 +512,7 @@ void read_command()
 { 
   unsigned char ignore_comments = 0;
   unsigned char bufpos = 0;
+  int16_t ch = -1;
   
   while (usb_serial_available() > 0)
   {
@@ -539,47 +520,44 @@ void read_command()
 		PreemptionFlag |= 0x0002;
 	#endif
 	
-    int16_t ch = usb_serial_read();
+    ch = usb_serial_read();
 	
 	if (ch == ';')
 	{
 	  ignore_comments = 1;
 	}
 	
-    if (ch < 0 || ch > 255)
-    {
-	  // TODO:  do something?
-      continue;
-    }
-	
-    if (ch == '\n' || ch == '\r')
-    {
-      // Newline marks end of this command;  terminate
-      // string and process it.
-      cmdbuf[bufpos] = '\0';
-	  if (bufpos > 0)
-	  {
-		process_command(cmdbuf);
-	  }
-	  ignore_comments = 0;
-      bufpos = 0;
-	  cmdbuf[bufpos] = '\0';
-      // Flush any output which may not have been sent 
-      // at the end of command execution.
-      usb_serial_flush();
-      return; //break;
-    }
-	
-	if (ignore_comments < 1)
-	{
-	  cmdbuf[bufpos++] = (uint8_t)ch;
-	
-	  if (bufpos > MAX_CMD_SIZE)
-	  {
-		// TODO:  can we do something more intelligent than
-		// just silently truncating the command?
-		bufpos--;
-	  }
+    if ( !(ch < 0 || ch > 255) )
+    {	
+		if (ch == '\n' || ch == '\r')
+		{
+			// Newline marks end of this command;  terminate
+			// string and process it.
+			cmdbuf[bufpos] = '\0';
+			if (bufpos > 0)
+			{
+				process_command(cmdbuf);
+			}
+			ignore_comments = 0;
+			bufpos = 0;
+			cmdbuf[bufpos] = '\0';
+			// Flush any output which may not have been sent 
+			// at the end of command execution.
+			usb_serial_flush();
+			break;
+		}
+		
+		if (ignore_comments < 1)
+		{
+			cmdbuf[bufpos++] = (uint8_t)ch;
+
+			if (bufpos > MAX_CMD_SIZE - 1)
+			{
+				// TODO:  can we do something more intelligent than
+				// just silently truncating the command?
+				bufpos--;
+			}
+		}
 	}
   }
 }
@@ -675,9 +653,11 @@ int parse_float(const char *cmd, char word, float *value)
 //  XMODEM CRC.
 //------------------------------------------------
 void process_command(const char *cmdstr)
-{
+{  
+  uint32_t checksum = 0;
+  uint8_t qfree = 0;
+  
   // Validate the command's checksum, if provided.
-  uint32_t checksum = -1;
   if (parse_hex(cmdstr, ';', &checksum)) {
     // 16-bit XMODEM cyclic redundancy check.
     uint16_t calculated_checksum = 0;
@@ -715,7 +695,7 @@ void process_command(const char *cmdstr)
   }
 
   // Validate the command's sequence number, if provided. 
-  uint32_t seqnbr;
+  uint32_t seqnbr = 0;
   if (parse_uint(cmdstr, 'N', &seqnbr))
   {
     if (seqnbr == 0) cmdseqnbr = 0;
@@ -769,7 +749,7 @@ void process_command(const char *cmdstr)
   cmd.has_D = parse_int(cmdstr, 'D', &cmd.D);
 
   // Dispatch command.
-  unsigned long start_tm, end_tm;
+  unsigned long start_tm, end_tm, execute_tm;
   serial_send("go %ld (executing %c%d)\r\n", cmdseqnbr, cmd.type, cmd.code);
   start_tm = millis();
   switch (cmd.type) {
@@ -779,9 +759,10 @@ void process_command(const char *cmdstr)
   }
   
   end_tm = millis();
-  uint8_t qfree = blocks_available();
+  execute_tm = end_tm - start_tm;
+  qfree = blocks_available();
   serial_send("ok %ld Q%d (%lums execute)\r\n", 
-					cmdseqnbr, qfree, end_tm - start_tm);
+					cmdseqnbr, qfree, execute_tm);
   cmdseqnbr++;
   previous_millis_cmd = end_tm;
 }
@@ -986,63 +967,11 @@ void execute_mcode(struct command *cmd) {
       break;
 	  
     case 21: // M21 - init SD card
-      if( !sd_raw_init() )
-      {
-			serial_send("-- *** SD Card Initialisation Failed.\r\n");
-			//break;
-	  }
-	  else
-	  {		
-			serial_send("-- SD Card Initialised.\r\n");
-	  }
-	  
-	  /* open first partition */
-        partition = partition_open(sd_raw_read,
-                                    sd_raw_read_interval,
-		#if SD_RAW_WRITE_SUPPORT
-                                    sd_raw_write,
-                                    sd_raw_write_interval,
-		#else
-                                    0,
-                                    0,
-		#endif
-                                    0
-                                    );
-
-        if(!partition)
-        {
-            /* If the partition did not open, assume the storage device
-             * is a "superfloppy", i.e. has no MBR.
-             */
-            partition = partition_open(sd_raw_read,
-                                       sd_raw_read_interval,
-		#if SD_RAW_WRITE_SUPPORT
-                                       sd_raw_write,
-                                       sd_raw_write_interval,
-		#else
-                                       0,
-                                       0,
-		#endif
-                                       -1
-                                      );
-            if(!partition)
-            {
-                serial_send("-- *** Failed to open partition.\r\n");
-				break;
-            }
-        }
-
-        /* open file system */
-        fs = fat_open(partition);
-        if(!fs)
-        {
-            serial_send("-- *** Opening filesystem failed\r\n");
-			break;
-        }
+      sdcard_initialise();
       break;
 	  
     case 22: //M22 - release SD card
-		sdcard_release();
+	  sdcard_release();
       break;
 	  
 /*    case 23: //M23 - Select file
@@ -1068,7 +997,7 @@ void execute_mcode(struct command *cmd) {
       break;
 */	  
     case 27: //M27 - Get SD print status
-	  print_disk_info(fs);
+	  print_disk_info(sdcard_fs);
       break;
 	  
 /*    case 28: //M28 - Start SD write
@@ -1083,7 +1012,7 @@ void execute_mcode(struct command *cmd) {
 	  
     case 29: //M29 - Stop SD write
       //processed in write to file routine above
-      card,saving = false;
+      //card,saving = false;
       break;
 	  
     case 30: //M30 <filename> Delete File 
@@ -1825,11 +1754,11 @@ void prepare_move()
 
   if(destination[E_AXIS] > current_position[E_AXIS])
   {
-    help_feedrate = ((long)feedrate*(long)feedmultiply);
+    help_feedrate = (long)((long)feedrate*(long)feedmultiply);
   }
   else
   {
-    help_feedrate = ((long)feedrate*(long)100);
+    help_feedrate = (long)((long)feedrate*(long)100);
   }
   
   plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], help_feedrate/6000.0);
@@ -2168,89 +2097,3 @@ void JumpToBootloader(void)
 	while (1) ;
 }
 
-
-#ifdef SDSUPPORT
-uint8_t print_disk_info(const struct fat_fs_struct* fs)
-{
-	//configure_ss_pin_as_output();
-	
-    if(!fs)
-        return 0;
-
-    struct sd_raw_info disk_info;
-    if(!sd_raw_get_info(&disk_info))
-        return 0;
-
-    serial_send("-- Manufacturer: 0x%04X\r\n", disk_info.manufacturer);
-    serial_send("-- OEM: %s\r\n", (char*) disk_info.oem);
-    serial_send("-- Product: %s\r\n", (char*) disk_info.product);
-    serial_send("-- Revision:  0x%04X\r\n", disk_info.revision);
-    serial_send("-- Serial: 0x%X\r\n", (unsigned int)(disk_info.serial));
-    serial_send("-- Date: %02d / %02d\r\n", disk_info.manufacturing_month, disk_info.manufacturing_year);
-    serial_send("-- Size: %dMB\r\n", (int)(disk_info.capacity / 1024.0 / 1024.0));
-    serial_send("-- Copy: %d\r\n", disk_info.flag_copy);
-    serial_send("-- Write Protect: %d / %d\r\n", disk_info.flag_write_protect_temp, disk_info.flag_write_protect);
-    serial_send("-- Format: %d\r\n", disk_info.format);
-    serial_send("-- Free Space: %lu / %lu Bytes\r\n", (unsigned long)(fat_get_fs_free(fs)), (unsigned long)(fat_get_fs_size(fs)));
-
-    return 1;
-}
-
-
-void sdcard_release(void)
-{
-	/* close directory */
-	if (sdcard_dir_desc != 0)
-	{
-		fat_close_dir(sdcard_dir_desc);
-	}
-	
-	if (fs != 0)
-	{
-		// close file system
-		fat_close(fs);
-
-		// close partition
-		partition_close(partition);
-	}
-	
-	serial_send("-- SD Card Released.\r\n");
-}
-
-
-void sdcard_list_root(void)
-{
-	struct fat_dir_entry_struct dir_entry;
-	struct fat_dir_entry_struct directory;
-	
-	if (fs != NULL)
-	{
-		fat_get_dir_entry_of_path(fs, "/", &directory);
-
-		sdcard_dir_desc = fat_open_dir(fs, &directory);
-		
-		if(!sdcard_dir_desc)
-		{
-			serial_send("-- Opening directory failed.\r\n");
-		}
-		
-		/* print directory listing */
-		while(fat_read_dir(sdcard_dir_desc, &dir_entry))
-		{
-			uint8_t spaces = sizeof(dir_entry.long_name) - strlen(dir_entry.long_name) + 4;
-
-			serial_send("-- %s", dir_entry.long_name);
-			serial_send("%s", (dir_entry.attributes & FAT_ATTRIB_DIR ? "/" : " "));
-			
-			while(spaces--)
-			{
-				serial_send(" ");
-			}
-			
-			serial_send("%lu\r\n", dir_entry.file_size);
-		}
-		
-		fat_close_dir(sdcard_dir_desc);
-	}
-}
-#endif

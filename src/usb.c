@@ -517,21 +517,28 @@ void usb_serial_end(void)
 // number of bytes available in the receive buffer
 int usb_serial_available(void)
 {
-        uint8_t n=0, i, intr_state;
+	uint8_t n=0, i, intr_state;
 
-        intr_state = SREG;
-        cli();
-        if (usb_configuration) {
-                UENUM = CDC_RX_ENDPOINT;
-                n = UEBCLX;
+	intr_state = SREG;
+	cli();
+	
+	if (usb_configuration) {
+		UENUM = CDC_RX_ENDPOINT;
+		n = UEBCLX;
+			
 		if (!n) {
 			i = UEINTX;
 			if (i & (1<<RXOUTI) && !(i & (1<<RWAL))) UEINTX = 0x6B;
 		}
-        }
-        SREG = intr_state;
-	if (peek_buf >= 0 && n < 255) n++;
-        return n;
+	}
+	
+	SREG = intr_state;
+		
+	if (peek_buf >= 0 && n < 255) {
+		n++;
+	}
+
+    return n;
 }
 
 int usb_serial_peek(void)
@@ -543,7 +550,7 @@ int usb_serial_peek(void)
 // get the next character, or -1 if nothing received
 int usb_serial_read(void)
 {
-        uint8_t c, intr_state;
+    uint8_t c, intr_state;
 
 	if (peek_buf >= 0) {
 		c = peek_buf;

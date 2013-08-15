@@ -7,14 +7,14 @@ F_CPU=16000000
 MAKIBOX_OBJS   = arc_func.o heater.o main.o makibox.o pins_teensy.o \
                  planner.o stepper.o store_eeprom.o usb.o \
 				 sdcard/byteordering.o sdcard/fat.o sdcard/partition.o \
-				 sdcard/sd_raw.o
+				 sdcard/sd_raw.o sdcard/makibox_sdcard.o
 
 
 CC=avr-gcc
 OBJCOPY=avr-objcopy
 
 
-CPPFLAGS       = -mmcu=$(MCU) -DF_CPU=$(F_CPU)L -O1 \
+CPPFLAGS       = -mmcu=$(MCU) -DF_CPU=$(F_CPU)L -Os \
                  -ffunction-sections -fdata-sections -g \
                  -Wall -Wformat=2 -Werror
 CFLAGS         = -std=gnu99

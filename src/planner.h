@@ -8,7 +8,10 @@
 // actually be reached if acceleration management is active.
 struct block {
   // Fields used by the bresenham algorithm for tracing the line
-  long steps_x, steps_y, steps_z, steps_e;  // Step count along each axis
+  long steps_x;
+  long steps_y;
+  long steps_z;
+  long steps_e;  // Step count along each axis
 
   unsigned long step_event_count;  // The number of step events required to complete this block
   long accelerate_until;           // The index of the step event on which to stop acceleration

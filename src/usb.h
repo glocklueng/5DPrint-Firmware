@@ -52,5 +52,4 @@ void inline __dummy_usb_serial_printf(const char *fmt, ...) { return; }
         __dummy_usb_serial_printf((fmt), ##args);   \
         usb_serial_printf_P(__c, ##args);           \
     } while(0)
-
 #endif

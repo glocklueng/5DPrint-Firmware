@@ -11,6 +11,7 @@
 struct command {
 	uint32_t seqnbr;
 	uint8_t type;
+	uint8_t dummy;	// byte align (even number of bytes)
 	uint16_t code;
 	uint16_t has_X : 1;
 	uint16_t has_Y : 1;

@@ -7,6 +7,36 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	15 August 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+SD Card Dev Branch
+
+planner.c
+block_t block_buffer[] initialised to block_t block_buffer[] = {{0}}; This is 
+still an uninitialised array of struct. However, this seems to cause the 
+compiler / linker to place this in a slightly different memory location (but 
+still in the .bss section).
+
+Makefile
+Optimisation level changed back to -Os.
+
+
+--------------------------
+DATE: 	08 August 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+SD Card Dev Branch
+
+Seperated Makibox SD card related functions to makibox_sdcard.c and 
+makibox_sdcard.h files.
+
+
+--------------------------
 DATE: 	07 August 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited
@@ -19,6 +49,14 @@ This appears to resolve the crash / memory issues that was seen when testing
 this code => or has this simply moved the problem to a differene memory 
 location? Had a search through the code for any pointer arithmetic that may go 
 wrong but could not spot anything.
+
+Can now list files and folders from the root directory of the SD card. Related 
+code has just been added to the bottom of the makibox.c file for testing 
+purposes. If the functions are to be used in a release then they should seperated 
+out to a different file (and added to the project) in order for easier navigation 
+and maintenance of the code in the future.
+
+This is still a very early work in progress for the SD card functionality.
 
 
 --------------------------

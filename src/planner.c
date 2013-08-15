@@ -92,7 +92,7 @@ unsigned long axis_steps_per_sqr_second[NUM_AXIS];
  */
 
 
-block_t block_buffer[BLOCK_BUFFER_SIZE]; // A ring buffer for motion instructions
+block_t block_buffer[BLOCK_BUFFER_SIZE] = {{0}}; 	// A ring buffer for motion instructions
 volatile unsigned char block_buffer_head;           // Index of the next block to be pushed
 volatile unsigned char block_buffer_tail;           // Index of the block to process now
 
@@ -444,8 +444,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   block->steps_y = labs(target[Y_AXIS]-position[Y_AXIS]);
   block->steps_z = labs(target[Z_AXIS]-position[Z_AXIS]);
   block->steps_e = labs(target[E_AXIS]-position[E_AXIS]);
-  block->steps_e *= extrudemultiply;
-  block->steps_e /= 100.0;
+  block->steps_e = (long)(block->steps_e * extrudemultiply / 100.0);
   block->step_event_count = MAX(block->steps_x, MAX(block->steps_y, MAX(block->steps_z, block->steps_e)));
 
   // Bail if this is a zero-length block

@@ -7,6 +7,42 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	22 August 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+SD Card Dev Branch
+
+Current development snapshot.
+
+Moved Y-Stop input to use the E-Stop input. The Y - limit switch connector must 
+be connected to the E-Stop header pins on the PrintRBoard instead. The Y-Stop 
+input is currently (on PrintRBoard Rev B) connected to a pin which also acts as 
+the /SS input pin for the SPI. This has the effect of putting the SPI module 
+into slave mode. There does not seem to be anyway to disable the /SS pin via 
+any of the MCU registers. Swapping to using the E-Stop (not used by anything at 
+the moment) will avoid problems caused by this during development.
+
+read_command() updated to include handling of printing from SD card.
+
+The SD card can now be read and files opened. The current SD card print function 
+is a bit slow due to reading characters from the file one byte at a time.
+
+
+--------------------------
+DATE: 	16 August 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+SD Card Dev Branch
+
+Adjusted some of the SD card feedback text to match those expected by 
+Pronterface for the correct buttons and dialog boxes to be displayed.
+
+
+--------------------------
 DATE: 	15 August 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

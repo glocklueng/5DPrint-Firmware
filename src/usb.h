@@ -37,9 +37,9 @@ void usb_serial_printf_P(PGM_P fmt, ...);
 // takes some amount of coaxing to get GCC to type-check format string parameters
 // without also placing the format string into RAM.  The __dummy_printf() inline
 // function seems to do the trick.
-void inline __dummy_usb_serial_printf(const char *fmt, ...)
+inline void __dummy_usb_serial_printf(const char *fmt, ...)
     __attribute__(( format(gnu_printf, 1, 2) ));
-void inline __dummy_usb_serial_printf(const char *fmt, ...) { return; }
+inline void __dummy_usb_serial_printf(const char *fmt, ...) { return; }
 
 
 // Note that this macro *EVALUATES ITS ARGUMENTS TWICE*.  This is (sadly) an
@@ -52,4 +52,5 @@ void inline __dummy_usb_serial_printf(const char *fmt, ...) { return; }
         __dummy_usb_serial_printf((fmt), ##args);   \
         usb_serial_printf_P(__c, ##args);           \
     } while(0)
-#endif
+	
+#endif // USB_H

@@ -59,7 +59,7 @@ unsigned short virtual_steps_z = 0;
 uint8_t is_homing = 0;
 
 uint8_t pause_print_req = 0;
-paused_data_t paused_data;
+paused_data_t paused_data = {0};
 
 
 
@@ -168,7 +168,7 @@ static volatile uint8_t endstop_x_hit=0;
 static volatile uint8_t endstop_y_hit=0;
 static volatile uint8_t endstop_z_hit=0;
 
-block_t resume_buffer[PRINT_PAUSED_BLOCK_BUF_SIZE];
+block_t resume_buffer[PRINT_PAUSED_BLOCK_BUF_SIZE] = {{0}};
 
 #if X_MIN_PIN > -1
   static uint8_t old_x_min_endstop=0;

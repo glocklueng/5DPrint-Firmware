@@ -117,7 +117,9 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 //Custom M Codes
 // M18	- Disable steppers until next move. Same as M84.
-// M20  - List SD card
+// M20  - List SD card - F value passed via the F are the flags for displaying 
+//			directories and file sizes.	Bit 0x01 = display file size;
+//										Bit 0x02 = display directories;
 // M21  - Init SD card
 // M22  - Release SD card
 // M23  - Select SD file (M23 filename.g)
@@ -175,7 +177,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25s-VCP/ 15.08.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25t-VCP/ 22.08.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -219,12 +221,14 @@ float offset[3] = {0.0, 0.0, 0.0};
 // comm variables and Commandbuffer
 // MAX_CMD_SIZE does not include the trailing \0 that terminates the string.
 #define MAX_CMD_SIZE 95
-static char cmdbuf[MAX_CMD_SIZE + 1];
+static char cmdbuf[MAX_CMD_SIZE + 1] = {0};
 //unsigned char bufpos = 0;
 uint32_t cmdseqnbr = 0;
 // Create the 'struct command'.
 struct command cmd;
 uint32_t code = -1;
+static unsigned char ignore_comments = 0;
+static unsigned char bufpos = 0;
 
 //Send Temperature in °C to Host
 int hotendtC = 0, bedtempC = 0;
@@ -238,6 +242,14 @@ uint8_t print_paused = 0;
 
 //Temp Monitor for repetier
 unsigned char manage_monitor = 255;
+
+// SD Card Variables
+struct fat_fs_struct* sdcard_fs = 0;
+char sdard_filename[92] = {0};
+unsigned char sdcard_print = 0;
+static char sdcard_cmdbuf[MAX_CMD_SIZE + 1] = {0};
+static unsigned char sdcard_bufpos = 0;
+static unsigned char sdcard_ignore_comments = 0;
 
 
 void enable_x()
@@ -510,9 +522,9 @@ void loop()
 //
 void read_command() 
 { 
-  unsigned char ignore_comments = 0;
-  unsigned char bufpos = 0;
   int16_t ch = -1;
+  uint8_t sd_ch = -1;
+  int16_t bytes_read = -1;
   
   while (usb_serial_available() > 0)
   {
@@ -558,6 +570,64 @@ void read_command()
 				bufpos--;
 			}
 		}
+	}
+  }
+  
+  // Printing from SD Card file
+  if (sdcard_print)
+  {
+	bytes_read = sdcard_file_read(sdcard_fd, &sd_ch, 1);
+	
+	if ( bytes_read > 0 )
+	{
+		if (sd_ch == ';')
+		{
+		  sdcard_ignore_comments = 1;
+		}
+		
+		if ( !(sd_ch < 0 || sd_ch > 255) )
+		{	
+			if (sd_ch== '\n' || sd_ch== '\r')
+			{
+				// Newline marks end of this command;  terminate
+				// string and process it.
+				sdcard_cmdbuf[sdcard_bufpos] = '\0';
+				if (sdcard_bufpos > 0)
+				{
+					process_command(sdcard_cmdbuf);
+				}
+				sdcard_ignore_comments = 0;
+				sdcard_bufpos = 0;
+				sdcard_cmdbuf[sdcard_bufpos] = '\0';
+				// Flush any output which may not have been sent 
+				// at the end of command execution.
+				usb_serial_flush();
+				return;
+			}
+			
+			if (sdcard_ignore_comments < 1)
+			{
+				sdcard_cmdbuf[sdcard_bufpos++] = (uint8_t)sd_ch;
+
+				if (sdcard_bufpos > MAX_CMD_SIZE - 1)
+				{
+					// TODO:  can we do something more intelligent than
+					// just silently truncating the command?
+					sdcard_bufpos--;
+				}
+			}
+		}
+	}
+	else
+	{
+		if (bytes_read < 0)
+		{
+			serial_send("-- Error reading file.\r\n");
+		}
+		
+		// Close file
+		sdcard_closeFile(sdcard_fd);
+		sdcard_print = 0;
 	}
   }
 }
@@ -631,6 +701,29 @@ int parse_float(const char *cmd, char word, float *value)
   if (pos < 0)
     return 0;
   *value = strtod(&cmd[pos+1], NULL);
+  return 1;
+}
+
+
+int parse_string(const char *cmd, char word, char *value)
+{
+  unsigned char i = 0, term_string = 0;
+  
+  // Find string
+  // TODO:  check errno
+  int16_t pos = find_word(cmd, word);
+  if (pos < 0)
+    return 0;
+
+  while ( (!term_string) && ((pos + i) < MAX_CMD_SIZE) )
+  {
+	*value++ = cmd[pos + i + 1];
+	if (cmd[pos + i + 1] == '\0')
+	{
+		term_string = 1;
+	}
+	i++;
+  }
   return 1;
 }
 
@@ -710,8 +803,8 @@ void process_command(const char *cmdstr)
 
 
   // Validate that the command has a single G or M code.
-  int has_gcode;
-  int has_mcode;
+  int has_gcode = 0;
+  int has_mcode = 0;
   //uint32_t code = -1;
   has_gcode = parse_uint(cmdstr, 'G', &code);
   has_mcode = parse_uint(cmdstr, 'M', &code);
@@ -747,6 +840,7 @@ void process_command(const char *cmdstr)
   cmd.has_S = parse_int(cmdstr, 'S', &cmd.S);
   cmd.has_T = parse_int(cmdstr, 'T', &cmd.T);
   cmd.has_D = parse_int(cmdstr, 'D', &cmd.D);
+  cmd.has_String = parse_string(cmdstr, ' ', &cmd.String[0]);
 
   // Dispatch command.
   unsigned long start_tm, end_tm, execute_tm;
@@ -755,7 +849,7 @@ void process_command(const char *cmdstr)
   switch (cmd.type) {
   case 'G':  execute_gcode(&cmd);  break;
   case 'M':  execute_mcode(&cmd);  break;
-  default:	break;
+  default:	serial_send("-- Unknown Command Type.\r\n"); break;
   }
   
   end_tm = millis();
@@ -962,8 +1056,20 @@ void execute_mcode(struct command *cmd) {
     //unsigned long codenum; //throw away variable
     switch(cmd->code) {
 #ifdef SDSUPPORT
-    case 20: // M20 - list SD card
-	  sdcard_list_root();
+    case 20: 	// M20 F0 - list SD card - value passed via the F are the flags
+				// for displaying directories and file sizes.
+	  if (cmd->has_F)
+	  {
+		  serial_send("Begin file list\r\n");
+		  sdcard_list_root((unsigned char)(cmd->F));
+		  serial_send("End file list\r\n");
+	  }
+	  else
+	  {
+		  serial_send("Begin file list\r\n");
+		  sdcard_list_root(LS_FILENAME_ONLY);
+		  serial_send("End file list\r\n");
+	  }
       break;
 	  
     case 21: // M21 - init SD card
@@ -974,18 +1080,33 @@ void execute_mcode(struct command *cmd) {
 	  sdcard_release();
       break;
 	  
-/*    case 23: //M23 - Select file
-      starpos = (strchr(strchr_pointer + 4,'*'));
-      if(starpos!=NULL)
-        *(starpos-1)='\0';
-      card.openFile(strchr_pointer + 4,true);
+    case 23: //M23 - Select file
+	  if (cmd->has_String)
+	  {
+			serial_send("-- Opening %s...\r\n", cmd->String);
+			strcpy(sdard_filename, cmd->String);
+			
+			if ( sdcard_openFile(sdard_filename) )
+			{
+				serial_send("File selected\r\n");
+			}
+			else
+			{
+				serial_send("file.open failed\r\n");
+			}
+	  }
+	  else
+	  {
+			serial_send("file.open failed\r\n");
+	  }
       break;
 	  
     case 24: //M24 - Start SD print
-      card.startFileprint();
-      starttime=millis();
+      //card.startFileprint();
+      //starttime=millis();
+	  sdcard_print = 1;
       break;
-	  
+/*	  
     case 25: //M25 - Pause SD print
       card.pauseSDPrint();
       break;
@@ -997,7 +1118,7 @@ void execute_mcode(struct command *cmd) {
       break;
 */	  
     case 27: //M27 - Get SD print status
-	  print_disk_info(sdcard_fs);
+	  //print_disk_info(sdcard_fs);
       break;
 	  
 /*    case 28: //M28 - Start SD write
@@ -1895,9 +2016,9 @@ void do_position_report(void)
 	char e_mm_str[10];
 
 	st_position_t pos = st_get_current_position();
-	float x_mm = pos.x ? (pos.x / (float)(axis_steps_per_unit[X_AXIS])) : 0;
-	float y_mm = pos.y ? (pos.y / (float)(axis_steps_per_unit[Y_AXIS])) : 0;
-	float z_mm = pos.z ? (pos.z / (float)(axis_steps_per_unit[Z_AXIS])) : 0;
+	float x_mm = (pos.x != 0) ? (pos.x / (float)(axis_steps_per_unit[X_AXIS])) : 0;
+	float y_mm = (pos.y != 0) ? (pos.y / (float)(axis_steps_per_unit[Y_AXIS])) : 0;
+	float z_mm = (pos.z != 0) ? (pos.z / (float)(axis_steps_per_unit[Z_AXIS])) : 0;
 	float e_mm = (pos.e != 0) ? (pos.e / (float)(axis_steps_per_unit[E_AXIS])) : 0;
 	
 	dtostrf(x_mm, 3, 5, x_mm_str);

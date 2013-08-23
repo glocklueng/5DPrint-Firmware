@@ -17,8 +17,13 @@
 #include "../usb.h"
 
 
-static struct partition_struct* sdcard_partition;
-static struct fat_dir_struct* sdcard_dir_desc;
+static struct partition_struct* sdcard_partition = {0};
+static struct fat_dir_struct* sdcard_dir_desc = {0};
+struct fat_file_struct* sdcard_fd = {0};
+
+uint8_t find_file_in_dir(struct fat_fs_struct* fs, struct fat_dir_struct* dd, const char* name, struct fat_dir_entry_struct* dir_entry);
+struct fat_file_struct* open_file_in_dir(struct fat_fs_struct* fs, struct fat_dir_struct* dd, const char* name);
+
 
 
 void sdcard_initialise(void)
@@ -34,17 +39,20 @@ void sdcard_initialise(void)
 	}
 
 	/* open first partition */
-	sdcard_partition = partition_open(sd_raw_read,
-								sd_raw_read_interval,
-			#if SD_RAW_WRITE_SUPPORT
-								sd_raw_write,
-								sd_raw_write_interval,
-			#else
-								0,
-								0,
-			#endif
-								0
-								);
+	if(!sdcard_partition)
+	{
+		sdcard_partition = partition_open(sd_raw_read,
+									sd_raw_read_interval,
+				#if SD_RAW_WRITE_SUPPORT
+									sd_raw_write,
+									sd_raw_write_interval,
+				#else
+									0,
+									0,
+				#endif
+									0
+									);
+	}
 
 	if(!sdcard_partition)
 	{
@@ -70,8 +78,12 @@ void sdcard_initialise(void)
 	}
 
 	/* open file system */
-	sdcard_fs = fat_open(sdcard_partition);
-	if(!sdcard_fs)
+	if (!sdcard_fs)
+	{
+		sdcard_fs = fat_open(sdcard_partition);
+	}
+	
+	if (!sdcard_fs)
 	{
 		serial_send("-- *** Opening filesystem failed\r\n");
 		return;
@@ -85,7 +97,7 @@ uint8_t print_disk_info(const struct fat_fs_struct* fs)
 	//configure_ss_pin_as_output();
 	sd_raw_init(); // initialise to ensure SPI is set in master mode
 	
-    if(!sdcard_fs)
+    if(!fs)
         return 0;
 
     struct sd_raw_info disk_info;
@@ -112,39 +124,51 @@ void sdcard_release(void)
 {
 	sd_raw_init(); // initialise to ensure SPI is set in master mode
 	
-	/* close directory */
-	if (sdcard_dir_desc != 0)
+	/* close any open file */
+	if (sdcard_fd)
 	{
-		fat_close_dir(sdcard_dir_desc);
+		fat_close_file(sdcard_fd);
 	}
 	
-	if (sdcard_fs != 0)
+	/* close directory */
+	if (sdcard_dir_desc)
+	{
+		fat_close_dir(sdcard_dir_desc);
+		
+		sdcard_dir_desc = 0;
+	}
+	
+	if (sdcard_fs)
 	{
 		// close file system
 		fat_close(sdcard_fs);
+		sdcard_fs = 0;
 
 		// close partition
 		partition_close(sdcard_partition);
+		sdcard_partition = 0;
 	}
 	
 	serial_send("-- SD Card Released.\r\n");
 }
 
 
-void sdcard_list_root(void)
+void sdcard_list_root(unsigned char flags)
 {
 	struct fat_dir_entry_struct dir_entry;
 	struct fat_dir_entry_struct directory;
 	
 	sd_raw_init(); // initialise to ensure SPI is set in master mode
 	
-	if (sdcard_fs != NULL)
+	if (sdcard_fs)
 	{
-		fat_get_dir_entry_of_path(sdcard_fs, "/", &directory);
-
-		sdcard_dir_desc = fat_open_dir(sdcard_fs, &directory);
+		if (!sdcard_dir_desc)
+		{
+			fat_get_dir_entry_of_path(sdcard_fs, "/", &directory);
+			sdcard_dir_desc = fat_open_dir(sdcard_fs, &directory);
+		}
 		
-		if(!sdcard_dir_desc)
+		if (!sdcard_dir_desc)
 		{
 			serial_send("-- Opening directory failed.\r\n");
 		}
@@ -153,19 +177,122 @@ void sdcard_list_root(void)
 		while(fat_read_dir(sdcard_dir_desc, &dir_entry))
 		{
 			uint8_t spaces = sizeof(dir_entry.long_name) - strlen(dir_entry.long_name) + 4;
-
-			serial_send("-- %s", dir_entry.long_name);
-			serial_send("%s", (dir_entry.attributes & FAT_ATTRIB_DIR ? "/" : " "));
 			
-			while(spaces--)
+			if (flags & LS_SHOW_DIRS)
 			{
-				serial_send(" ");
+				serial_send("%s", dir_entry.long_name);
+				serial_send("%s", (dir_entry.attributes & FAT_ATTRIB_DIR ? "/" : ""));
+			}
+			else
+			{
+				if ( !(dir_entry.attributes & FAT_ATTRIB_DIR) )
+				{
+					serial_send("%s", dir_entry.long_name);
+				}
 			}
 			
-			serial_send("%lu\r\n", dir_entry.file_size);
+			if (flags & LS_SIZE)
+			{
+				if ( !(dir_entry.attributes & FAT_ATTRIB_DIR) )
+				{
+					while(spaces--)
+					{
+						serial_send(" ");
+					}
+				
+					serial_send("%lu", dir_entry.file_size);
+				}
+			}
+			
+			if ( !(flags & LS_SHOW_DIRS)
+					&&  !(dir_entry.attributes & FAT_ATTRIB_DIR) )
+			{
+				serial_send("\r\n");
+			}
+			else if (flags & LS_SHOW_DIRS)
+			{
+				serial_send("\r\n");
+			}
 		}
 		
 		fat_close_dir(sdcard_dir_desc);
+		sdcard_dir_desc = 0;
 	}
 }
+
+
+uint8_t sdcard_openFile(const char* filename)
+{
+	struct fat_dir_entry_struct directory;
+	
+	sd_raw_init(); // initialise to ensure SPI is set in master mode
+	
+	if(!sdcard_dir_desc)
+	{
+		fat_get_dir_entry_of_path(sdcard_fs, "/", &directory);
+		sdcard_dir_desc = fat_open_dir(sdcard_fs, &directory);
+	}
+	
+	if(!sdcard_dir_desc)
+	{
+		serial_send("-- Opening directory failed.\r\n");
+		return 0;
+	}
+	
+	if (!sdcard_fd)
+	{
+		sdcard_fd = open_file_in_dir(sdcard_fs, sdcard_dir_desc, filename);
+	}
+	
+	if (!sdcard_fd)
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+
+uint8_t find_file_in_dir(struct fat_fs_struct* fs, struct fat_dir_struct* dd, const char* name, struct fat_dir_entry_struct* dir_entry)
+{
+    while(fat_read_dir(dd, dir_entry))
+    {
+        if(strcmp(dir_entry->long_name, name) == 0)
+        {
+            fat_reset_dir(dd);
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+
+struct fat_file_struct* open_file_in_dir(struct fat_fs_struct* fs, struct fat_dir_struct* dd, const char* name)
+{
+    struct fat_dir_entry_struct file_entry;
+    if(!find_file_in_dir(fs, dd, name, &file_entry))
+        return 0;
+
+    return fat_open_file(fs, &file_entry);
+}
+
+
+void sdcard_closeFile(struct fat_file_struct* fd)
+{
+	sd_raw_init();
+	
+	fat_close_file(fd);
+}
+
+
+intptr_t sdcard_file_read(struct fat_file_struct* fd, uint8_t* buffer, uintptr_t buffer_len)
+{
+	sd_raw_init();
+	
+	return fat_read_file(fd, buffer, buffer_len);
+}
+
 #endif

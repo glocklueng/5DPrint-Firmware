@@ -824,7 +824,7 @@ void setHeaterPWMDuty(uint8_t pin, int val)
 		val = 0;
 	}
 	
-	if (val > ICR3)
+	if ( (unsigned int)val > ICR3)
 	{
 		val = ICR3;
 	}
@@ -868,7 +868,7 @@ void setFanPWMDuty(int val)
 		val = 0;
 	}
 	
-	if (val > ICR3)
+	if ( (unsigned int)val > ICR3)
 	{
 		val = ICR3;
 	}

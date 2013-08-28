@@ -5,6 +5,25 @@ Makibox A6 Firmware - History / Change Log
 Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
+--------------------------
+DATE: 	28 August 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Main/Default branch.
+
+NOTE: Restarting with new versioning system at version 2.00.
+The previous version numbering was continued from the version number system that 
+was inherited from the Sprinter code base that this firmware was originally 
+forked from.
+
+Fix issue with code range check in makibox.c. G0 commands were being ignored 
+with rs (re-send) response being sent to the host.
+
+Added copyright and GPL licensing text for each source file and the README file.
+Also adding copy of the GPL license to the repository in BitBucket.
+
 
 --------------------------
 DATE: 	26 July 2013

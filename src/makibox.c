@@ -1,21 +1,24 @@
 /*
- Makibox A6 firmware, based on Sprinter (master branch, 1 Sep 2012).
+ Makibox A6 Firmware
+ Based on Sprinter (master branch, 1 Sep 2012).
  Designed for Printrboard (Rev B).
- 
  ---
-
- This program is free software: you can redistribute it and/or modify
+ Copyright (c) 2012-2013 by Makible Limited.
+ 
+ This file is part of the Makibox A6 Firmware.
+ 
+ Makibox A6 Firmware is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
  
- This program is distributed in the hope that it will be useful,
+ The Makibox A6 Firmware is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
  
  You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
@@ -162,7 +165,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25p-VCP/ 26.07.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "2.00 / 28.08.2013";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -693,9 +696,9 @@ void process_command(const char *cmdstr)
   // Validate that the command has a single G or M code.
   int has_gcode;
   int has_mcode;
-  uint32_t code = -1;
-  has_gcode = parse_uint(cmdstr, 'G', &code);
-  has_mcode = parse_uint(cmdstr, 'M', &code);
+  int32_t code = -1;
+  has_gcode = parse_int(cmdstr, 'G', &code);
+  has_mcode = parse_int(cmdstr, 'M', &code);
   if (has_gcode && has_mcode)
   {
     serial_send("rs %ld (multiple command codes)\r\n", cmdseqnbr);
@@ -706,7 +709,7 @@ void process_command(const char *cmdstr)
     serial_send("rs %ld (command code missing): %s\r\n", cmdseqnbr, cmdstr);
     return;
   }
-  if (code < 1 || code > 999)
+  if (code < 0 || code > 999)
   {
     serial_send("rs %ld (command code out of range)\r\n", cmdseqnbr);
     return;

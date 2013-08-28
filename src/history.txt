@@ -7,6 +7,19 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	28 August 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+SD Card Dev Branch
+
+Current development snapshot. Need to do some updates to the default / main 
+branch so checking this dev branch in to the repository for now. This checked in 
+version has SDSUPPORT commented out.
+
+
+--------------------------
 DATE: 	22 August 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

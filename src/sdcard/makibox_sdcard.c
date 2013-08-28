@@ -291,7 +291,6 @@ void sdcard_closeFile(struct fat_file_struct* fd)
 intptr_t sdcard_file_read(struct fat_file_struct* fd, uint8_t* buffer, uintptr_t buffer_len)
 {
 	sd_raw_init();
-	
 	return fat_read_file(fd, buffer, buffer_len);
 }
 

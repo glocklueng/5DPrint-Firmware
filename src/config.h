@@ -156,8 +156,8 @@
 //    32      0x1F    2304
 //    64      0x3F    4608
 //    128     0x7F    9216
-#define BLOCK_BUFFER_SIZE 32 //64
-#define BLOCK_BUFFER_MASK 0x1F //0x3F
+#define CFG_BLOCK_BUFFER_SIZE 32 //64
+#define CFG_BLOCK_BUFFER_MASK 0x1F //0x3F
 
 #define PRINT_PAUSED_BLOCK_BUF_SIZE	8
 #define PRINT_PAUSED_BLOCK_BUF_MASK	0X07
@@ -314,7 +314,7 @@
 //#define CHAIN_OF_COMMAND 1 //Finish buffered moves before executing M42, fan speed, heater target, and so...
 
 // Comment out to disable SD Card support
-#define SDSUPPORT			1
+//#define SDSUPPORT			1
 
 // Global Variables for CPU Loading Calculation
 #if (DEBUG > -1)

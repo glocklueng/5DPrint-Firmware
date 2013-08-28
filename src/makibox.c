@@ -1,21 +1,25 @@
 /*
- Makibox A6 firmware, based on Sprinter (master branch, 1 Sep 2012).
+ Makibox A6 Firmware
+ Based on Sprinter (master branch, 1 Sep 2012).
  Designed for Printrboard (Rev B).
  
  ---
-
- This program is free software: you can redistribute it and/or modify
+ Copyright (c) 2012-2013 by Makible Limited.
+ 
+ This file is part of the Makibox A6 Firmware.
+ 
+ Makibox A6 Firmware is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
  
- This program is distributed in the hope that it will be useful,
+ The Makibox A6 Firmware is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
  
  You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
@@ -177,7 +181,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25t-VCP/ 22.08.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25u-VCP/ 28.08.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -192,7 +196,7 @@ long  max_acceleration_units_per_sq_second[4] = _MAX_ACCELERATION_UNITS_PER_SQ_S
 
 //adjustable feed factor for online tuning printer speed
 volatile int feedmultiply=100; //100->original / 200 -> Factor 2 / 50 -> Factor 0.5
-int saved_feedmultiply;
+volatile int saved_feedmultiply=100;
 volatile int feedmultiplychanged=0;
 
 float destination[NUM_AXIS] = {0.0, 0.0, 0.0, 0.0};
@@ -221,12 +225,12 @@ float offset[3] = {0.0, 0.0, 0.0};
 // comm variables and Commandbuffer
 // MAX_CMD_SIZE does not include the trailing \0 that terminates the string.
 #define MAX_CMD_SIZE 95
-static char cmdbuf[MAX_CMD_SIZE + 1] = {0};
+static char cmdbuf[MAX_CMD_SIZE + 1];
 //unsigned char bufpos = 0;
 uint32_t cmdseqnbr = 0;
 // Create the 'struct command'.
 struct command cmd;
-uint32_t code = -1;
+int32_t code = -1;
 static unsigned char ignore_comments = 0;
 static unsigned char bufpos = 0;
 
@@ -243,13 +247,15 @@ uint8_t print_paused = 0;
 //Temp Monitor for repetier
 unsigned char manage_monitor = 255;
 
-// SD Card Variables
-struct fat_fs_struct* sdcard_fs = 0;
-char sdard_filename[92] = {0};
-unsigned char sdcard_print = 0;
-static char sdcard_cmdbuf[MAX_CMD_SIZE + 1] = {0};
-static unsigned char sdcard_bufpos = 0;
-static unsigned char sdcard_ignore_comments = 0;
+#ifdef SDSUPPORT
+	// SD Card Variables
+	struct fat_fs_struct* sdcard_fs = 0;
+	char sdard_filename[92];
+	static unsigned char sdcard_print = 0;
+	static char sdcard_cmdbuf[MAX_CMD_SIZE + 1];
+	static unsigned char sdcard_bufpos = 0;
+	static unsigned char sdcard_ignore_comments = 0;
+#endif
 
 
 void enable_x()
@@ -523,9 +529,12 @@ void loop()
 void read_command() 
 { 
   int16_t ch = -1;
-  uint8_t sd_ch = -1;
+#ifdef SDSUPPORT
+  uint8_t sd_ch[8];
   int16_t bytes_read = -1;
-  
+  uint8_t i;
+#endif
+
   while (usb_serial_available() > 0)
   {
 	#if (DEBUG > -1)
@@ -572,22 +581,38 @@ void read_command()
 		}
 	}
   }
-  
+
+#ifdef SDSUPPORT
   // Printing from SD Card file
   if (sdcard_print)
   {
-	bytes_read = sdcard_file_read(sdcard_fd, &sd_ch, 1);
+	bytes_read = sdcard_file_read(sdcard_fd, sd_ch, sizeof(sd_ch));
+	//serial_send("-- Bytes Read: %d\r\n", bytes_read);
+	//serial_send("-- Chars: %s\r\n", (char *)sd_ch);
 	
-	if ( bytes_read > 0 )
+	if (bytes_read == 0)
+	{	// End of File -> Close file
+		sdcard_closeFile(sdcard_fd);
+		sdcard_print = 0;
+	}
+	else if (bytes_read < 0)
 	{
-		if (sd_ch == ';')
+		serial_send("-- Error reading file.\r\n");
+		// Close file
+		sdcard_closeFile(sdcard_fd);
+		sdcard_print = 0;
+	}
+	
+	for (i = 0; i < bytes_read; i++)
+	{
+		if ((char)sd_ch[i] == ';')
 		{
 		  sdcard_ignore_comments = 1;
 		}
 		
-		if ( !(sd_ch < 0 || sd_ch > 255) )
+		if ( !((char)sd_ch[i] < 0 || (char)sd_ch[i] > 255) )
 		{	
-			if (sd_ch== '\n' || sd_ch== '\r')
+			if ((char)sd_ch[i] == '\n' || (char)sd_ch[i] == '\r')
 			{
 				// Newline marks end of this command;  terminate
 				// string and process it.
@@ -602,12 +627,12 @@ void read_command()
 				// Flush any output which may not have been sent 
 				// at the end of command execution.
 				usb_serial_flush();
-				return;
+				//return;
 			}
 			
 			if (sdcard_ignore_comments < 1)
 			{
-				sdcard_cmdbuf[sdcard_bufpos++] = (uint8_t)sd_ch;
+				sdcard_cmdbuf[sdcard_bufpos++] = (char)sd_ch[i];
 
 				if (sdcard_bufpos > MAX_CMD_SIZE - 1)
 				{
@@ -617,19 +642,9 @@ void read_command()
 				}
 			}
 		}
-	}
-	else
-	{
-		if (bytes_read < 0)
-		{
-			serial_send("-- Error reading file.\r\n");
-		}
-		
-		// Close file
-		sdcard_closeFile(sdcard_fd);
-		sdcard_print = 0;
-	}
-  }
+	} // for
+  } // if (sdcard_print)
+#endif
 }
 
 //------------------------------------------------
@@ -805,9 +820,9 @@ void process_command(const char *cmdstr)
   // Validate that the command has a single G or M code.
   int has_gcode = 0;
   int has_mcode = 0;
-  //uint32_t code = -1;
-  has_gcode = parse_uint(cmdstr, 'G', &code);
-  has_mcode = parse_uint(cmdstr, 'M', &code);
+  code = -1;
+  has_gcode = parse_int(cmdstr, 'G', &code);
+  has_mcode = parse_int(cmdstr, 'M', &code);
   if (has_gcode && has_mcode)
   {
     serial_send("rs %ld (multiple command codes)\r\n", cmdseqnbr);
@@ -818,7 +833,7 @@ void process_command(const char *cmdstr)
     serial_send("rs %ld (command code missing): %s\r\n", cmdseqnbr, cmdstr);
     return;
   }
-  if (code < 1 || code > 999)
+  if (code < 0 || code > 999)
   {
     serial_send("rs %ld (command code out of range)\r\n", cmdseqnbr);
     return;

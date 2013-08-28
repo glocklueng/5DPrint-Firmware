@@ -92,12 +92,12 @@ unsigned long axis_steps_per_sqr_second[NUM_AXIS];
  */
 
 
-block_t block_buffer[BLOCK_BUFFER_SIZE] = {{0}}; 	// A ring buffer for motion instructions
-volatile unsigned char block_buffer_head;           // Index of the next block to be pushed
-volatile unsigned char block_buffer_tail;           // Index of the block to process now
+block_t block_buffer[CFG_BLOCK_BUFFER_SIZE]; // = {{0}}; 	// A ring buffer for motion instructions
+volatile unsigned char block_buffer_head = 0;           // Index of the next block to be pushed
+volatile unsigned char block_buffer_tail = 0;           // Index of the block to process now
 
-volatile unsigned char block_buffer_size = BLOCK_BUFFER_SIZE;
-volatile unsigned char block_buffer_mask = BLOCK_BUFFER_MASK;
+volatile unsigned char block_buffer_size = CFG_BLOCK_BUFFER_SIZE;
+volatile unsigned char block_buffer_mask = CFG_BLOCK_BUFFER_MASK;
 
 //===========================================================================
 //=============================private variables ============================

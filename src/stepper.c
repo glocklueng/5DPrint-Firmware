@@ -886,8 +886,8 @@ void clear_plan_buffer(void)
 
 void resume_normal_print_buffer(void)
 {
-	block_buffer_size = BLOCK_BUFFER_SIZE;
-	block_buffer_mask = BLOCK_BUFFER_MASK;
+	block_buffer_size = CFG_BLOCK_BUFFER_SIZE;
+	block_buffer_mask = CFG_BLOCK_BUFFER_MASK;
 	
 	// Copy first 8 buffer contents from saved data
 	for (int i = 0; i < PRINT_PAUSED_BLOCK_BUF_SIZE; i++)

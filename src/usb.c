@@ -22,15 +22,16 @@
  */
 
 
-#include "usb.h"
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <avr/io.h>
-#include "pgmspace.h"
 #include <avr/interrupt.h>
 #include "pins_teensy.h"
 #include "config.h"
+#include "pgmspace.h"
+#include "usb.h"
+
 
 
 /**************************************************************************
@@ -239,10 +240,6 @@
                 : : "r" (val) , "M" ((int)(&reg)) )
 
 #define USBSTATE __attribute__ ((section (".noinit")))
-
-extern void _reboot_Teensyduino_(void) __attribute__((noreturn));
-extern void _restart_Teensyduino_(void) __attribute__((noreturn));
-
 
 
 /**************************************************************************

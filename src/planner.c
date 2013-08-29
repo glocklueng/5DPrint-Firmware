@@ -115,6 +115,7 @@ static int8_t next_block_index(int8_t block_index) {
 // Returns the index of the previous block in the ring buffer
 static int8_t prev_block_index(int8_t block_index) {
   block_index--;
+  if (block_index < 0) { block_index += block_buffer_size; }
   return(block_index);
 }
 
@@ -446,7 +447,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   block->steps_e = labs(target[E_AXIS]-position[E_AXIS]);
   block->steps_e = (long)(block->steps_e * extrudemultiply / 100.0);
   block->step_event_count = MAX(block->steps_x, MAX(block->steps_y, MAX(block->steps_z, block->steps_e)));
-
+  
   // Bail if this is a zero-length block
   if (block->step_event_count <= DROP_SEGMENTS) { return; };
 
@@ -474,7 +475,6 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
        max_E_feedrate_calc = max_feedrate[E_AXIS]; 
      }
   }
-  
 
  #ifdef DELAY_ENABLE
   if(block->steps_x != 0)
@@ -595,12 +595,14 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
     if(((float)block->acceleration_st * (float)block->steps_x / (float)block->step_event_count) > axis_steps_per_sqr_second[X_AXIS])
       block->acceleration_st = axis_steps_per_sqr_second[X_AXIS];
     if(((float)block->acceleration_st * (float)block->steps_y / (float)block->step_event_count) > axis_steps_per_sqr_second[Y_AXIS])
+	
       block->acceleration_st = axis_steps_per_sqr_second[Y_AXIS];
     if(((float)block->acceleration_st * (float)block->steps_e / (float)block->step_event_count) > axis_steps_per_sqr_second[E_AXIS])
       block->acceleration_st = axis_steps_per_sqr_second[E_AXIS];
     if(((float)block->acceleration_st * (float)block->steps_z / (float)block->step_event_count ) > axis_steps_per_sqr_second[Z_AXIS])
       block->acceleration_st = axis_steps_per_sqr_second[Z_AXIS];
   }
+  
   block->acceleration = block->acceleration_st / (float)(steps_per_mm);
   block->acceleration_rate = (long)((float)block->acceleration_st * 8.388608);
   
@@ -679,12 +681,15 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
     } 
     vmax_junction = fmin(previous_nominal_speed, vmax_junction * vmax_junction_factor); // Limit speed to max previous speed
   }
+  
+  
   block->max_entry_speed = vmax_junction;
 
   // Initialize block entry speed. Compute based on deceleration to user-defined MINIMUM_PLANNER_SPEED.
   double v_allowable = max_allowable_speed(-block->acceleration,MINIMUM_PLANNER_SPEED,block->millimeters);
   block->entry_speed = fmin(vmax_junction, v_allowable);
-
+  
+  
   // Initialize planner efficiency flags
   // Set flag if block will always reach maximum junction speed regardless of entry/exit speeds.
   // If a block can de/ac-celerate from nominal speed to zero within the length of the block, then
@@ -700,15 +705,18 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
     block->nominal_length_flag = 0; 
   }
   block->recalculate_flag = 1; // Always calculate trapezoid for new block
-
+  
   // Update previous path unit_vector and nominal speed
   memcpy(previous_speed, current_speed, sizeof(previous_speed)); // previous_speed[] = current_speed[]
   previous_nominal_speed = block->nominal_speed;
+  
   calculate_trapezoid_for_block(block, block->entry_speed/(float)(block->nominal_speed),
     safe_speed/(float)(block->nominal_speed));
     
   // Move buffer head
+  CRITICAL_SECTION_START;
   block_buffer_head = next_buffer_head;
+  CRITICAL_SECTION_END;
   
   // Update position
   memcpy(position, target, sizeof(target)); // position[] = target[]
@@ -733,9 +741,11 @@ void plan_set_position(float x, float y, float z, float e)
   position[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);     
   position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);
   
+  CRITICAL_SECTION_START;
   virtual_steps_x = 0;
   virtual_steps_y = 0;
   virtual_steps_z = 0;
+  CRITICAL_SECTION_END;
 
   previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
   previous_speed[0] = 0.0;

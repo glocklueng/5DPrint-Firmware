@@ -292,7 +292,6 @@ ISR(TIMER1_COMPA_vect)
 		PreemptionFlag |= 0x0001;
 	#endif
 	
-	
   // If there is no current block, attempt to pop one from the buffer
   if (current_block == NULL) {
     // Anything in the buffer?
@@ -898,4 +897,16 @@ void resume_normal_print_buffer(void)
 	// Copy block_buffer_head and block_buffer_tail from saved data
 	block_buffer_head = paused_data.block_buffer_head; 
 	block_buffer_tail = paused_data.block_buffer_tail;
+}
+
+
+// Block until all buffered steps are executed
+void st_synchronize()
+{
+  while(blocks_queued()) {
+    manage_inactivity(1);
+    #if (MINIMUM_FAN_START_SPEED > 0)
+      manage_fan_start_speed();
+    #endif
+  }
 }

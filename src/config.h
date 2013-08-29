@@ -314,7 +314,7 @@
 //#define CHAIN_OF_COMMAND 1 //Finish buffered moves before executing M42, fan speed, heater target, and so...
 
 // Comment out to disable SD Card support
-//#define SDSUPPORT			1
+#define SDSUPPORT			1
 
 // Global Variables for CPU Loading Calculation
 #if (DEBUG > -1)

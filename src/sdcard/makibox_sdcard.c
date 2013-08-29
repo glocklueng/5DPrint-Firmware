@@ -1,3 +1,24 @@
+/*
+ Makibox A6 Firmware
+ Designed for Printrboard (Rev B).
+ ---
+ Copyright (c) 2012-2013 by Makible Limited.
+ 
+ This file is part of the Makibox A6 Firmware.
+ 
+ Makibox A6 Firmware is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ The Makibox A6 Firmware is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 
 #include "../config.h"
@@ -17,9 +38,9 @@
 #include "../usb.h"
 
 
-static struct partition_struct* sdcard_partition = {0};
-static struct fat_dir_struct* sdcard_dir_desc = {0};
-struct fat_file_struct* sdcard_fd = {0};
+static struct partition_struct* sdcard_partition;
+static struct fat_dir_struct* sdcard_dir_desc;
+struct fat_file_struct* sdcard_fd;
 
 uint8_t find_file_in_dir(struct fat_fs_struct* fs, struct fat_dir_struct* dd, const char* name, struct fat_dir_entry_struct* dir_entry);
 struct fat_file_struct* open_file_in_dir(struct fat_fs_struct* fs, struct fat_dir_struct* dd, const char* name);

@@ -132,7 +132,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 // M26  - Set SD position in bytes (M26 S12345)
 // M27  - Report SD print status
 // M28  - Start SD write (M28 filename.g)
-// M29  - Stop SD write
+// M29  - Stop SD write	
 // M30  - Delete file from SD (M30 filename.g)
 // M80  - Turn on Power Supply
 // M81  - Turn off Power Supply
@@ -181,7 +181,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25u-VCP/ 28.08.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25v-VCP/ 29.08.2013 (USB VCP Protocol)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -461,7 +461,20 @@ void setup()
   #if (E_STEP_PIN > -1) 
     SET_OUTPUT(E_STEP_PIN);
   #endif  
- 
+
+#ifdef SDSUPPORT
+  //Setup SD Card / SPI Pins
+  DDRB |= (1 << PINB2);		// MOSI Pin
+  DDRB |= (1 << PINB1);		// SCK Pin
+  DDRB |= (1 << PINB6);		// CS Pin set as output
+  DDRB &= ~(1 << PINB3);	// MISO
+
+  PORTB |= (1 << PINB6);	// Unselect Card (CS pin high)
+  
+  DDRB |= (1 << PINB0);		// SS Pins set as output
+  PORTB |= (1 << PINB0);	// SS Pin set high
+#endif
+  
   // Initialise Timer 3 / PWM for Extruder Heater, Hotbed Heater, and Fan
   init_Timer3_HW_pwm();
   
@@ -530,7 +543,7 @@ void read_command()
 { 
   int16_t ch = -1;
 #ifdef SDSUPPORT
-  uint8_t sd_ch[8];
+  uint8_t sd_ch[32];
   int16_t bytes_read = -1;
   uint8_t i;
 #endif
@@ -593,13 +606,16 @@ void read_command()
 	if (bytes_read == 0)
 	{	// End of File -> Close file
 		sdcard_closeFile(sdcard_fd);
+		sdcard_fd = 0;
 		sdcard_print = 0;
+		serial_send("-- Closed SD card file.\r\n");
 	}
 	else if (bytes_read < 0)
 	{
 		serial_send("-- Error reading file.\r\n");
 		// Close file
 		sdcard_closeFile(sdcard_fd);
+		sdcard_fd = 0;
 		sdcard_print = 0;
 	}
 	
@@ -629,11 +645,13 @@ void read_command()
 				usb_serial_flush();
 				//return;
 			}
-			
-			if (sdcard_ignore_comments < 1)
+			else
 			{
-				sdcard_cmdbuf[sdcard_bufpos++] = (char)sd_ch[i];
-
+				if (sdcard_ignore_comments < 1)
+				{
+					sdcard_cmdbuf[sdcard_bufpos++] = (char)sd_ch[i];
+				}
+				
 				if (sdcard_bufpos > MAX_CMD_SIZE - 1)
 				{
 					// TODO:  can we do something more intelligent than
@@ -1117,8 +1135,6 @@ void execute_mcode(struct command *cmd) {
       break;
 	  
     case 24: //M24 - Start SD print
-      //card.startFileprint();
-      //starttime=millis();
 	  sdcard_print = 1;
       break;
 /*	  
@@ -1896,9 +1912,7 @@ void prepare_move()
   {
     help_feedrate = (long)((long)feedrate*(long)100);
   }
-  
   plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], help_feedrate/6000.0);
-  
   for(int i=0; i < NUM_AXIS; i++)
   {
     current_position[i] = destination[i];
@@ -2000,7 +2014,7 @@ void manage_fan_start_speed(void)
 #endif
 
 // Block until all buffered steps are executed
-void st_synchronize()
+/*void st_synchronize()
 {
   while(blocks_queued()) {
     manage_inactivity(1);
@@ -2008,7 +2022,7 @@ void st_synchronize()
       manage_fan_start_speed();
     #endif
   }
-}
+}*/
 
 
 /***************************************************

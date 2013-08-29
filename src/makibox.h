@@ -21,6 +21,7 @@
 extern unsigned char reset_flags;
 
 void manage_inactivity(unsigned char debug);
+//void st_synchronize();
 
 void enable_x();
 void enable_y();

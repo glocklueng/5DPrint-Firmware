@@ -7,6 +7,26 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	29 August 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+SD Card Dev Branch
+
+Fixed issue with block_index in prev_block_index() within planner.c. A bounds 
+check has somehow been removed accidentally during development resulting in the 
+possibility that the index was pointing to an incorrect memory location. Bounds 
+checking code has been added to the prev_block_index() function to prevent this 
+problem.
+
+Fixed read_command() so that empty command buffer is not processes resulting in 
+a 'rs' error message being displayed in Pronterface.
+
+sdcard_fd reset to 0 after file close.
+
+
+--------------------------
 DATE: 	28 August 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited
@@ -17,6 +37,8 @@ SD Card Dev Branch
 Current development snapshot. Need to do some updates to the default / main 
 branch so checking this dev branch in to the repository for now. This checked in 
 version has SDSUPPORT commented out.
+
+Fixed code range checking so the a zero will be accepted (e.g. G0).
 
 
 --------------------------

@@ -110,13 +110,14 @@ volatile unsigned char block_buffer_mask = BLOCK_BUFFER_MASK;
 // NOTE: Removed modulo (%) operator, which uses an expensive divide and multiplication.
 static int8_t next_block_index(int8_t block_index) {
   block_index++;
-  if (block_index == block_buffer_size) { block_index -= block_buffer_size; }
+  if (block_index >= block_buffer_size) { block_index = 0; }
   return(block_index);
 }
 
 
 // Returns the index of the previous block in the ring buffer
 static int8_t prev_block_index(int8_t block_index) {
+  if (block_index <= 0) { block_index = block_buffer_size; }
   block_index--;
   return(block_index);
 }

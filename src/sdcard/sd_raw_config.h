@@ -65,7 +65,7 @@ extern "C"
  * Set to 1 to support so-called SDHC memory cards, i.e. SD
  * cards with more than 2 gigabytes of memory.
  */
-#define SD_RAW_SDHC 0
+#define SD_RAW_SDHC 1
 
 /**
  * @}
@@ -126,10 +126,10 @@ extern "C"
 #endif
 
 #define configure_pin_available() DDRB &= ~(1 << DDB7)
-#define configure_pin_locked() //DDRC &= ~(1 << DDC5)
+#define configure_pin_locked() 					// No lock or write-protect pin
 
-#define get_pin_available() (PINB & (1 << PINB7))
-#define get_pin_locked() 0 //(PINC & (1 << PINC5))
+#define get_pin_available() 	(PINB & (1 << PINB7))
+#define get_pin_locked() 		1 				// No lock or write-protect pin
 
 #if SD_RAW_SDHC
     typedef uint64_t offset_t;

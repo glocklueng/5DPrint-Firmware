@@ -27,19 +27,12 @@
 
 #include <string.h>
 
-// Roland Riegel SD Card library includes
-#include "../sdcard/fat.h"
-#include "../sdcard/fat_config.h"
-#include "../sdcard/partition.h"
-#include "../sdcard/sd_raw.h"
-#include "../sdcard/sd_raw_config.h"
-
 #include "../sdcard/makibox_sdcard.h"
 #include "../usb.h"
 
 
 static struct partition_struct* sdcard_partition;
-static struct fat_dir_struct* sdcard_dir_desc;
+struct fat_dir_struct* sdcard_dir_desc;
 struct fat_file_struct* sdcard_fd;
 
 uint8_t find_file_in_dir(struct fat_fs_struct* fs, struct fat_dir_struct* dd, const char* name, struct fat_dir_entry_struct* dir_entry);
@@ -109,14 +102,13 @@ void sdcard_initialise(void)
 		serial_send("-- *** Opening filesystem failed\r\n");
 		return;
 	}
-
 }
 
 
 uint8_t print_disk_info(const struct fat_fs_struct* fs)
 {
 	//configure_ss_pin_as_output();
-	sd_raw_init(); // initialise to ensure SPI is set in master mode
+	//sd_raw_init(); // initialise to ensure SPI is set in master mode
 	
     if(!fs)
         return 0;
@@ -143,7 +135,7 @@ uint8_t print_disk_info(const struct fat_fs_struct* fs)
 
 void sdcard_release(void)
 {
-	sd_raw_init(); // initialise to ensure SPI is set in master mode
+	//sd_raw_init(); // initialise to ensure SPI is set in master mode
 	
 	/* close any open file */
 	if (sdcard_fd)
@@ -179,7 +171,7 @@ void sdcard_list_root(unsigned char flags)
 	struct fat_dir_entry_struct dir_entry;
 	struct fat_dir_entry_struct directory;
 	
-	sd_raw_init(); // initialise to ensure SPI is set in master mode
+	//sd_raw_init(); // initialise to ensure SPI is set in master mode
 	
 	if (sdcard_fs)
 	{
@@ -246,7 +238,11 @@ uint8_t sdcard_openFile(const char* filename)
 {
 	struct fat_dir_entry_struct directory;
 	
-	sd_raw_init(); // initialise to ensure SPI is set in master mode
+	if (!sdcard_fs)
+	{
+		serial_send("-- SD card file system not initialised.\r\n");
+		return 0;
+	}
 	
 	if(!sdcard_dir_desc)
 	{
@@ -303,16 +299,125 @@ struct fat_file_struct* open_file_in_dir(struct fat_fs_struct* fs, struct fat_di
 
 void sdcard_closeFile(struct fat_file_struct* fd)
 {
-	sd_raw_init();
-	
 	fat_close_file(fd);
 }
 
 
 intptr_t sdcard_file_read(struct fat_file_struct* fd, uint8_t* buffer, uintptr_t buffer_len)
 {
-	sd_raw_init();
 	return fat_read_file(fd, buffer, buffer_len);
+}
+
+
+unsigned long sdcard_get_filesize(struct fat_file_struct* fd)
+{
+	return (fd->dir_entry.file_size);
+}
+
+
+unsigned long sdcard_get_current_file_position(struct fat_file_struct* fd)
+{
+	return (fd->pos);
+}
+
+
+uint8_t sdcard_create_file(const char* filename)
+{
+	struct fat_dir_entry_struct directory;
+	struct fat_dir_entry_struct file_entry;
+	
+	if (!sdcard_fs)
+	{
+		serial_send("-- SD card file system not initialised.\r\n");
+		return 0;
+	}
+	
+	if(!sdcard_dir_desc)
+	{
+		fat_get_dir_entry_of_path(sdcard_fs, "/", &directory);
+		sdcard_dir_desc = fat_open_dir(sdcard_fs, &directory);
+	}
+	
+	if(!sdcard_dir_desc)
+	{
+		serial_send("-- Opening directory failed.\r\n");
+		return 0;
+	}
+	
+	return ( fat_create_file(sdcard_dir_desc, filename, &file_entry) );
+}
+
+
+
+uint8_t sdcard_delete_file(const char* filename)
+{
+	struct fat_dir_entry_struct directory;
+	struct fat_dir_entry_struct file_entry;
+	
+	if (!sdcard_fs)
+	{
+		serial_send("-- SD card file system not initialised.\r\n");
+		return 0;
+	}
+	
+	if(!sdcard_dir_desc)
+	{
+		fat_get_dir_entry_of_path(sdcard_fs, "/", &directory);
+		sdcard_dir_desc = fat_open_dir(sdcard_fs, &directory);
+	}
+	
+	if(!sdcard_dir_desc)
+	{
+		serial_send("-- Opening directory failed.\r\n");
+		return 0;
+	}
+	
+	if( find_file_in_dir(sdcard_fs, sdcard_dir_desc, filename, &file_entry) )
+	{
+		if(fat_delete_file(sdcard_fs, &file_entry))
+		{
+			serial_send("-- Deleted File: %s\r\n", filename);
+			return 1;
+		}
+		else
+		{
+			serial_send("-- Could not delete %s. File delete failed.\r\n", filename);
+			return 0;
+		}
+	}
+	
+	serial_send("-- Delete failed.\r\n");
+	return 0;
+}
+
+
+/*
+* Return:	The number of bytes written (0 or something less than buffer_len 
+*			on disk full) or -1 on failure.
+*/
+intptr_t sdcard_write_file(struct fat_file_struct* fd, const uint8_t* buffer, uintptr_t buffer_len)
+{
+	return ( fat_write_file(fd, (uint8_t*) buffer, buffer_len) );
+}
+
+/*
+* Move file position to end of file
+* Return:	0 = failure
+*			1 = success
+*/
+uint8_t sdcard_file_goto_eof(struct fat_file_struct* fd)
+{
+	return ( fat_seek_file(fd, 0, FAT_SEEK_END) );
+}
+
+/*
+* Move file position to start of file
+* Return:	0 = failure
+*			1 = success
+*/
+uint8_t sdcard_file_goto_sof(struct fat_file_struct* fd)
+{
+	return ( fat_seek_file(fd, 0, FAT_SEEK_SET) );
 }
 
 #endif

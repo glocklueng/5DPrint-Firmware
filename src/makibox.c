@@ -112,10 +112,12 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 //RepRap M Codes
 // M104 - Set extruder target temp
+// M140 - Set bed target temp
 // M105 - Read current temp
 // M106 - Fan on
 // M107 - Fan off
 // M109 - Wait for extruder current temp to reach target temp.
+// M190 - Wait for bed current temp to reach target temp.
 // M112 - Emergency Stop
 // M114 - Display current position
 
@@ -145,8 +147,6 @@ void set_extruder_heater_max_current(struct command *cmd);
 // M93  - Send axis_steps_per_unit
 // M115	- Capabilities string
 // M119 - Show Endstopper State 
-// M140 - Set bed target temp
-// M190 - Wait for bed current temp to reach target temp.
 // M201 - Set maximum acceleration in units/s^2 for print moves (M201 X1000 Y1000)
 // M202 - Set maximum feedrate that your machine can sustain (M203 X200 Y200 Z300 E10000) in mm/sec
 // M203 - Set temperture monitor to Sx
@@ -181,7 +181,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25v-VCP/ 29.08.2013 (USB VCP Protocol)";
+static const char VERSION_TEXT[] = "1.3.25w-VCP/ 04.09.2013 (SD Card Dev)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -255,6 +255,7 @@ unsigned char manage_monitor = 255;
 	static char sdcard_cmdbuf[MAX_CMD_SIZE + 1];
 	static unsigned char sdcard_bufpos = 0;
 	static unsigned char sdcard_ignore_comments = 0;
+	static unsigned char sdcard_write = 0;
 #endif
 
 
@@ -561,8 +562,8 @@ void read_command()
 	  ignore_comments = 1;
 	}
 	
-    if ( !(ch < 0 || ch > 255) )
-    {	
+	if ( !(ch < 0 || ch > 255) )
+	{	
 		if (ch == '\n' || ch == '\r')
 		{
 			// Newline marks end of this command;  terminate
@@ -609,6 +610,7 @@ void read_command()
 		sdcard_fd = 0;
 		sdcard_print = 0;
 		serial_send("-- Closed SD card file.\r\n");
+		serial_send("Done printing file\r\n");
 	}
 	else if (bytes_read < 0)
 	{
@@ -617,6 +619,7 @@ void read_command()
 		sdcard_closeFile(sdcard_fd);
 		sdcard_fd = 0;
 		sdcard_print = 0;
+		serial_send("Done printing file\r\n");
 	}
 	
 	for (i = 0; i < bytes_read; i++)
@@ -877,13 +880,42 @@ void process_command(const char *cmdstr)
 
   // Dispatch command.
   unsigned long start_tm, end_tm, execute_tm;
-  serial_send("go %ld (executing %c%d)\r\n", cmdseqnbr, cmd.type, cmd.code);
   start_tm = millis();
-  switch (cmd.type) {
-  case 'G':  execute_gcode(&cmd);  break;
-  case 'M':  execute_mcode(&cmd);  break;
-  default:	serial_send("-- Unknown Command Type.\r\n"); break;
+
+#ifdef SDSUPPORT
+  if (sdcard_write)
+  {
+	// if not M29 command
+	if ( !((cmd.code == 29) & (cmd.type == 'M')) )
+	{
+		// write data to file
+		sdcard_write_file(sdcard_fd, (uint8_t*) cmdstr, strlen(cmdstr));		
+		sdcard_write_file(sdcard_fd, (uint8_t*) "\r\n", 2);
+	}
+	else
+	{
+		// close the file
+		sdcard_closeFile(sdcard_fd);
+		sdcard_fd = 0;
+		
+		sdcard_write = 0;
+		
+		// issue "File upload complete" text to host
+		serial_send("File upload complete\r\n");
+	}
   }
+  else
+  {
+#endif // SDSUPPORT
+	  serial_send("go %ld (executing %c%d)\r\n", cmdseqnbr, cmd.type, cmd.code);
+	  switch (cmd.type) {
+	  case 'G':  execute_gcode(&cmd);  break;
+	  case 'M':  execute_mcode(&cmd);  break;
+	  default:	serial_send("-- Unknown Command Type.\r\n"); break;
+	  }
+#ifdef SDSUPPORT
+  }
+#endif // SDSUPPORT
   
   end_tm = millis();
   execute_tm = end_tm - start_tm;
@@ -1086,7 +1118,9 @@ void execute_gcode(struct command *cmd)
 
 
 void execute_mcode(struct command *cmd) {
-    //unsigned long codenum; //throw away variable
+#ifdef SDSUPPORT
+    unsigned long codenum, codenum2; //throw away variable
+#endif // SDSUPPORT
     switch(cmd->code) {
 #ifdef SDSUPPORT
     case 20: 	// M20 F0 - list SD card - value passed via the F are the flags
@@ -1121,7 +1155,7 @@ void execute_mcode(struct command *cmd) {
 			
 			if ( sdcard_openFile(sdard_filename) )
 			{
-				serial_send("File selected\r\n");
+				serial_send("File selected\r\n");				
 			}
 			else
 			{
@@ -1149,36 +1183,68 @@ void execute_mcode(struct command *cmd) {
       break;
 */	  
     case 27: //M27 - Get SD print status
-	  //print_disk_info(sdcard_fs);
+	  codenum = sdcard_get_current_file_position(sdcard_fd);
+	  codenum2 = sdcard_get_filesize(sdcard_fd);
+	  serial_send("SD printing byte %lu/%lu\r\n", codenum, codenum2);
       break;
 	  
-/*    case 28: //M28 - Start SD write
-      starpos = (strchr(strchr_pointer + 4,'*'));
-      if(starpos != NULL){
-        char* npos = strchr(cmdbuffer[bufindr], 'N');
-        strchr_pointer = strchr(npos,' ') + 1;
-        *(starpos-1) = '\0';
-      }
-      card.openFile(strchr_pointer+4,false);
+    case 28: //M28 - Start SD write
+	  if ( (!sdcard_fd) && (cmd->has_String) )
+	  {
+		strcpy(sdard_filename, cmd->String);
+		serial_send("-- Opening %s...\r\n", sdard_filename);
+		
+		codenum = sdcard_create_file(sdard_filename);
+		
+		if ( codenum > 2)
+		{
+			serial_send("-- Could not create file.\r\n");
+			serial_send("-- Error Code: %lu.\r\n", codenum);
+			serial_send("file.open failed\r\n");
+		}
+		else if ( codenum )
+		{
+			if ( sdcard_openFile(sdard_filename) )
+			{
+				// Move file position to end of file to prevent over-writing
+				// any existing data if the file already existed
+				sdcard_file_goto_eof(sdcard_fd);
+				
+				sdcard_write = 1;
+				serial_send("Writing to file\r\n");
+			}
+			else
+			{
+				serial_send("file.open failed\r\n");
+			}
+		}
+		else
+		{
+			serial_send("-- Could not create file.\r\n");
+			serial_send("file.open failed\r\n");
+		}
+	  }
+	  else
+	  {
+		sdcard_write = 0;
+		serial_send("open failed, File\r\n");
+	  }
       break;
 	  
     case 29: //M29 - Stop SD write
       //processed in write to file routine above
-      //card,saving = false;
+      //sdcard_write = 0;
       break;
-	  
-    case 30: //M30 <filename> Delete File 
-	if (card.cardOK){
-		card.closefile();
-		starpos = (strchr(strchr_pointer + 4,'*'));
-                if(starpos != NULL){
-                char* npos = strchr(cmdbuffer[bufindr], 'N');
-                strchr_pointer = strchr(npos,' ') + 1;
-                *(starpos-1) = '\0';
-         }
-	 card.removeFile(strchr_pointer + 4);
-	}
-	break;	*/
+
+    case 30: //M30 <filename> Delete File
+	  if ( cmd->has_String )
+	  {
+		strcpy(sdard_filename, cmd->String);
+		serial_send("-- Deleting %s...\r\n", sdard_filename);
+		
+		sdcard_delete_file(sdard_filename);
+	  }
+	  break;
 #endif //SDSUPPORT
 	
       case 104: // M104 - Set Extruder Temperature
@@ -2243,7 +2309,7 @@ void JumpToBootloader(void)
 	PORTA = 0; PORTB = 0; PORTC = 0; PORTD = 0; PORTE = 0; PORTF = 0;
 	
 	// Jump to Bootloader start address
-	asm volatile("jmp 0xF000");
+	asm volatile("jmp 0x1E000");
 	while (1) ;
 }
 

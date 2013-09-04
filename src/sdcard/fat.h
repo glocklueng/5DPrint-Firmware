@@ -60,10 +60,72 @@ extern "C"
  * @}
  */
 
-struct partition_struct;
-struct fat_fs_struct;
-struct fat_file_struct;
-struct fat_dir_struct;
+#define FAT16_CLUSTER_FREE 0x0000
+#define FAT16_CLUSTER_RESERVED_MIN 0xfff0
+#define FAT16_CLUSTER_RESERVED_MAX 0xfff6
+#define FAT16_CLUSTER_BAD 0xfff7
+#define FAT16_CLUSTER_LAST_MIN 0xfff8
+#define FAT16_CLUSTER_LAST_MAX 0xffff
+
+#define FAT32_CLUSTER_FREE 0x00000000
+#define FAT32_CLUSTER_RESERVED_MIN 0x0ffffff0
+#define FAT32_CLUSTER_RESERVED_MAX 0x0ffffff6
+#define FAT32_CLUSTER_BAD 0x0ffffff7
+#define FAT32_CLUSTER_LAST_MIN 0x0ffffff8
+#define FAT32_CLUSTER_LAST_MAX 0x0fffffff
+
+#define FAT_DIRENTRY_DELETED 0xe5
+#define FAT_DIRENTRY_LFNLAST (1 << 6)
+#define FAT_DIRENTRY_LFNSEQMASK ((1 << 6) - 1)
+
+/* Each entry within the directory table has a size of 32 bytes
+ * and either contains a 8.3 DOS-style file name or a part of a
+ * long file name, which may consist of several directory table
+ * entries at once.
+ *
+ * multi-byte integer values are stored little-endian!
+ *
+ * 8.3 file name entry:
+ * ====================
+ * offset  length  description
+ *      0       8  name (space padded)
+ *      8       3  extension (space padded)
+ *     11       1  attributes (FAT_ATTRIB_*)
+ *
+ * long file name (lfn) entry ordering for a single file name:
+ * ===========================================================
+ * LFN entry n
+ *     ...
+ * LFN entry 2
+ * LFN entry 1
+ * 8.3 entry (see above)
+ * 
+ * lfn entry:
+ * ==========
+ * offset  length  description
+ *      0       1  ordinal field
+ *      1       2  unicode character 1
+ *      3       3  unicode character 2
+ *      5       3  unicode character 3
+ *      7       3  unicode character 4
+ *      9       3  unicode character 5
+ *     11       1  attribute (always 0x0f)
+ *     12       1  type (reserved, always 0)
+ *     13       1  checksum
+ *     14       2  unicode character 6
+ *     16       2  unicode character 7
+ *     18       2  unicode character 8
+ *     20       2  unicode character 9
+ *     22       2  unicode character 10
+ *     24       2  unicode character 11
+ *     26       2  cluster (unused, always 0)
+ *     28       2  unicode character 12
+ *     30       2  unicode character 13
+ * 
+ * The ordinal field contains a descending number, from n to 1.
+ * For the n'th lfn entry the ordinal field is or'ed with 0x40.
+ * For deleted lfn entries, the ordinal field is set to 0xe5.
+ */
 
 /**
  * \ingroup fat_file
@@ -88,6 +150,70 @@ struct fat_dir_entry_struct
     /** The total disk offset of this directory entry. */
     offset_t entry_offset;
 };
+
+struct fat_header_struct
+{
+    offset_t size;
+
+    offset_t fat_offset;
+    uint32_t fat_size;
+
+    uint16_t sector_size;
+    uint16_t cluster_size;
+
+    offset_t cluster_zero_offset;
+
+    offset_t root_dir_offset;
+#if FAT_FAT32_SUPPORT
+    cluster_t root_dir_cluster;
+#endif
+};
+
+struct fat_fs_struct
+{
+    struct partition_struct* partition;
+    struct fat_header_struct header;
+    cluster_t cluster_free;
+};
+
+struct fat_file_struct
+{
+    struct fat_fs_struct* fs;
+    struct fat_dir_entry_struct dir_entry;
+    offset_t pos;
+    cluster_t pos_cluster;
+};
+
+struct fat_dir_struct
+{
+    struct fat_fs_struct* fs;
+    struct fat_dir_entry_struct dir_entry;
+    cluster_t entry_cluster;
+    uint16_t entry_offset;
+};
+
+struct fat_read_dir_callback_arg
+{
+    struct fat_dir_entry_struct* dir_entry;
+    uintptr_t bytes_read;
+#if FAT_LFN_SUPPORT
+    uint8_t checksum;
+#endif
+    uint8_t finished;
+};
+
+struct fat_usage_count_callback_arg
+{
+    cluster_t cluster_count;
+    uintptr_t buffer_size;
+};
+
+/*
+struct partition_struct;
+struct fat_fs_struct;
+struct fat_file_struct;
+struct fat_dir_struct;
+*/
 
 struct fat_fs_struct* fat_open(struct partition_struct* partition);
 void fat_close(struct fat_fs_struct* fs);

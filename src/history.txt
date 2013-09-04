@@ -7,6 +7,46 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	04 September 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+SD Card Dev Branch
+
+Correct bootloader jump address in JumpToBootloader(void) (within makibox.c.). 
+Corrected to 0x1E000 (byte address). The 0xF000 address listed in the datasheet 
+is the word address.
+
+Now able to upload / write to the SD card via Pronterface. The transfer / upload 
+seems a bit slower than desired. This may be due to, at least in part, the fact 
+that Pronterface waits until an OK response is received from the printer after 
+each data line it sends before sending the next line.
+
+M30 Delete SD card file feature implemented and tested using a terminal. It was 
+not possible to test this command in Pronterface as there are no menus with this 
+option and the Pronterface command line terminal converts all letters to capitals 
+meaning that it would not work.
+
+
+--------------------------
+DATE: 	30 August 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+SD Card Dev Branch
+
+Note that the Pronterface SD card file selector changes all the filenames to 
+lowercase. This means that files using capital letters as part of the filename 
+can not be selected using Pronterface. Also note that all commands entered in 
+the Pronterface console are changed to upper case meaning that you cannot 
+manually select and print any files containing lower case letters.
+
+Turned on support for SDHC cards.
+
+
+--------------------------
 DATE: 	29 August 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

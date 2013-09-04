@@ -165,7 +165,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "2.01 / 29.08.2013";
+static const char VERSION_TEXT[] = "2.02 / 04.09.2013";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -2004,6 +2004,6 @@ void JumpToBootloader(void)
 	PORTA = 0; PORTB = 0; PORTC = 0; PORTD = 0; PORTE = 0; PORTF = 0;
 	
 	// Jump to Bootloader start address
-	asm volatile("jmp 0xF000");
+	asm volatile("jmp 0x1E000");
 	while (1) ;
 }

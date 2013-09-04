@@ -5,6 +5,20 @@ Makibox A6 Firmware - History / Change Log
 Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
+
+--------------------------
+DATE: 	04 September 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Version 2.02
+
+Correct bootloader jump address in JumpToBootloader(void) (within makibox.c.). 
+Corrected to 0x1E000 (byte address). The 0xF000 address listed in the datasheet 
+is the word address.
+
+
 --------------------------
 DATE: 	29 August 2013
 AUTHOR:	JTK WONG

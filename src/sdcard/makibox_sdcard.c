@@ -30,6 +30,7 @@
 #include "../sdcard/makibox_sdcard.h"
 #include "../usb.h"
 
+#define MAX_SFN_FILENAME_NUMBER			9
 
 static struct partition_struct* sdcard_partition;
 struct fat_dir_struct* sdcard_dir_desc;

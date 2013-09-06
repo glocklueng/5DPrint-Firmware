@@ -7,6 +7,24 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	06 September 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+SD Card Dev Branch
+
+Edited find_word() so that multiple 'words' do not return an error. It returns 
+the position of the first instance found.
+
+Edited process_command() such that multiple M and G codes in the command string 
+do not return an error. The first M or G code found will be taken as the command 
+to be executed.
+
+The above changes allow SD card filename strings to be handled better.
+
+
+--------------------------
 DATE: 	04 September 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

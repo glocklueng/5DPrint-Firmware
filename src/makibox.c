@@ -181,7 +181,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25w-VCP/ 04.09.2013 (SD Card Dev)";
+static const char VERSION_TEXT[] = "1.3.25x-VCP/ 06.09.2013 (SD Card Dev)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -252,6 +252,7 @@ unsigned char manage_monitor = 255;
 	struct fat_fs_struct* sdcard_fs = 0;
 	char sdard_filename[92];
 	static unsigned char sdcard_print = 0;
+	static unsigned char sdcard_print_pause = 0;
 	static char sdcard_cmdbuf[MAX_CMD_SIZE + 1];
 	static unsigned char sdcard_bufpos = 0;
 	static unsigned char sdcard_ignore_comments = 0;
@@ -598,7 +599,7 @@ void read_command()
 
 #ifdef SDSUPPORT
   // Printing from SD Card file
-  if (sdcard_print)
+  if ( (sdcard_print) && (!sdcard_print_pause) )
   {
 	bytes_read = sdcard_file_read(sdcard_fd, sd_ch, sizeof(sd_ch));
 	//serial_send("-- Bytes Read: %d\r\n", bytes_read);
@@ -679,18 +680,16 @@ int16_t find_word(const char *cmd, char word)
   char ch;
   int16_t pos = -1;
   int16_t first = -1;
-  int16_t last = -1;
 
   while ((ch = cmd[++pos]) != '\0')
   {
     if (ch == word)
     {
       if (first == -1) first = pos;
-      last = pos;
+	  break;
     }
   }
   if (first == -1) return -1;
-  if (first != last) return -1;
   if (first >= 0 && cmd[first+1] == ' ') return -1;
   if (first >= 0 && cmd[first+1] == '\0') return -1;
   return first;
@@ -846,8 +845,17 @@ void process_command(const char *cmdstr)
   has_mcode = parse_int(cmdstr, 'M', &code);
   if (has_gcode && has_mcode)
   {
-    serial_send("rs %ld (multiple command codes)\r\n", cmdseqnbr);
-    return;
+	// Take first command that appears as the command to process
+	if ( find_word(cmdstr, 'G') < find_word(cmdstr, 'M') )
+	{
+		has_mcode = 0;
+		has_gcode = parse_int(cmdstr, 'G', &code);
+	}
+	else
+	{
+		has_gcode = 0;
+		has_mcode = parse_int(cmdstr, 'M', &code);
+	}
   }
   if (!has_gcode && !has_mcode)
   {
@@ -1170,13 +1178,14 @@ void execute_mcode(struct command *cmd) {
 	  
     case 24: //M24 - Start SD print
 	  sdcard_print = 1;
-      break;
-/*	  
-    case 25: //M25 - Pause SD print
-      card.pauseSDPrint();
+	  sdcard_print_pause = 0;
       break;
 	  
-    case 26: //M26 - Set SD index
+    case 25: //M25 - Pause SD print
+	  sdcard_print_pause = 1;
+      break;
+	  
+/*    case 26: //M26 - Set SD index
       if(card.cardOK && code_seen('S')) {
         card.setIndex(code_value_long());
       }

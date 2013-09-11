@@ -7,6 +7,25 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	11 September 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+SD Card Dev Branch
+
+Improved SD card upload / write speed by buffering blocks of at least 512kBytes 
+of data before writing to the SD card. Tested using an alternate terminal / 
+serial emulator which can open and send an ASCII file as well as manually 
+entered ASCII / commands. Pronterface is too slow at uploading. Using 
+Pronterface an 8.7MB file took around 1 hour and 20 minutes to upload. Using a 
+simple terminal program on the host PC it took around 13 - 15 minutes for the same 
+file even before the improvements in firmware. Still not super fast by today's 
+standards but more usable than 1 hour 20 minutes. Should be able to do a better 
+job of the upload feature than Pronterface in 5DPrint.
+
+
+--------------------------
 DATE: 	06 September 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

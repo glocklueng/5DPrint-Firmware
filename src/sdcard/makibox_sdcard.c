@@ -156,7 +156,10 @@ void sdcard_release(void)
 		// close file system
 		fat_close(sdcard_fs);
 		sdcard_fs = 0;
-
+	}
+	
+	if (sdcard_partition)
+	{
 		// close partition
 		partition_close(sdcard_partition);
 		sdcard_partition = 0;

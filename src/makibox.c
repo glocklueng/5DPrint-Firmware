@@ -181,7 +181,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25x-VCP/ 06.09.2013 (SD Card Dev)";
+static const char VERSION_TEXT[] = "1.3.25x-VCP/ 11.09.2013 (SD Card Dev)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -248,6 +248,7 @@ uint8_t print_paused = 0;
 unsigned char manage_monitor = 255;
 
 #ifdef SDSUPPORT
+#define SDCARD_WRITEBUF_SIZE			1024 + 1
 	// SD Card Variables
 	struct fat_fs_struct* sdcard_fs = 0;
 	char sdard_filename[92];
@@ -257,6 +258,7 @@ unsigned char manage_monitor = 255;
 	static unsigned char sdcard_bufpos = 0;
 	static unsigned char sdcard_ignore_comments = 0;
 	static unsigned char sdcard_write = 0;
+	char sdcard_writebuf[SDCARD_WRITEBUF_SIZE];
 #endif
 
 
@@ -896,9 +898,21 @@ void process_command(const char *cmdstr)
 	// if not M29 command
 	if ( !((cmd.code == 29) & (cmd.type == 'M')) )
 	{
-		// write data to file
-		sdcard_write_file(sdcard_fd, (uint8_t*) cmdstr, strlen(cmdstr));		
-		sdcard_write_file(sdcard_fd, (uint8_t*) "\r\n", 2);
+		//sdcard_writebuf[SDCARD_WRITEBUF_SIZE]
+		
+		// if no more space in buffer
+		//if (SDCARD_WRITEBUF_SIZE - sdcard_writebuf_pos) <= 0 )
+		//{
+			// write data to file
+			sdcard_write_file(sdcard_fd, (uint8_t*) cmdstr, strlen(cmdstr));		
+			sdcard_write_file(sdcard_fd, (uint8_t*) "\r\n", 2);
+			// reset buffer pointer / position
+			// add remaining cmdstr to buffer
+		//}
+		// else
+			// add cmdstr to current buffer position
+			// add \0 to end of buffer (for use by strlen())
+			// increment buffer index by correct amount
 	}
 	else
 	{

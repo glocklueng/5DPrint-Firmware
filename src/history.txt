@@ -14,6 +14,18 @@ AUTHOR:	JTK WONG
 --------------------------
 SD Card Dev Branch
 
+FAT_DELAY_DIRENTRY_UPDATE set to 1. Improves SD card performance but at a cost 
+of higher risk of  data loss if the file is not closed properly.
+
+
+--------------------------
+DATE: 	06 September 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+SD Card Dev Branch
+
 Edited find_word() so that multiple 'words' do not return an error. It returns 
 the position of the first instance found.
 

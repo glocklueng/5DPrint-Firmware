@@ -181,7 +181,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25y-VCP/ 11.09.2013 (SD Card Dev)";
+static const char VERSION_TEXT[] = "1.3.25z-VCP/ 13.09.2013 (SD Card Dev)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -885,7 +885,7 @@ void process_command(const char *cmdstr)
   cmd.has_S = parse_int(cmdstr, 'S', &cmd.S);
   cmd.has_T = parse_int(cmdstr, 'T', &cmd.T);
   cmd.has_D = parse_int(cmdstr, 'D', &cmd.D);
-  cmd.has_String = parse_string(cmdstr, ' ', &cmd.String[0]);
+  cmd.has_String = parse_string(&cmdstr[find_word(cmdstr, cmd.type)], ' ', &cmd.String[0]);
 
   // Dispatch command.
   unsigned long start_tm, end_tm, execute_tm;
@@ -1178,7 +1178,7 @@ void execute_gcode(struct command *cmd)
 
 void execute_mcode(struct command *cmd) {
 #ifdef SDSUPPORT
-    unsigned long codenum, codenum2; //throw away variable
+    long codenum, codenum2; //throw away variable
 #endif // SDSUPPORT
     switch(cmd->code) {
 #ifdef SDSUPPORT
@@ -1209,17 +1209,27 @@ void execute_mcode(struct command *cmd) {
     case 23: //M23 - Select file
 	  if (cmd->has_String)
 	  {
-			serial_send("-- Opening %s...\r\n", cmd->String);
+		codenum = find_word(cmd->String, '*');
+		
+		if (codenum > 0)
+		{
+			strlcpy(sdard_filename, cmd->String, codenum);
+		}
+		else
+		{
 			strcpy(sdard_filename, cmd->String);
-			
-			if ( sdcard_openFile(sdard_filename) )
-			{
-				serial_send("File selected\r\n");				
-			}
-			else
-			{
-				serial_send("file.open failed\r\n");
-			}
+		}
+		
+		serial_send("-- Opening %s...\r\n", sdard_filename);
+		
+		if ( sdcard_openFile(sdard_filename) )
+		{
+			serial_send("File selected\r\n");				
+		}
+		else
+		{
+			serial_send("file.open failed\r\n");
+		}
 	  }
 	  else
 	  {
@@ -1251,7 +1261,17 @@ void execute_mcode(struct command *cmd) {
     case 28: //M28 - Start SD write
 	  if ( (!sdcard_fd) && (cmd->has_String) )
 	  {
-		strcpy(sdard_filename, cmd->String);
+		codenum = find_word(cmd->String, '*');
+		
+		if (codenum > 0)
+		{
+			strlcpy(sdard_filename, cmd->String, codenum);
+		}
+		else
+		{
+			strcpy(sdard_filename, cmd->String);
+		}
+		
 		serial_send("-- Opening %s...\r\n", sdard_filename);
 		
 		codenum = sdcard_create_file(sdard_filename);
@@ -1299,7 +1319,17 @@ void execute_mcode(struct command *cmd) {
     case 30: //M30 <filename> Delete File
 	  if ( cmd->has_String )
 	  {
-		strcpy(sdard_filename, cmd->String);
+		codenum = find_word(cmd->String, '*');
+		
+		if (codenum > 0)
+		{
+			strlcpy(sdard_filename, cmd->String, codenum);
+		}
+		else
+		{
+			strcpy(sdard_filename, cmd->String);
+		}
+		
 		serial_send("-- Deleting %s...\r\n", sdard_filename);
 		
 		sdcard_delete_file(sdard_filename);

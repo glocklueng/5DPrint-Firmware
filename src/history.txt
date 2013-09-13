@@ -7,6 +7,20 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	13 September 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+SD Card Dev Branch
+
+In process_command(), for capturing the 'string', handle case where the host 
+inserts a line/sequence number to the start of the command string.
+
+In SD card file access M codes, remove the checksum from the filename string.
+
+
+--------------------------
 DATE: 	11 September 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

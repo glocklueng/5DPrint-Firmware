@@ -41,7 +41,17 @@
 #define Y_STEP_PIN         30
 #define Y_DIR_PIN          31
 #define Y_ENABLE_PIN       18
-#define Y_MIN_PIN          37 // 20
+
+// config.h must be included before this file
+// Hopefully, should be able to remove this if-else once either new hardware is 
+// release or we instruct users to use the E-STOP headers on the PrintRBoard 
+// for the Y-STOP / limit switch.
+#if SDSUPPORT > 0
+	#define Y_MIN_PIN          37
+#else
+	#define Y_MIN_PIN          20
+#endif
+
 #define Y_MAX_PIN          -1
 
 #define Z_STEP_PIN         32

@@ -7,6 +7,31 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	19 September 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Version 2.03
+
+Merged with the SD card development branch.
+
+Option in config.h to turn on SD card support (set SDSUPPORT to 1). Currently, 
+SDSUPPORT is set to 0 and so SD card support is disabled. Plan buffer size is 
+reduced from 64 to 32 when SD card support is enabled as extra RAM is required 
+for the data structures and buffers to support the SD card.
+
+NOTE:
+To support SD cards the Y-STOP limit switch must be plugged in to the spare 
+E-STOP header pins instead of the Y-STOP ones on the PrintRBoard rev. B. This 
+is because the assigned port pin for Y-STOP detection is also the /SS pin for 
+the SPI port. This forces the SPI in to slave mode and so can interrupt the 
+operation of the SD card.
+
+Added makibox_sdcard.h to repository. Was not added during the merge process.
+
+
+--------------------------
 DATE: 	04 September 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

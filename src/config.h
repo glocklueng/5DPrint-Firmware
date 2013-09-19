@@ -336,8 +336,17 @@
 
 //#define CHAIN_OF_COMMAND 1 //Finish buffered moves before executing M42, fan speed, heater target, and so...
 
-// Comment out to disable SD Card support
-#define SDSUPPORT			1
+// Set to 0 to disable SD Card support
+// Set to 1 to enable SD Card support
+#define SDSUPPORT			0
+
+#if SDSUPPORT < 1
+	#undef 	CFG_BLOCK_BUFFER_SIZE
+	#define CFG_BLOCK_BUFFER_SIZE 64
+	#undef 	CFG_BLOCK_BUFFER_MASK
+	#define CFG_BLOCK_BUFFER_MASK 0x3F
+#endif // SDSUPPORT
+
 
 // Global Variables for CPU Loading Calculation
 #if (DEBUG > -1)

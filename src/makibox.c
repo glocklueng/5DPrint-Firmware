@@ -180,7 +180,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "2.02 / 04.09.2013";
+static const char VERSION_TEXT[] = "2.03 / 19.09.2013";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -246,7 +246,7 @@ uint8_t print_paused = 0;
 //Temp Monitor for repetier
 unsigned char manage_monitor = 255;
 
-#ifdef SDSUPPORT
+#if SDSUPPORT > 0
 #define SDCARD_WRITEBUF_SIZE			2048 //1536
 	// SD Card Variables
 	struct fat_fs_struct* sdcard_fs = 0;
@@ -466,7 +466,7 @@ void setup()
     SET_OUTPUT(E_STEP_PIN);
   #endif  
 
-#ifdef SDSUPPORT
+#if SDSUPPORT > 0
   //Setup SD Card / SPI Pins
   DDRB |= (1 << PINB2);		// MOSI Pin
   DDRB |= (1 << PINB1);		// SCK Pin
@@ -543,7 +543,7 @@ void loop()
 void read_command() 
 { 
   int16_t ch = -1;
-#ifdef SDSUPPORT
+#if SDSUPPORT > 0
   uint8_t sd_ch[32];
   int16_t bytes_read = -1;
   uint8_t i;
@@ -596,7 +596,7 @@ void read_command()
 	}
   }
 
-#ifdef SDSUPPORT
+#if SDSUPPORT > 0
   // Printing from SD Card file
   if ( (sdcard_print) && (!sdcard_print_pause) )
   {
@@ -783,7 +783,9 @@ void process_command(const char *cmdstr)
 {  
   uint32_t checksum = 0;
   uint8_t qfree = 0;
+ #if SDSUPPORT > 0
   unsigned char i;
+ #endif
   
   // Validate the command's checksum, if provided.
   if (parse_hex(cmdstr, ';', &checksum)) {
@@ -890,7 +892,7 @@ void process_command(const char *cmdstr)
   unsigned long start_tm, end_tm, execute_tm;
   start_tm = millis();
 
-#ifdef SDSUPPORT
+#if SDSUPPORT > 0
   if (sdcard_write)
   {
 	// if not M29 command
@@ -971,7 +973,7 @@ void process_command(const char *cmdstr)
 	  case 'M':  execute_mcode(&cmd);  break;
 	  default:	serial_send("-- Unknown Command Type.\r\n"); break;
 	  }
-#ifdef SDSUPPORT
+#if SDSUPPORT > 0
   }
 #endif // SDSUPPORT
   
@@ -1176,11 +1178,11 @@ void execute_gcode(struct command *cmd)
 
 
 void execute_mcode(struct command *cmd) {
-#ifdef SDSUPPORT
+#if SDSUPPORT > 0
     long codenum, codenum2; //throw away variable
 #endif // SDSUPPORT
     switch(cmd->code) {
-#ifdef SDSUPPORT
+#if SDSUPPORT > 0
     case 20: 	// M20 F0 - list SD card - value passed via the F are the flags
 				// for displaying directories and file sizes.
 	  if (cmd->has_F)
@@ -1246,9 +1248,6 @@ void execute_mcode(struct command *cmd) {
       break;
 	  
 /*    case 26: //M26 - Set SD index
-      if(card.cardOK && code_seen('S')) {
-        card.setIndex(code_value_long());
-      }
       break;
 */	  
     case 27: //M27 - Get SD print status

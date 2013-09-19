@@ -23,7 +23,7 @@
 
 #include "../config.h"
 
-#ifdef SDSUPPORT
+#if SDSUPPORT > 0
 
 #include <string.h>
 

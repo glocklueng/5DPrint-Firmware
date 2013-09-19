@@ -7,106 +7,16 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
-DATE: 	13 September 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
-SD Card Dev Branch
-
-In process_command(), for capturing the 'string', handle case where the host 
-inserts a line/sequence number to the start of the command string.
-
-In SD card file access M codes, remove the checksum from the filename string.
-
-
---------------------------
-DATE: 	11 September 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
-SD Card Dev Branch
-
-Improved SD card upload / write speed by buffering blocks of at least 512kBytes 
-of data before writing to the SD card. Tested using an alternate terminal / 
-serial emulator which can open and send an ASCII file as well as manually 
-entered ASCII / commands. Pronterface is too slow at uploading. Using 
-Pronterface an 8.7MB file took around 1 hour and 20 minutes to upload. Using a 
-simple terminal program on the host PC it took around 13 - 15 minutes for the same 
-file even before the improvements in firmware. Still not super fast by today's 
-standards but more usable than 1 hour 20 minutes. Should be able to do a better 
-job of the upload feature than Pronterface in 5DPrint.
-
-
---------------------------
-DATE: 	06 September 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
-SD Card Dev Branch
-
-FAT_DELAY_DIRENTRY_UPDATE set to 1. Improves SD card performance but at a cost 
-of higher risk of  data loss if the file is not closed properly.
-
-
---------------------------
-DATE: 	06 September 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
-SD Card Dev Branch
-
-Edited find_word() so that multiple 'words' do not return an error. It returns 
-the position of the first instance found.
-
-Edited process_command() such that multiple M and G codes in the command string 
-do not return an error. The first M or G code found will be taken as the command 
-to be executed.
-
-The above changes allow SD card filename strings to be handled better.
-
-
---------------------------
 DATE: 	04 September 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited
 		www.xtrontec.com
 --------------------------
-SD Card Dev Branch
+Version 2.02
 
 Correct bootloader jump address in JumpToBootloader(void) (within makibox.c.). 
 Corrected to 0x1E000 (byte address). The 0xF000 address listed in the datasheet 
 is the word address.
-
-Now able to upload / write to the SD card via Pronterface. The transfer / upload 
-seems a bit slower than desired. This may be due to, at least in part, the fact 
-that Pronterface waits until an OK response is received from the printer after 
-each data line it sends before sending the next line.
-
-M30 Delete SD card file feature implemented and tested using a terminal. It was 
-not possible to test this command in Pronterface as there are no menus with this 
-option and the Pronterface command line terminal converts all letters to capitals 
-meaning that it would not work.
-
-
---------------------------
-DATE: 	30 August 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
-SD Card Dev Branch
-
-Note that the Pronterface SD card file selector changes all the filenames to 
-lowercase. This means that files using capital letters as part of the filename 
-can not be selected using Pronterface. Also note that all commands entered in 
-the Pronterface console are changed to upper case meaning that you cannot 
-manually select and print any files containing lower case letters.
-
-Turned on support for SDHC cards.
 
 
 --------------------------
@@ -115,18 +25,13 @@ AUTHOR:	JTK WONG
 		XTRONTEC Limited
 		www.xtrontec.com
 --------------------------
-SD Card Dev Branch
+Version 2.01
 
-Fixed issue with block_index in prev_block_index() within planner.c. A bounds 
-check has somehow been removed accidentally during development resulting in the 
-possibility that the index was pointing to an incorrect memory location. Bounds 
-checking code has been added to the prev_block_index() function to prevent this 
+Fixed issue with block_index in prev_block_index() within planner.c. A bounds
+check has somehow been removed accidentally during development resulting in the
+possibility that the index was pointing to an incorrect memory location. Bounds
+checking code has been added to the prev_block_index() function to prevent this
 problem.
-
-Fixed read_command() so that empty command buffer is not processes resulting in 
-a 'rs' error message being displayed in Pronterface.
-
-sdcard_fd reset to 0 after file close.
 
 
 --------------------------
@@ -135,126 +40,19 @@ AUTHOR:	JTK WONG
 		XTRONTEC Limited
 		www.xtrontec.com
 --------------------------
-SD Card Dev Branch
+Main/Default branch.
 
-Current development snapshot. Need to do some updates to the default / main 
-branch so checking this dev branch in to the repository for now. This checked in 
-version has SDSUPPORT commented out.
-
-Fixed code range checking so the a zero will be accepted (e.g. G0).
-
-
---------------------------
-DATE: 	22 August 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
-SD Card Dev Branch
-
-Current development snapshot.
-
-Moved Y-Stop input to use the E-Stop input. The Y - limit switch connector must 
-be connected to the E-Stop header pins on the PrintRBoard instead. The Y-Stop 
-input is currently (on PrintRBoard Rev B) connected to a pin which also acts as 
-the /SS input pin for the SPI. This has the effect of putting the SPI module 
-into slave mode. There does not seem to be anyway to disable the /SS pin via 
-any of the MCU registers. Swapping to using the E-Stop (not used by anything at 
-the moment) will avoid problems caused by this during development.
-
-read_command() updated to include handling of printing from SD card.
-
-The SD card can now be read and files opened. The current SD card print function 
-is a bit slow due to reading characters from the file one byte at a time.
+NOTE: Restarting with new versioning system at version 2.00.
+The previous version numbering was continued from the version number system that 
+was inherited from the Sprinter code base that this firmware was originally 
+forked from.
 
 
---------------------------
-DATE: 	16 August 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
-SD Card Dev Branch
+Fix issue with code range check in makibox.c. G0 commands were being ignored 
+with rs (re-send) response being sent to the host.
 
-Adjusted some of the SD card feedback text to match those expected by 
-Pronterface for the correct buttons and dialog boxes to be displayed.
-
-
---------------------------
-DATE: 	15 August 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
-SD Card Dev Branch
-
-planner.c
-block_t block_buffer[] initialised to block_t block_buffer[] = {{0}}; This is 
-still an uninitialised array of struct. However, this seems to cause the 
-compiler / linker to place this in a slightly different memory location (but 
-still in the .bss section).
-
-Makefile
-Optimisation level changed back to -Os.
-
-
---------------------------
-DATE: 	08 August 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
-SD Card Dev Branch
-
-Seperated Makibox SD card related functions to makibox_sdcard.c and 
-makibox_sdcard.h files.
-
-
---------------------------
-DATE: 	07 August 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
-SD Card Dev Branch
-
-Makefile - Changed compiler optimisation level to -O1 (simple optimisation). 
-This appears to resolve the crash / memory issues that was seen when testing 
-this code => or has this simply moved the problem to a differene memory 
-location? Had a search through the code for any pointer arithmetic that may go 
-wrong but could not spot anything.
-
-Can now list files and folders from the root directory of the SD card. Related 
-code has just been added to the bottom of the makibox.c file for testing 
-purposes. If the functions are to be used in a release then they should seperated 
-out to a different file (and added to the project) in order for easier navigation 
-and maintenance of the code in the future.
-
-This is still a very early work in progress for the SD card functionality.
-
-
---------------------------
-DATE: 	31 July 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
-Initial development branch to get the SD card working. This is an initial 
-commit to the repository with first small steps and experimenting with a SD card 
-library (open source GNU v2 license) from Roland Riegel (www.roland-riegel.de). 
-Many thanks to Roland Riegel for making this available as open source under the 
-GNU GPL v2 and LGPL V2.1.
-
-So far in this version of code we have been able to successfully initialise a 
-SD card (i.e. the SPI module is working) and read basic information such as 
-capacity and free space available from the SD card.
-
-Expecting further issues with the Y-STOP / SS input pin on the PrintRBoard. This 
-is used as an input for the Y-axis end-stop. However, this is also the SS (slave 
-select) pin for the SPI module. When this input is low it puts the SPI module in 
-to 'slave' mode. The Atmel documentation does not show any means of disabling 
-this 'feature'. It will most likely cause us problems unless we find a reliable 
-work around.
+Added copyright and GPL licensing text for each source file and the README file.
+Also adding copy of the GPL license to the repository in BitBucket.
 
 
 --------------------------
@@ -276,7 +74,6 @@ plan).
 
 Hot-Bed current / duty-cycle is limited to 80% of the maximum when the hot-bed 
 is less than MIN_BED_TEMP_FOR_HOTBED_FULL_PWR (currently set to 70 degC).
-
 
 --------------------------
 DATE: 	25 July 2013

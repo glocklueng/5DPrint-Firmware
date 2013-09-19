@@ -2,7 +2,6 @@
  Makibox A6 Firmware
  Based on Sprinter (master branch, 1 Sep 2012).
  Designed for Printrboard (Rev B).
- 
  ---
  Copyright (c) 2012-2013 by Makible Limited.
  
@@ -181,7 +180,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "1.3.25z-VCP/ 13.09.2013 (SD Card Dev)";
+static const char VERSION_TEXT[] = "2.02 / 04.09.2013";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;

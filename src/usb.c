@@ -637,7 +637,7 @@ size_t usb_serial_write(const uint8_t *buffer, uint16_t size)
 	// interrupts are disabled so these functions can be
 	// used from the main program or interrupt context,
 	// even both in the same program!
-	//intr_state = SREG;
+	intr_state = SREG;
 	cli();
 	UENUM = CDC_TX_ENDPOINT;
 	// if we gave up due to timeout before, don't wait again
@@ -729,7 +729,7 @@ size_t usb_serial_write(const uint8_t *buffer, uint16_t size)
 		if (!(UEINTX & (1<<RWAL))) UEINTX = 0x3A;
 		transmit_flush_timer = TRANSMIT_FLUSH_TIMEOUT;
 	}
-	//SREG = intr_state;
+
 end:
 	SREG = intr_state;
 	return count;

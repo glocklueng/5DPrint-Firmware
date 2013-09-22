@@ -180,7 +180,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "2.03 / 19.09.2013";
+static const char VERSION_TEXT[] = "2.03a / 22.09.2013";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -247,7 +247,7 @@ uint8_t print_paused = 0;
 unsigned char manage_monitor = 255;
 
 #if SDSUPPORT > 0
-#define SDCARD_WRITEBUF_SIZE			2048 //1536
+#define SDCARD_WRITEBUF_SIZE			2048
 	// SD Card Variables
 	struct fat_fs_struct* sdcard_fs = 0;
 	char sdard_filename[92];

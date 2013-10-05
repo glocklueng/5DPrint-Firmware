@@ -36,7 +36,7 @@
 // Makiox A6 standard stepper motors have 1.8 deg/step. However with micro-
 // stepping feature 1/16th step is achieved.
 // Therefore 1mm movement in x, y, z = (200 / 8) * 16 = 400 micro-steps.
-#define _AXIS_STEP_PER_UNIT {400, 400, 400, 165}
+#define _AXIS_STEP_PER_UNIT {400, 400, 400, 163}
 
 
 //// Endstop Settings
@@ -179,11 +179,11 @@
 //    32      0x1F    2304
 //    64      0x3F    4608
 //    128     0x7F    9216
-#define CFG_BLOCK_BUFFER_SIZE 32 //64
-#define CFG_BLOCK_BUFFER_MASK 0x1F //0x3F
+#define CFG_BLOCK_BUFFER_SIZE 			32
+#define CFG_BLOCK_BUFFER_MASK 			0x1F
 
-#define PRINT_PAUSED_BLOCK_BUF_SIZE	8
-#define PRINT_PAUSED_BLOCK_BUF_MASK	0X07
+#define PRINT_PAUSED_BLOCK_BUF_SIZE		8
+#define PRINT_PAUSED_BLOCK_BUF_MASK		0X07
 
 //-----------------------------------------------------------------------
 //// SETTINGS FOR ARC FUNCTION (Command G2/G2)
@@ -342,9 +342,9 @@
 
 #if SDSUPPORT < 1
 	#undef 	CFG_BLOCK_BUFFER_SIZE
-	#define CFG_BLOCK_BUFFER_SIZE 64
+	#define CFG_BLOCK_BUFFER_SIZE 		64
 	#undef 	CFG_BLOCK_BUFFER_MASK
-	#define CFG_BLOCK_BUFFER_MASK 0x3F
+	#define CFG_BLOCK_BUFFER_MASK 		0x3F
 #endif // SDSUPPORT
 
 

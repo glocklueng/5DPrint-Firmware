@@ -32,6 +32,7 @@
 #include "config.h"
 #include "usb.h"
 #include "heater.h"
+#include "language.h"
 
 #ifdef PIDTEMP
  //extern unsigned int PID_Kp, PID_Ki, PID_Kd;
@@ -125,7 +126,7 @@ void EEPROM_StoreSettings()
 
   unsigned short checksum = EEPROM_Checksum();
   EEPROM_write_setting(EEPROM_CHECKSUM_ADDR, &checksum, sizeof(checksum));
-  serial_send("Settings Stored\r\n");
+  serial_send(TXT_SETTINGS_STORED_CRLF);
 }
 
 
@@ -135,7 +136,7 @@ void EEPROM_printSettings()
 	unsigned short stored_checksum;
 	
   #ifdef PRINT_EEPROM_SETTINGS
-      serial_send("Steps per unit:\r\n  M92 X%d Y%d Z%d E%d\r\n",
+      serial_send(TXT_STEPS_PER_UNIT_CRLF_M92_X_Y_Z_E_CRLF,
 									(unsigned short)axis_steps_per_unit[0],
 									(unsigned short)axis_steps_per_unit[1],
 									(unsigned short)axis_steps_per_unit[2],
@@ -146,13 +147,13 @@ void EEPROM_printSettings()
 	  dtostrf(max_feedrate[2], 3, 3, str_buf2);
 	  dtostrf(max_feedrate[3], 3, 3, str_buf3);
 	  
-      serial_send("Maximum feedrates (mm/s):\r\n  M202 X%s Y%s Z%s E%s\r\n",
+      serial_send(TXT_MAX_FEEDRATES_CRLF_M202_X_Y_Z_E_CRLF,
 																	str_buf0,
 																	str_buf1,
 																	str_buf2,
 																	str_buf3);
 
-      serial_send("Maximum Acceleration (mm/s2):\r\n  M201 X%ld Y%ld Z%ld E%ld\r\n",
+      serial_send(TXT_MAX_ACCEL_CRLF_M201_X_Y_Z_E_CRLF,
 										max_acceleration_units_per_sq_second[0],
 										max_acceleration_units_per_sq_second[1],
 										max_acceleration_units_per_sq_second[2],
@@ -162,8 +163,8 @@ void EEPROM_printSettings()
 	  dtostrf(move_acceleration, 5, 3, str_buf0);
 	  dtostrf(retract_acceleration, 5, 3, str_buf1);
 	  
-	  serial_send("Acceleration: S=acceleration, T=retract acceleration\r\n");
-      serial_send("  M204 S%s T%s\r\n", str_buf0, str_buf1);
+	  serial_send(TXT_ACCEL_S_T_CRLF);
+      serial_send(TXT_M204_S_T_CRLF, str_buf0, str_buf1);
 
 
       dtostrf(minimumfeedrate, 3, 3, str_buf0);
@@ -172,25 +173,25 @@ void EEPROM_printSettings()
 	  dtostrf(max_z_jerk, 3, 3, str_buf3);
 	  dtostrf(max_e_jerk, 3, 3, str_buf4);
 	  
-	  serial_send("Advanced variables (mm/s): S=Min feedrate, T=Min travel feedrate, XY=max xY jerk,  Z=max Z jerk, E=max E jerk\r\n");
-      serial_send("  M205 S%s T%s XY%s Z%s E%s\r\n",	str_buf0,
+	  serial_send(TXT_ADAVNCED_VARIABLES_S_T_XY_Z_E_JERK_CRLF);
+      serial_send(TXT_M205_S_T_XY_Z_E_CRLF,	str_buf0,
 														str_buf1,
 														str_buf2,
 														str_buf3,
 														str_buf4);
 
     #ifdef PIDTEMP
-      serial_send("PID settings:\r\n  M301 P%d I%d D%d\r\n", PID_Kp, PID_Ki, PID_Kd); 
+      serial_send(TXT_PID_SETTINGS_CRLF_M301_P_I_D_CRLF, PID_Kp, PID_Ki, PID_Kd); 
     #endif
   #else
-    serial_send("(printing of EEPROM settings disabled)\r\n");
+    serial_send(TXT_PRINTING_OF_EEPROM_SETTINGS_DISABLED_CRLF);
   #endif
 	
 	EEPROM_read_setting(EEPROM_CHECKSUM_ADDR, &stored_checksum, 
 													sizeof(stored_checksum));
 	
-	serial_send("Stored EEPROM Checksum: 0x%X\r\n", stored_checksum);
-	serial_send("Expected EEPROM Checksum: 0x%X\r\n", EEPROM_Checksum());
+	serial_send(TXT_STORED_EEPROM_CHECKSUM_HEX_CRLF, stored_checksum);
+	serial_send(TXT_EXPECTED_EEPROM_CHECKSUM_HEX_CRLF, EEPROM_Checksum());
 } 
 
 
@@ -236,7 +237,7 @@ void EEPROM_RetrieveSettings(int def, int printout)
        EEPROM_read_setting(Kd_address, &PID_Kd, sizeof(PID_Kd));
       #endif
 
-      serial_send("Stored settings retreived\r\n");
+      serial_send(TXT_STORED_SETTINGS_RETRIEVED_CRLF);
     }
     else 
     {
@@ -263,7 +264,7 @@ void EEPROM_RetrieveSettings(int def, int printout)
        PID_Kd = PID_DGAIN;
       #endif
 
-      serial_send("Using Default settings\r\n");
+      serial_send(TXT_USING_DEFAULT_SETTINGS_CRLF);
     }
     
     if(printout)

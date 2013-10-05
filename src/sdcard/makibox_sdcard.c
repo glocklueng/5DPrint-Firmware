@@ -29,6 +29,7 @@
 
 #include "../sdcard/makibox_sdcard.h"
 #include "../usb.h"
+#include "../language.h"
 
 
 static struct partition_struct* sdcard_partition;
@@ -44,12 +45,12 @@ void sdcard_initialise(void)
 {
 	if( !sd_raw_init() )
 	{
-		serial_send("-- *** SD Card Initialisation Failed.\r\n");
+		serial_send(TXT_SD_CARD_INIT_FAILED_CRLF);
 		//break;
 	}
 	else
 	{		
-		serial_send("-- SD Card Initialised.\r\n");
+		serial_send(TXT_SD_CARD_INITIALISED_CRLF);
 	}
 
 	/* open first partition */
@@ -86,7 +87,7 @@ void sdcard_initialise(void)
 								  );
 		if(!sdcard_partition)
 		{
-			serial_send("-- *** Failed to open partition.\r\n");
+			serial_send(TXT_FAILED_TO_OPEN_PARTITION_CRLF);
 			return;
 		}
 	}
@@ -99,7 +100,7 @@ void sdcard_initialise(void)
 	
 	if (!sdcard_fs)
 	{
-		serial_send("-- *** Opening filesystem failed\r\n");
+		serial_send(TXT_OPENING_FILESYSTEM_FAILED_CRLF);
 		return;
 	}
 }
@@ -117,17 +118,17 @@ uint8_t print_disk_info(const struct fat_fs_struct* fs)
     if(!sd_raw_get_info(&disk_info))
         return 0;
 
-    serial_send("-- Manufacturer: 0x%04X\r\n", disk_info.manufacturer);
-    serial_send("-- OEM: %s\r\n", (char*) disk_info.oem);
-    serial_send("-- Product: %s\r\n", (char*) disk_info.product);
-    serial_send("-- Revision:  0x%04X\r\n", disk_info.revision);
-    serial_send("-- Serial: 0x%X\r\n", (unsigned int)(disk_info.serial));
-    serial_send("-- Date: %02d / %02d\r\n", disk_info.manufacturing_month, disk_info.manufacturing_year);
-    serial_send("-- Size: %dMB\r\n", (int)(disk_info.capacity / 1024.0 / 1024.0));
-    serial_send("-- Copy: %d\r\n", disk_info.flag_copy);
-    serial_send("-- Write Protect: %d / %d\r\n", disk_info.flag_write_protect_temp, disk_info.flag_write_protect);
-    serial_send("-- Format: %d\r\n", disk_info.format);
-    serial_send("-- Free Space: %lu / %lu Bytes\r\n", (unsigned long)(fat_get_fs_free(fs)), (unsigned long)(fat_get_fs_size(fs)));
+    serial_send(TXT_MANUFACTURER_HEX_CRLF, disk_info.manufacturer);
+    serial_send(TXT_OEM_STR_CRLF, (char*) disk_info.oem);
+    serial_send(TXT_PRODUCT_STR_CRLF, (char*) disk_info.product);
+    serial_send(TXT_REVISION_HEX_CRLF, disk_info.revision);
+    serial_send(TXT_SERIAL_HEX_CRLF, (unsigned int)(disk_info.serial));
+    serial_send(TXT_DATE_INT_INT_CRLF, disk_info.manufacturing_month, disk_info.manufacturing_year);
+    serial_send(TXT_SIZE_INT_MB_CRLF, (int)(disk_info.capacity / 1024.0 / 1024.0));
+    serial_send(TXT_COPY_INT_CRLF, disk_info.flag_copy);
+    serial_send(TXT_WRITE_PROTECT_INT_INT_CRLF, disk_info.flag_write_protect_temp, disk_info.flag_write_protect);
+    serial_send(TXT_FORMAT_INT_CRLF, disk_info.format);
+    serial_send(TXT_FREE_SPACE_LU_LU_BYTES_CRLF, (unsigned long)(fat_get_fs_free(fs)), (unsigned long)(fat_get_fs_size(fs)));
 
     return 1;
 }
@@ -165,7 +166,7 @@ void sdcard_release(void)
 		sdcard_partition = 0;
 	}
 	
-	serial_send("-- SD Card Released.\r\n");
+	serial_send(TXT_SD_CARD_RELEASED_CRLF);
 }
 
 
@@ -186,7 +187,7 @@ void sdcard_list_root(unsigned char flags)
 		
 		if (!sdcard_dir_desc)
 		{
-			serial_send("-- Opening directory failed.\r\n");
+			serial_send(TXT_OPENING_DIRECTORY_FAILED_CRLF);
 		}
 		
 		/* print directory listing */
@@ -196,14 +197,14 @@ void sdcard_list_root(unsigned char flags)
 			
 			if (flags & LS_SHOW_DIRS)
 			{
-				serial_send("%s", dir_entry.long_name);
-				serial_send("%s", (dir_entry.attributes & FAT_ATTRIB_DIR ? "/" : ""));
+				serial_send(TXT_STR, dir_entry.long_name);
+				serial_send(TXT_STR, (dir_entry.attributes & FAT_ATTRIB_DIR ? "/" : ""));
 			}
 			else
 			{
 				if ( !(dir_entry.attributes & FAT_ATTRIB_DIR) )
 				{
-					serial_send("%s", dir_entry.long_name);
+					serial_send(TXT_STR, dir_entry.long_name);
 				}
 			}
 			
@@ -213,21 +214,21 @@ void sdcard_list_root(unsigned char flags)
 				{
 					while(spaces--)
 					{
-						serial_send(" ");
+						serial_send(TXT_SPACE);
 					}
 				
-					serial_send("%lu", dir_entry.file_size);
+					serial_send(TXT_LU, dir_entry.file_size);
 				}
 			}
 			
 			if ( !(flags & LS_SHOW_DIRS)
 					&&  !(dir_entry.attributes & FAT_ATTRIB_DIR) )
 			{
-				serial_send("\r\n");
+				serial_send(TXT_CRLF);
 			}
 			else if (flags & LS_SHOW_DIRS)
 			{
-				serial_send("\r\n");
+				serial_send(TXT_CRLF);
 			}
 		}
 		
@@ -243,7 +244,7 @@ uint8_t sdcard_openFile(const char* filename)
 	
 	if (!sdcard_fs)
 	{
-		serial_send("-- SD card file system not initialised.\r\n");
+		serial_send(TXT_SD_CARD_FILE_SYSTEM_NOT_INITIALISED_CRLF);
 		return 0;
 	}
 	
@@ -255,7 +256,7 @@ uint8_t sdcard_openFile(const char* filename)
 	
 	if(!sdcard_dir_desc)
 	{
-		serial_send("-- Opening directory failed.\r\n");
+		serial_send(TXT_OPENING_DIRECTORY_FAILED_CRLF);
 		return 0;
 	}
 	
@@ -331,7 +332,7 @@ uint8_t sdcard_create_file(const char* filename)
 	
 	if (!sdcard_fs)
 	{
-		serial_send("-- SD card file system not initialised.\r\n");
+		serial_send(TXT_SD_CARD_FILE_SYSTEM_NOT_INITIALISED_CRLF);
 		return 0;
 	}
 	
@@ -343,7 +344,7 @@ uint8_t sdcard_create_file(const char* filename)
 	
 	if(!sdcard_dir_desc)
 	{
-		serial_send("-- Opening directory failed.\r\n");
+		serial_send(TXT_OPENING_DIRECTORY_FAILED_CRLF);
 		return 0;
 	}
 	
@@ -359,7 +360,7 @@ uint8_t sdcard_delete_file(const char* filename)
 	
 	if (!sdcard_fs)
 	{
-		serial_send("-- SD card file system not initialised.\r\n");
+		serial_send(TXT_SD_CARD_FILE_SYSTEM_NOT_INITIALISED_CRLF);
 		return 0;
 	}
 	
@@ -371,7 +372,7 @@ uint8_t sdcard_delete_file(const char* filename)
 	
 	if(!sdcard_dir_desc)
 	{
-		serial_send("-- Opening directory failed.\r\n");
+		serial_send(TXT_OPENING_DIRECTORY_FAILED_CRLF);
 		return 0;
 	}
 	
@@ -379,12 +380,12 @@ uint8_t sdcard_delete_file(const char* filename)
 	{
 		if(fat_delete_file(sdcard_fs, &file_entry))
 		{
-			serial_send("-- Deleted File: %s\r\n", filename);
+			serial_send(TXT_DELETED_FILE_STR_CRLF, filename);
 			return 1;
 		}
 		else
 		{
-			serial_send("-- Could not delete %s. File delete failed.\r\n", filename);
+			serial_send(TXT_COULD_NOT_DELETE_STR_FILE_DELETE_FAILED_CRLF, filename);
 			return 0;
 		}
 	}

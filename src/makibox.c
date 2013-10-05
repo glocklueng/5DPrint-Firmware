@@ -40,6 +40,7 @@
 #include "planner.h"
 #include "stepper.h"
 #include "sdcard/makibox_sdcard.h"
+#include "language.h"
 
 
 #ifdef USE_ARC_FUNCTION
@@ -130,7 +131,6 @@ void set_extruder_heater_max_current(struct command *cmd);
 // M23  - Select SD file (M23 filename.g)
 // M24  - Start/resume SD print
 // M25  - Pause SD print
-// M26  - Set SD position in bytes (M26 S12345)
 // M27  - Report SD print status
 // M28  - Start SD write (M28 filename.g)
 // M29  - Stop SD write	
@@ -141,9 +141,9 @@ void set_extruder_heater_max_current(struct command *cmd);
 // M83  - Set E codes relative while in Absolute Coordinates (G90) mode
 // M84  - Disable steppers until next move, 
 //        or use S<seconds> to specify an inactivity timeout, after which the steppers will be disabled.  S0 to disable the timeout.
-// M85  - Set inactivity shutdown timer with parameter S<seconds>. To disable set zero (default)
+// M85  - Use S<seconds> to specify an inactivity timeout, after which the steppers and heaters will be disabled.  S0 to disable the timeout.
 // M92  - Set axis_steps_per_unit - same syntax as G92
-// M93  - Send axis_steps_per_unit
+// M93  - Show axis_steps_per_unit
 // M115	- Capabilities string
 // M119 - Show Endstopper State 
 // M201 - Set maximum acceleration in units/s^2 for print moves (M201 X1000 Y1000)
@@ -180,7 +180,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "2.03a / 22.09.2013";
+static const char VERSION_TEXT[] = "2.04 / 05.10.2013";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -344,7 +344,7 @@ int FreeRam1(void)
 void setup()
 { 
   usb_serial_begin(); 
-  serial_send("// Makibox %s started.\r\n", VERSION_TEXT);
+  serial_send(TXT_MAKIBOX_VER_STARTED_CRLF, VERSION_TEXT);
   
   //Initialize Dir Pins
   #if X_DIR_PIN > -1
@@ -482,10 +482,10 @@ void setup()
   // Initialise Timer 3 / PWM for Extruder Heater, Hotbed Heater, and Fan
   init_Timer3_HW_pwm();
   
-  serial_send("// Planner Init\r\n");
+  serial_send(TXT_PLANNER_INIT);
   plan_init();  // Initialize planner;
 
-  serial_send("// Stepper Timer init\r\n");
+  serial_send(TXT_STEPPER_TIMER_INIT_CRLF);
   st_init();    // Initialize stepper
 
   #ifdef USE_EEPROM_SETTINGS
@@ -499,7 +499,7 @@ void setup()
   #endif
   
   //Free Ram
-  serial_send("// Free Ram: %d\r\n", FreeRam1());
+  serial_send(TXT_FREE_RAM_CRLF, FreeRam1());
   
   for(int8_t i=0; i < NUM_AXIS; i++)
   {
@@ -609,17 +609,17 @@ void read_command()
 		sdcard_closeFile(sdcard_fd);
 		sdcard_fd = 0;
 		sdcard_print = 0;
-		serial_send("-- Closed SD card file.\r\n");
-		serial_send("Done printing file\r\n");
+		serial_send(TXT_CLOSED_SD_CARD_FILE_CRLF);
+		serial_send(TXT_DONE_PRINTING_FILE_CRLF);
 	}
 	else if (bytes_read < 0)
 	{
-		serial_send("-- Error reading file.\r\n");
+		serial_send(TXT_ERROR_READING_FILE_CRLF);
 		// Close file
 		sdcard_closeFile(sdcard_fd);
 		sdcard_fd = 0;
 		sdcard_print = 0;
-		serial_send("Done printing file\r\n");
+		serial_send(TXT_DONE_PRINTING_FILE_CRLF);
 	}
 	
 	for (i = 0; i < bytes_read; i++)
@@ -793,7 +793,7 @@ void process_command(const char *cmdstr)
     uint16_t calculated_checksum = 0;
     if (checksum < 0x0000 || checksum > 0xFFFF)
     {
-      serial_send("rs %ld (checksum out of range)\r\n", cmdseqnbr);
+      serial_send(TXT_RS_SEQNUM_CHECKSUM_OUT_OF_RANGE_CRLF, cmdseqnbr);
       return;
     }
     for (int i = 0; i < MAX_CMD_SIZE && cmdstr[i] != ';'; i++)
@@ -802,7 +802,7 @@ void process_command(const char *cmdstr)
     }
     if (calculated_checksum != (uint16_t)checksum)
     {
-      serial_send("rs %ld (incorrect checksum - should be %u)\r\n", cmdseqnbr, calculated_checksum);
+      serial_send(TXT_RS_SEQNUM_INCORRECT_CHECKSUM_SHOULD_BE_CRLF, cmdseqnbr, calculated_checksum);
       return;
     }
   } else if (parse_uint(cmdstr, '*', &checksum)) {
@@ -810,7 +810,7 @@ void process_command(const char *cmdstr)
     uint8_t calculated_checksum = 0;
     if (checksum < 0 || checksum > 255)
     {
-      serial_send("rs %ld (checksum out of range)\r\n", cmdseqnbr);
+      serial_send(TXT_RS_SEQNUM_CHECKSUM_OUT_OF_RANGE_CRLF, cmdseqnbr);
       return;
     }
     for (int i = 0; i < MAX_CMD_SIZE && cmdstr[i] != '*'; i++)
@@ -819,7 +819,7 @@ void process_command(const char *cmdstr)
     }
     if (calculated_checksum != (uint8_t)checksum)
     {
-      serial_send("rs %ld (incorrect checksum - should be %u)\r\n", cmdseqnbr, calculated_checksum);
+      serial_send(TXT_RS_SEQNUM_INCORRECT_CHECKSUM_SHOULD_BE_CRLF, cmdseqnbr, calculated_checksum);
       return;
     }
   }
@@ -861,12 +861,12 @@ void process_command(const char *cmdstr)
   }
   if (!has_gcode && !has_mcode)
   {
-    serial_send("rs %ld (command code missing): %s\r\n", cmdseqnbr, cmdstr);
+    serial_send(TXT_RS_SEQNUM_COMMAND_CODE_MISSING_CRLF, cmdseqnbr, cmdstr);
     return;
   }
   if (code < 0 || code > 999)
   {
-    serial_send("rs %ld (command code out of range)\r\n", cmdseqnbr);
+    serial_send(TXT_RS_SEQNUM_COMMAND_CODE_OUT_OF_RANGE_CRLF, cmdseqnbr);
     return;
   }
 
@@ -961,17 +961,17 @@ void process_command(const char *cmdstr)
 		sdcard_write = 0;
 		
 		// issue "File upload complete" text to host
-		serial_send("File upload complete\r\n");
+		serial_send(TXT_FILE_UPLOAD_COMPLETE_CRLF);
 	}
   }
   else
   {
 #endif // SDSUPPORT
-	  serial_send("go %ld (executing %c%d)\r\n", cmdseqnbr, cmd.type, cmd.code);
+	  serial_send(TXT_GO_SEQNUM_EXECUTING_CRLF, cmdseqnbr, cmd.type, cmd.code);
 	  switch (cmd.type) {
 	  case 'G':  execute_gcode(&cmd);  break;
 	  case 'M':  execute_mcode(&cmd);  break;
-	  default:	serial_send("-- Unknown Command Type.\r\n"); break;
+	  default:	serial_send(TXT_UNKNOWN_COMMAND_TYPE); break;
 	  }
 #if SDSUPPORT > 0
   }
@@ -980,7 +980,7 @@ void process_command(const char *cmdstr)
   end_tm = millis();
   execute_tm = end_tm - start_tm;
   qfree = blocks_available();
-  serial_send("ok %ld Q%d (%lums execute)\r\n", 
+  serial_send(TXT_OK_SEQNUM_Q_MS_EXECUTE_CRLF, 
 					cmdseqnbr, qfree, execute_tm);
   cmdseqnbr++;
   previous_millis_cmd = end_tm;
@@ -1111,7 +1111,7 @@ void execute_gcode(struct command *cmd)
         codenum = 0;
         if(cmd->has_P) codenum += cmd->P; // milliseconds to wait
         if(cmd->has_S) codenum += cmd->S * 1000; // seconds to wait
-        serial_send("-- delaying %lums\r\n", codenum);
+        serial_send(TXT_DELAYING_MS_CRLF, codenum);
         codenum += millis();  // keep track of when we started waiting
         st_synchronize();  // wait for all movements to finish
         while(millis()  < codenum ){
@@ -1171,7 +1171,7 @@ void execute_gcode(struct command *cmd)
         plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
         break;
       default:
-        serial_send("-- Unknown code G%d.\r\n", cmd->code);
+        serial_send(TXT_UNKNOWN_CODE_GX_CRLF, cmd->code);
         break;
   }
 }
@@ -1187,15 +1187,15 @@ void execute_mcode(struct command *cmd) {
 				// for displaying directories and file sizes.
 	  if (cmd->has_F)
 	  {
-		  serial_send("Begin file list\r\n");
+		  serial_send(TXT_BEGIN_FILE_LIST_CRLF);	  
 		  sdcard_list_root((unsigned char)(cmd->F));
-		  serial_send("End file list\r\n");
+		  serial_send(TXT_END_FILE_LIST_CRLF);
 	  }
 	  else
 	  {
-		  serial_send("Begin file list\r\n");
+		  serial_send(TXT_BEGIN_FILE_LIST_CRLF);
 		  sdcard_list_root(LS_FILENAME_ONLY);
-		  serial_send("End file list\r\n");
+		  serial_send(TXT_END_FILE_LIST_CRLF);
 	  }
       break;
 	  
@@ -1221,20 +1221,20 @@ void execute_mcode(struct command *cmd) {
 			strcpy(sdard_filename, cmd->String);
 		}
 		
-		serial_send("-- Opening %s...\r\n", sdard_filename);
+		serial_send(TXT_OPENING_STR_CRLF, sdard_filename);
 		
 		if ( sdcard_openFile(sdard_filename) )
 		{
-			serial_send("File selected\r\n");				
+			serial_send(TXT_FILE_SELECTED_CRLF);				
 		}
 		else
 		{
-			serial_send("file.open failed\r\n");
+			serial_send(TXT_FILE_OPEN_FAILED_CRLF);
 		}
 	  }
 	  else
 	  {
-			serial_send("file.open failed\r\n");
+			serial_send(TXT_FILE_OPEN_FAILED_CRLF);
 	  }
       break;
 	  
@@ -1253,7 +1253,7 @@ void execute_mcode(struct command *cmd) {
     case 27: //M27 - Get SD print status
 	  codenum = sdcard_get_current_file_position(sdcard_fd);
 	  codenum2 = sdcard_get_filesize(sdcard_fd);
-	  serial_send("SD printing byte %lu/%lu\r\n", codenum, codenum2);
+	  serial_send(TXT_SD_PRINTING_BYTE_LU_OF_LU_CRLF, codenum, codenum2);
       break;
 	  
     case 28: //M28 - Start SD write
@@ -1270,15 +1270,15 @@ void execute_mcode(struct command *cmd) {
 			strcpy(sdard_filename, cmd->String);
 		}
 		
-		serial_send("-- Opening %s...\r\n", sdard_filename);
+		serial_send(TXT_OPENING_STR_CRLF, sdard_filename);
 		
 		codenum = sdcard_create_file(sdard_filename);
 		
 		if ( codenum > 2)
 		{
-			serial_send("-- Could not create file.\r\n");
-			serial_send("-- Error Code: %lu.\r\n", codenum);
-			serial_send("file.open failed\r\n");
+			serial_send(TXT_COULD_NOT_CREATE_FILE_CRLF);
+			serial_send(TXT_ERROR_CODE_LU_CRLF, codenum);
+			serial_send(TXT_FILE_OPEN_FAILED_CRLF);
 		}
 		else if ( codenum )
 		{
@@ -1289,23 +1289,23 @@ void execute_mcode(struct command *cmd) {
 				sdcard_file_goto_eof(sdcard_fd);
 				
 				sdcard_write = 1;
-				serial_send("Writing to file\r\n");
+				serial_send(TXT_WRITING_TO_FILE_CRLF);
 			}
 			else
 			{
-				serial_send("file.open failed\r\n");
+				serial_send(TXT_FILE_OPEN_FAILED_CRLF);
 			}
 		}
 		else
 		{
-			serial_send("-- Could not create file.\r\n");
-			serial_send("file.open failed\r\n");
+			serial_send(TXT_COULD_NOT_CREATE_FILE_CRLF);
+			serial_send(TXT_FILE_OPEN_FAILED_CRLF);
 		}
 	  }
 	  else
 	  {
 		sdcard_write = 0;
-		serial_send("open failed, File\r\n");
+		serial_send(TXT_FILE_OPEN_FAILED_CRLF);
 	  }
       break;
 	  
@@ -1328,7 +1328,7 @@ void execute_mcode(struct command *cmd) {
 			strcpy(sdard_filename, cmd->String);
 		}
 		
-		serial_send("-- Deleting %s...\r\n", sdard_filename);
+		serial_send(TXT_DELETING_STR_CRLF, sdard_filename);
 		
 		sdcard_delete_file(sdard_filename);
 	  }
@@ -1343,8 +1343,8 @@ void execute_mcode(struct command *cmd) {
 		{	
 			if (cmd->S > HOTEND_MAX_TARGET_TEMP)
 			{
-				serial_send("// Max allowed hotend temperature is %ddegC\r\n", HOTEND_MAX_TARGET_TEMP);
-				serial_send("// Setting target hotend temperature to %ddegC\r\n", HOTEND_MAX_TARGET_TEMP);
+				serial_send(TXT_MAX_ALLOWED_HOTEND_TEMP_IS_INT_DEGC_CRLF, HOTEND_MAX_TARGET_TEMP);
+				serial_send(TXT_SETTING_TARGET_HOTEND_TEMP_TO_INT_DEGC_CRLF, HOTEND_MAX_TARGET_TEMP);
 			}
 			target_temp = (cmd->S <= HOTEND_MAX_TARGET_TEMP) ? cmd->S : HOTEND_MAX_TARGET_TEMP;
 			target_raw = temp2analogh(target_temp);
@@ -1372,8 +1372,8 @@ void execute_mcode(struct command *cmd) {
 			{
 				if (cmd->S > BED_MAX_TARGET_TEMP)
 				{
-					serial_send("// Max allowed bed temperature is %ddegC\r\n", BED_MAX_TARGET_TEMP);
-					serial_send("// Setting target bed temperature to %ddegC\r\n", BED_MAX_TARGET_TEMP);
+					serial_send(TXT_MAX_ALLOWED_BED_TEMP_IS_INT_DEGC_CRLF, BED_MAX_TARGET_TEMP);
+					serial_send(TXT_SETTING_TARGET_BED_TEMP_TO_INT_DEGC_CRLF, BED_MAX_TARGET_TEMP);
 				}
 				target_bed_raw = temp2analogBed( (cmd->S <= BED_MAX_TARGET_TEMP) ? 
 													cmd->S : BED_MAX_TARGET_TEMP );
@@ -1389,20 +1389,20 @@ void execute_mcode(struct command *cmd) {
           bedtempC = analog2tempBed(current_bed_raw);
         #endif
         #if (TEMP_0_PIN > -1)
-          serial_send("ok T:%d", hotendtC);
+          serial_send(TXT_OK_T_INT, hotendtC);
           #ifdef PIDTEMP
-            serial_send(" D%d%%", (int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ));
+            serial_send(TXT_D_INT_PERCENT, (int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ));
             #ifdef AUTOTEMP
-              serial_send(" A%d", autotemp_setpoint);
+              serial_send(TXT_A_INT, autotemp_setpoint);
             #endif
           #endif
           #if TEMP_1_PIN > -1
-            serial_send(" B:%d", bedtempC);
+            serial_send(TXT_B_INT, bedtempC);
           #endif
 		  #ifdef BED_PIDTEMP
-			serial_send(" D%d%%", (int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
+			serial_send(TXT_D_INT_PERCENT, (int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
 		  #endif
-          serial_send("\r\n");
+          serial_send(TXT_CRLF);
         #else
           #error No temperature source available
         #endif
@@ -1416,8 +1416,8 @@ void execute_mcode(struct command *cmd) {
 		{
 			if (cmd->S > HOTEND_MAX_TARGET_TEMP)
 			{
-				serial_send("// Max allowed hotend temperature is %ddegC\r\n", HOTEND_MAX_TARGET_TEMP);
-				serial_send("// Setting target hotend temperature to %ddegC\r\n", HOTEND_MAX_TARGET_TEMP);
+				serial_send(TXT_MAX_ALLOWED_HOTEND_TEMP_IS_INT_DEGC_CRLF, HOTEND_MAX_TARGET_TEMP);
+				serial_send(TXT_SETTING_TARGET_HOTEND_TEMP_TO_INT_DEGC_CRLF, HOTEND_MAX_TARGET_TEMP);
 			}
 			target_temp = (cmd->S <= HOTEND_MAX_TARGET_TEMP) ? cmd->S : HOTEND_MAX_TARGET_TEMP;
 			target_raw = temp2analogh(target_temp);
@@ -1447,8 +1447,8 @@ void execute_mcode(struct command *cmd) {
 		{
 			if (cmd->S > BED_MAX_TARGET_TEMP)
 			{
-				serial_send("// Max allowed bed temperature is %ddegC\r\n", BED_MAX_TARGET_TEMP);
-				serial_send("// Setting target bed temperature to %ddegC\r\n", BED_MAX_TARGET_TEMP);
+				serial_send(TXT_MAX_ALLOWED_BED_TEMP_IS_INT_DEGC_CRLF, BED_MAX_TARGET_TEMP);
+				serial_send(TXT_SETTING_TARGET_BED_TEMP_TO_INT_DEGC_CRLF, BED_MAX_TARGET_TEMP);
 			}
 			
 			target_bed_raw = temp2analogBed( (cmd->S <= BED_MAX_TARGET_TEMP) ? 
@@ -1499,7 +1499,7 @@ void execute_mcode(struct command *cmd) {
         break;
       #endif
       #if (PS_ON_PIN > -1)
-      case 80: // M81 - ATX Power On
+      case 80: // M80 - ATX Power On
         SET_OUTPUT(PS_ON_PIN); //GND
         break;
 		
@@ -1548,27 +1548,16 @@ void execute_mcode(struct command *cmd) {
           max_inactive_time = cmd->S * 1000; 
         } else 
         {
-          serial_send("!! S param required.\r\n");
+          serial_send(TXT_S_PARAM_REQUIRED_CRLF);
         }
         break;
 		
       case 92: // M92
         execute_m92(cmd);
-		// Update current position as steps per mm have been changed.
-		st_position_t pos;
-		pos.x = current_position[X_AXIS];
-		pos.y = current_position[Y_AXIS];
-		pos.z = current_position[Z_AXIS];
-		pos.e = current_position[E_AXIS];
-		st_set_current_position(pos);
-		
-		//plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], 
-		//				current_position[Z_AXIS], current_position[E_AXIS]);
-		serial_send("-- Steps per mm settings changed (but not saved to memory).\r\n");
         break;
 		
       case 93: // M93 show current axis steps.
-        serial_send("ok X%f Y%f Z%f E%f\r\n",
+        serial_send(TXT_OK_X_Y_Z_E_CRLF,
           axis_steps_per_unit[0],
           axis_steps_per_unit[1],
           axis_steps_per_unit[2],
@@ -1577,9 +1566,9 @@ void execute_mcode(struct command *cmd) {
         break;
 		
       case 115: // M115
-		serial_send("FIRMWARE_NAME: Makibox PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel EXTRUDER_COUNT:1\r\n");
+		serial_send(TXT_FIRMWARE_NAME_STR_CRLF);
         serial_send("00000000-0000-0000-0000-000000000000\r\n");
-		serial_send("// Makibox Firmware Version: %s\r\n", VERSION_TEXT);
+		serial_send(TXT_MAKIBOX_FIRMWARE_VERSION_STR_CRLF, VERSION_TEXT);
         break;
 		
       case 114: // M114
@@ -1587,31 +1576,31 @@ void execute_mcode(struct command *cmd) {
         break;
 		
       case 119: // M119
-        serial_send("// ");
+        serial_send(TXT_FORWARDSLASH_FORWARDSLASH);
       	#if (X_MIN_PIN > -1)
-      	  serial_send("x_min:%s", (READ(X_MIN_PIN)^X_ENDSTOP_INVERT)?"H ":"L ");
+      	  serial_send(TXT_X_MIN_STR, (READ(X_MIN_PIN)^X_ENDSTOP_INVERT)?"H ":"L ");
       	#endif
       	#if (X_MAX_PIN > -1)
-      	  serial_send("x_max:%s", (READ(X_MAX_PIN)^X_ENDSTOP_INVERT)?"H ":"L ");
+      	  serial_send(TXT_X_MAX_STR, (READ(X_MAX_PIN)^X_ENDSTOP_INVERT)?"H ":"L ");
       	#endif
       	#if (Y_MIN_PIN > -1)
 		  SET_INPUT(Y_MIN_PIN);
-      	  serial_send("y_min:%s", (READ(Y_MIN_PIN)^Y_ENDSTOP_INVERT)?"H ":"L ");
+      	  serial_send(TXT_Y_MIN_STR, (READ(Y_MIN_PIN)^Y_ENDSTOP_INVERT)?"H ":"L ");
       	#endif
       	#if (Y_MAX_PIN > -1)
 		  SET_INPUT(Y_MAX_PIN);
-      	  serial_send("y_max:%s", (READ(Y_MAX_PIN)^Y_ENDSTOP_INVERT)?"H ":"L ");
+      	  serial_send(TXT_Y_MAX_STR, (READ(Y_MAX_PIN)^Y_ENDSTOP_INVERT)?"H ":"L ");
       	#endif
       	#if (Z_MIN_PIN > -1)
-      	  serial_send("z_min:%s", (READ(Z_MIN_PIN)^Z_ENDSTOP_INVERT)?"H ":"L ");
+      	  serial_send(TXT_Z_MIN_STR, (READ(Z_MIN_PIN)^Z_ENDSTOP_INVERT)?"H ":"L ");
       	#endif
       	#if (Z_MAX_PIN > -1)
-      	  serial_send("z_max:%s", (READ(Z_MAX_PIN)^Z_ENDSTOP_INVERT)?"H ":"L ");
+      	  serial_send(TXT_Z_MAX_STR, (READ(Z_MAX_PIN)^Z_ENDSTOP_INVERT)?"H ":"L ");
       	#endif
-        serial_send("\r\n"); 
-		serial_send("// X_MAX_LENGTH:%d ", X_MAX_LENGTH);
-		serial_send("Y_MAX_LENGTH:%d ", Y_MAX_LENGTH);
-		serial_send("Z_MAX_LENGTH:%d \r\n", Z_MAX_LENGTH);
+        serial_send(TXT_CRLF); 
+		serial_send(TXT_X_MAX_LENGTH_INT, X_MAX_LENGTH);
+		serial_send(TXT_Y_MAX_LENGTH_INT, Y_MAX_LENGTH);
+		serial_send(TXT_Z_MAX_LENGTH_INT_CRLF, Z_MAX_LENGTH);
       	break;
 		
       case 201: // M201  Set maximum acceleration in units/s^2 for print moves (M201 X1000 Y1000)
@@ -1652,7 +1641,7 @@ void execute_mcode(struct command *cmd) {
       break;
 	  
       case 206: // M206 additional homing offset
-        serial_send("// M206 Addhome X:%f Y:%f Z:%f\r\n", add_homing[0], add_homing[1], add_homing[2]);
+        serial_send(TXT_M206_ADDHOME_X_Y_Z_CRLF, add_homing[0], add_homing[1], add_homing[2]);
         if (cmd->has_X) add_homing[X_AXIS] = cmd->X;
         if (cmd->has_Y) add_homing[Y_AXIS] = cmd->Y;
         if (cmd->has_Z) add_homing[Z_AXIS] = cmd->Z;
@@ -1681,7 +1670,7 @@ void execute_mcode(struct command *cmd) {
         if(cmd->has_I) PID_Ki = (unsigned int)cmd->I;
         if(cmd->has_D) PID_Kd = (unsigned int)cmd->D;
         updatePID();
-		serial_send("-- PID settings changed (but not saved to memory).\r\n");
+		serial_send(TXT_PID_SETTINGS_CHANGED_NOT_SAVED_TO_MEM_CRLF);
       break;
 #endif //PIDTEMP      
 #ifdef PID_AUTOTUNE
@@ -1721,20 +1710,20 @@ void execute_mcode(struct command *cmd) {
       break;  
 #endif      
       case 603: // M603 - Free RAM
-			serial_send("// Makibox Firmware Version: %s\r\n", VERSION_TEXT);
-            serial_send("// Free Ram: %d\r\n", FreeRam1());
+			serial_send(TXT_MAKIBOX_FIRMWARE_VERSION_STR_CRLF, VERSION_TEXT);
+            serial_send(TXT_FREE_RAM_CRLF, FreeRam1());
       break;
 	  
 	  case 604:	// M604 Show Timer 1 COMPA ISR Execution Time Debug Info
 		#if (DEBUG > -1)
-			serial_send("// Last TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
+			serial_send(TXT_LAST_TIMER1_COMPA_VECT_ISR_EXE_TIME_LU_US_CRLF, 
 												timer1_compa_isr_exe_micros);
-			serial_send("// MIN TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
+			serial_send(TXT_MIN_TIMER1_COMPA_VECT_ISR_EXE_TIME_LU_US_CRLF, 
 												timer1_compa_isr_exe_micros_min);
-			serial_send("// MAX TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n", 
+			serial_send(TXT_MAX_TIMER1_COMPA_VECT_ISR_EXE_TIME_LU_US_CRLF, 
 												timer1_compa_isr_exe_micros_max);
 		#else
-			serial_send("// Timer 1 execution time debug info not availale in this version of firmaware.\r\n");
+			serial_send(TXT_TIMER1_EXE_TIME_DEBUG_NOT_AVAILABLE_CRLF);
 		#endif
 	  break;
 	  
@@ -1742,19 +1731,19 @@ void execute_mcode(struct command *cmd) {
 		#if (DEBUG > -1)
 			timer1_compa_isr_exe_micros_min = 0xFFFFFFFF;
 			timer1_compa_isr_exe_micros_max = 0;
-			serial_send("// TIMER1_COMPA_vect ISR Execution Time MIN / MAX Reset.\r\n");
+			serial_send(TXT_TIMER1_COMPA_VECT_ISR_EXE_TIME_MIN_MAX_RESET_CRLF);
 		#else
-			serial_send("// Timer 1 execution time debug info not availale in this version of firmaware.\r\n");
+			serial_send(TXT_TIMER1_EXE_TIME_DEBUG_NOT_AVAILABLE_CRLF);
 		#endif
 	  break;
 	  
 	  case 606: // M606 - Show CPU loading information
 			#if (DEBUG > -1)
-				serial_send("// Current CPU Loading:	%d %%\r\n", cpu_loading);
-				serial_send("// Peak CPU Load:		%d %%\r\n", peak_cpu_load);
-				serial_send("// Average CPU Load: 	%d %%\r\n", average_cpu_load);
+				serial_send(TXT_CURRENT_CPU_LOADING_INT_PERCENT_CRLF, cpu_loading);
+				serial_send(TXT_PEAK_CPU_LOAD_INT_PERCENT_CRLF, peak_cpu_load);
+				serial_send(TXT_AVERAGE_CPU_LOAD_INT_PERCENT_CRLF, average_cpu_load);
 			#else
-				serial_send("// CPU loading info not available in this version of firmware.\r\n");
+				serial_send(TXT_CPU_LOADING_INFO_NOT_AVAIL_IN_THIS_VER_CRLF);
 			#endif
 	  break;
 	  
@@ -1762,14 +1751,14 @@ void execute_mcode(struct command *cmd) {
 			#if (DEBUG > -1)
 				peak_cpu_load = 0;
 				average_cpu_load = 0;
-				serial_send("// Peak and Average CPU Load Values Reset.\r\n");
+				serial_send(TXT_PEAK_N_AVERAGE_CPU_LOAD_VALUES_RESET_CRLF);
 			#else
-				serial_send("// CPU loading info not available in this version of firmware.\r\n");
+				serial_send(TXT_CPU_LOADING_INFO_NOT_AVAIL_IN_THIS_VER_CRLF);
 			#endif
 	  break;
 	  
 	  case 608: // M608
-			serial_send("// Makibox Firmware Version: %s\r\n", VERSION_TEXT);
+			serial_send(TXT_MAKIBOX_FIRMWARE_VERSION_STR_CRLF, VERSION_TEXT);
 	  break;
 	  
 	  case 610:	// M610 - Set Extruder Heater Max Current P = 0 - 100%.
@@ -1781,10 +1770,10 @@ void execute_mcode(struct command *cmd) {
 			{
 				if (cmd->F == BOOTLOADER_PASSCODE)
 				{
-					serial_send("\r\n// Makibox Bootloader\r\n");
-					serial_send("// ENTERING BOOTLOADER...\r\n");
-					serial_send("// Existing USB connection will be disconnected.\r\n");
-					serial_send("// Please disconnect and close your current host software.\r\n\r\n");
+					serial_send(TXT_CRLF_MAKIBOX_BOOTLOADER_CRLF);
+					serial_send(TXT_ENTERING_BOOTLOADER_CRLF);
+					serial_send(TXT_EXISTING_USB_CONN_WILL_BE_DISCONNECTED_CRLF);
+					serial_send(TXT_PLEASE_DISCONNECT_N_CLOSE_HOST_SW_CRLF_CRLF);
 					
 					// Delay to allow time for message to be sent before disabling
 					// the USB in the JumpToBootloader() function.
@@ -1794,54 +1783,54 @@ void execute_mcode(struct command *cmd) {
 				}
 				else
 				{
-					serial_send("\r\n// Makibox Bootloader\r\n");
-					serial_send("// *** CAN NOT Enter Bootloader - Incorrect Pass Code!\r\n");
-					serial_send("// Please try again with correct pass code.\r\n\r\n");
+					serial_send(TXT_CRLF_MAKIBOX_BOOTLOADER_CRLF);
+					serial_send(TXT_CANNOT_ENTER_BOOTLOADER_INCORRECT_PASSCODE_CRLF);
+					serial_send(TXT_PLEASE_TRY_AGAIN_WITH_CORRECT_PASSCODE_CRLF);
 				}
 			}
 			else
 			{
-				serial_send("\r\n// Makibox Bootloader\r\n");
-				serial_send("// *** CAN NOT Enter Bootloader - Pass code not found!\r\n");
-				serial_send("// Please try again with correct pass code.\r\n\r\n");
+				serial_send(TXT_CRLF_MAKIBOX_BOOTLOADER_CRLF);
+				serial_send(TXT_CANNOT_ENTER_BOOTLOADER_PASSCODE_NOT_FOUND_CRLF);
+				serial_send(TXT_PLEASE_TRY_AGAIN_WITH_CORRECT_PASSCODE_CRLF);
 			}
 	  break;
 	  
 	  case 112:	// M112 - Emergency Stop
 			kill();
-			serial_send("\r\n// Emergency Stop!\r\n");
-			serial_send("// Motors off. Heaters Off.\r\n");
+			serial_send(TXT_CRLF_EMERGENCY_STOP_CRLF);
+			serial_send(TXT_MOTORS_OFF_HEATERS_OFF_CRLF);
 			_restart_Teensyduino_();
 	  break;
 	  
 	  case 609: // M609 - Show last reset flags
-			serial_send("\r\n// Reset Flags: 0x%X ", reset_flags);
-			serial_send("( ");
+			serial_send(TXT_CRLF_RESET_FLAGS_HEX_SPACE, reset_flags);
+			serial_send(TXT_OPEN_BRACKETS_SPACE);
 			if ( reset_flags & (1 << JTRF) )
 			{
-				serial_send("JTAG ");
+				serial_send(TXT_JTAG_SPACE);
 			}
 			if ( reset_flags & (1 << WDRF) )
 			{
-				serial_send("WDT ");
+				serial_send(TXT_WDT_SPACE);
 			}
 			if ( reset_flags & (1 << BORF) )
 			{
-				serial_send("BOR ");
+				serial_send(TXT_BOR_SPACE);
 			}
 			if ( reset_flags & (1 << EXTRF) )
 			{
-				serial_send("EXT ");
+				serial_send(TXT_EXT_SPACE);
 			}
 			if ( reset_flags & (1 << PORF) )
 			{
-				serial_send("POR ");
+				serial_send(TXT_POR_SPACE);
 			}
-			serial_send(")\r\n");
+			serial_send((TXT_CLOSE_BRACKETS TXT_CRLF));
 	  break;
 	  
       default:
-            serial_send("-- Unknown code M%d.\r\n", cmd->code);
+            serial_send(TXT_UNKNOWN_CODE_M_CRLF, cmd->code);
       break;
 
     }
@@ -1864,14 +1853,26 @@ void update_max_acceleration(int axis, float units_per_sq_second)
 
 void execute_m92(struct command *cmd)
 {
-  if (cmd->has_X)
-    update_axis_steps(X_AXIS, cmd->X);
-  if (cmd->has_Y)
-    update_axis_steps(Y_AXIS, cmd->Y);
-  if (cmd->has_Z)
-    update_axis_steps(Z_AXIS, cmd->Z);
-  if (cmd->has_E)
-    update_axis_steps(E_AXIS, cmd->E);
+	if (cmd->has_X)
+		update_axis_steps(X_AXIS, cmd->X);
+	if (cmd->has_Y)
+		update_axis_steps(Y_AXIS, cmd->Y);
+	if (cmd->has_Z)
+		update_axis_steps(Z_AXIS, cmd->Z);
+	if (cmd->has_E)
+		update_axis_steps(E_AXIS, cmd->E);
+	
+	// Update current position as steps per mm have been changed.
+	st_position_t pos;
+	pos.x = current_position[X_AXIS];
+	pos.y = current_position[Y_AXIS];
+	pos.z = current_position[Z_AXIS];
+	pos.e = current_position[E_AXIS];
+	st_set_current_position(pos);
+	
+	//plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], 
+	//				current_position[Z_AXIS], current_position[E_AXIS]);
+	serial_send(TXT_STEPS_PER_MM_SETTINGS_CHANGED_NOT_SAVED_TO_MEM_CRLF);
 }
 
 
@@ -1901,7 +1902,7 @@ void execute_m226(struct command *cmd)
 			target_raw = paused_data.hotend_target_temp_raw;
 			target_bed_raw = paused_data.target_bed_temp_raw;
 			
-			serial_send("\r\n// Resuming print. Please wait...");
+			serial_send(TXT_CRLF_RESUMING_PRINT_PLEASE_WAIT);
 			
 			// Allow time for hot-bed and hot-end to reach target
 			if ( target_bed_raw > temp2analogBed(BEDMINTEMP) )
@@ -1956,7 +1957,7 @@ void execute_m226(struct command *cmd)
 			// Pause print after current block has finished
 			pause_print_req = 1;
 			
-			serial_send("\r\n// Pausing print...\r\n");
+			serial_send(TXT_CRLF_PAUSING_PRINT_CRLF);
 			
 			paused_data.current_position_x = current_position[X_AXIS];
 			paused_data.current_position_y = current_position[Y_AXIS];
@@ -2167,17 +2168,6 @@ void manage_fan_start_speed(void)
 }
 #endif
 
-// Block until all buffered steps are executed
-/*void st_synchronize()
-{
-  while(blocks_queued()) {
-    manage_inactivity(1);
-    #if (MINIMUM_FAN_START_SPEED > 0)
-      manage_fan_start_speed();
-    #endif
-  }
-}*/
-
 
 /***************************************************
 * do_position_report(void)
@@ -2209,17 +2199,17 @@ void do_position_report(void)
 	dtostrf(z_mm, 3, 5, z_mm_str);
 	dtostrf(e_mm, 3, 5, e_mm_str);
 	
-	serial_send("-- C: X:%s Y:%s Z:%s E:%s (mm)\r\n", 
+	serial_send(TXT_C_X_Y_Z_E_MM_CRLF, 
 									x_mm_str, y_mm_str, z_mm_str, e_mm_str);
 									
-	serial_send("-- X:%ld Y:%ld Z:%ld E:%ld (steps)\r\n", 
+	serial_send(TXT_X_Y_Z_E_STEPS_CRLF, 
 												pos.x, pos.y, pos.z, pos.e);
 												
-	serial_send("-- Axes Homed X:%d Y:%d Z:%d\r\n", x_homed, y_homed, z_homed);
+	serial_send(TXT_AXES_HOMED_X_Y_Z_CRLF, x_homed, y_homed, z_homed);
 	
 	if (!x_homed || !y_homed || !z_homed)
 	{
-		serial_send("-- *Not all axes homed! Positions reported may be incorrect!!!\r\n");
+		serial_send(TXT_NOT_ALL_AXES_HOMED_POSITION_MAYBE_INCORRECT_CRLF);
 	}
 }
 
@@ -2244,8 +2234,8 @@ void wait_extruder_target_temp(void)
 	int target_raw_low = temp2analogh(target_temp - TEMP_HYSTERESIS);
 	int target_raw_high = temp2analogh(target_temp + TEMP_HYSTERESIS);
 	
-	serial_send("\r\n// Target Temperature: %ddegC", target_temp);
-	serial_send("\r\n// Waiting for extruder heater to reach target temperature...\r\n");
+	serial_send(TXT_CRLF_TARGET_TEMP_DEGC, target_temp);
+	serial_send(TXT_WAITING_FOR_EXTRUDER_TO_REACH_TARGET_TEMP_CRLF);
 	
 	long hotend_timeout = millis();
 	
@@ -2262,7 +2252,7 @@ void wait_extruder_target_temp(void)
   #endif
 	  if( (millis() - timer) > 1000 ) //Print Temp Reading every 1 second while heating up/cooling down
 	  {
-		serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
+		serial_send(TXT_T_D_B_D_CRLF, analog2temp(current_raw), 
 						(int)( (heater_duty * 100) / (float)(HEATER_CURRENT)),
 						analog2tempBed(current_bed_raw),
 						(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
@@ -2285,21 +2275,21 @@ void wait_extruder_target_temp(void)
 	  // milli-seconds has passed. Exit loop if timeout reached.
 	  if ( (millis() - hotend_timeout) > HOTEND_HEATUP_TIMEOUT )
 	  {
-		serial_send("\r\n// *** Hot-end heater took too long to reach target. Timed Out!\r\n");
+		serial_send(TXT_CRLF_HOTEND_TOO_LONG_TO_REACH_TARGET_TIMED_OUT_CRLF);
 		break;
 	  }
 	  
 	  if ( (target_temp == 0) || (target_raw == 0) )
 	  {
-		serial_send("\r\n// *** Hot-end heater does not appear to be responding.\r\n");
-		serial_send("// *** STOP PRINT!!! - Power Off Printer - Disconnect and close host software.\r\n");
-		serial_send("// *** Check hot-end and hot-end thermistor connections!!!\r\n");
+		serial_send(TXT_HOTEND_HEATER_NOT_RESPONDING_CRLF);
+		serial_send(TXT_STOP_PRINT_POWER_OFF_PRINTER_DISCONNECT_CRLF);
+		serial_send(TXT_CHECK_HOTEND_N_HOTBED_THERMISTOR_CONNECTIONS_CRLF);
 		
-		serial_send("\r\n// *** Firmware will continue operation after 30 seconds...\r\n");
+		serial_send(TXT_FIRMWARE_WILL_CONTINUE_OP_AFTER_30_SECS_CRLF);
 		
 		delay(30000);
 		
-		serial_send("// *** Continuing...\r\n");
+		serial_send(TXT_CONTINUING_CRLF);
 		break;
 	  }
 	}
@@ -2318,14 +2308,14 @@ void wait_bed_target_temp(void)
 	unsigned long timer = millis();
 	unsigned long bed_timeout = millis();
 	
-	serial_send("\r\n// Target Temperature: %ddegC", analog2tempBed(target_bed_raw));
-	serial_send("\r\n// Waiting for hot-bed heater to reach target temperature...\r\n");
+	serial_send(TXT_CRLF_TARGET_TEMP_DEGC, analog2tempBed(target_bed_raw));
+	serial_send(TXT_CRLF_WAITING_FOR_HOTBED_HEATER_TO_REACH_TARGET_CRLF);
 
 	while(current_bed_raw < target_bed_raw) 
 	{
 	  if( (millis()-timer) > 1000 ) //Print Temp Reading every 1 second while heating up.
 	  {
-		serial_send("T:%d D%d%% B:%d D%d%% \r\n", analog2temp(current_raw), 
+		serial_send(TXT_T_D_B_D_CRLF, analog2temp(current_raw), 
 						(int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ),
 						analog2tempBed(current_bed_raw),
 						(int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
@@ -2340,14 +2330,14 @@ void wait_bed_target_temp(void)
 	  // milli-seconds has passed. Exit loop if timeout reached.
 	  if ( (millis() - bed_timeout) > BED_HEATUP_TIMEOUT )
 	  {
-		serial_send("\r\n// *** Hot bed heater took too long to reach target. Timed Out!\r\n");
+		serial_send(TXT_CRLF_HOTBED_HEATER_TOOK_TOO_LONG_TIMED_OUT_CRLF);
 		break;
 	  }
 	  
 	  if (target_bed_raw == 0)
 	  {
-		serial_send("\r\n// *** Hot-bed heater does not appear to be responding.\r\n");
-		serial_send("// *** Check hot-bed and hot-bed thermistor connections!!!\r\n");
+		serial_send(TXT_CRLF_HOTBED_HEATER_APPEARS_NOT_RESPONDING_CRLF);
+		serial_send(TXT_CHECK_HOTBED_THERMISTOR_CONNECTIONS);
 		break;
 	  }
 	}
@@ -2358,13 +2348,13 @@ void set_extruder_heater_max_current(struct command *cmd)
 {
 	if (cmd->has_P)
 	{
-		serial_send("// Existing Extruder Heater Max Current: %d%%\r\n", (int)(user_max_heater_duty * 100 / 250.0));
-		serial_send("// Setting Extruder Heater Max Current: %d%%\r\n", (int)(cmd->P));
+		serial_send(TXT_EXISTING_EXTRUDER_MAX_CURRENT_INT_PERCENT_CRLF, (int)(user_max_heater_duty * 100 / 250.0));
+		serial_send(TXT_SETTING_EXTRUDER_MAX_CURRENT_INT_PERCENT_CRLF, (int)(cmd->P));
 		user_max_heater_duty = (int)(cmd->P * 2.5);
 	}
 	else
 	{
-		serial_send("// Existing Extruder Heater Max Current: %d%%\r\n", (int)(user_max_heater_duty * 100 / 250.0));
+		serial_send(TXT_EXISTING_EXTRUDER_MAX_CURRENT_INT_PERCENT_CRLF, (int)(user_max_heater_duty * 100 / 250.0));
 	}
 }
 

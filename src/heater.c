@@ -33,8 +33,8 @@
 #include "pins_teensy.h"
 //#include "makibox.h"
 #include "usb.h"
-
 #include "pgmspace.h"
+#include "language.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -204,7 +204,7 @@ void PID_autotune(int PIDAT_test_temp)
   
   #define PIDAT_TIME_FACTOR ((HEATER_CHECK_INTERVAL*256.0) / 1000.0)
   
-  serial_send("PID Autotune start\r\n");
+  serial_send(TXT_PID_AUTOTUNE_START_CRLF);
 
   target_temp = PIDAT_test_temp;
   
@@ -282,30 +282,30 @@ void PID_autotune(int PIDAT_test_temp)
             if(PIDAT_bias > (HEATER_CURRENT/2.0)) PIDAT_d = (HEATER_CURRENT - 1) - PIDAT_bias;
             else PIDAT_d = PIDAT_bias;
 
-            serial_send(" bias: %ld d: %ld min: %f max: %f", PIDAT_bias, PIDAT_d, PIDAT_min, PIDAT_max);
+            serial_send(TXT_BIAS_MIN_MAX, PIDAT_bias, PIDAT_d, PIDAT_min, PIDAT_max);
             
             if(PIDAT_cycles > 2) 
             {
               PIDAT_Ku = (4.0*PIDAT_d)/(3.14159*(PIDAT_max-PIDAT_min));
               PIDAT_Tu = ((float)(PIDAT_t_low + PIDAT_t_high)/1000.0);
               
-              serial_send(" Ku: %f Tu: %f\r\n", PIDAT_Ku, PIDAT_Tu);
+              serial_send(TXT_KU_TU_CRLF, PIDAT_Ku, PIDAT_Tu);
 
               PIDAT_Kp = 0.60*PIDAT_Ku;
               PIDAT_Ki = 2.0*PIDAT_Kp/(float)(PIDAT_Tu);
               PIDAT_Kd = PIDAT_Kp*PIDAT_Tu/8.0;
-              serial_send(" Clasic PID \r\n");
-              serial_send(" CFG Kp: %d\r\n", (unsigned int)(PIDAT_Kp*256));
-              serial_send(" CFG Ki: %d\r\n", (unsigned int)(PIDAT_Ki*PIDAT_TIME_FACTOR));
-              serial_send(" CFG Kd: %d\r\n", (unsigned int)(PIDAT_Kd*PIDAT_TIME_FACTOR));
+              serial_send(TXT_CLASSIC_PID_CRLF);
+              serial_send(TXT_CFG_KP_CRLF, (unsigned int)(PIDAT_Kp*256));
+              serial_send(TXT_CFG_KI_CRLF, (unsigned int)(PIDAT_Ki*PIDAT_TIME_FACTOR));
+              serial_send(TXT_CFG_KD_CRLF, (unsigned int)(PIDAT_Kd*PIDAT_TIME_FACTOR));
               
               PIDAT_Kp = 0.30*PIDAT_Ku;
               PIDAT_Ki = PIDAT_Kp/(float)PIDAT_Tu;
               PIDAT_Kd = PIDAT_Kp*PIDAT_Tu/3.0;
-              serial_send(" Some overshoot \r\n");
-              serial_send(" CFG Kp: %d\r\n", (unsigned int)(PIDAT_Kp*256));
-              serial_send(" CFG Ki: %d\r\n", (unsigned int)(PIDAT_Ki*PIDAT_TIME_FACTOR));
-              serial_send(" CFG Kd: %d\r\n", (unsigned int)(PIDAT_Kd*PIDAT_TIME_FACTOR));
+              serial_send(TXT_SOME_OVERSHOOT_CRLF);
+              serial_send(TXT_CFG_KP_CRLF, (unsigned int)(PIDAT_Kp*256));
+              serial_send(TXT_CFG_KI_CRLF, (unsigned int)(PIDAT_Ki*PIDAT_TIME_FACTOR));
+              serial_send(TXT_CFG_KD_CRLF, (unsigned int)(PIDAT_Kd*PIDAT_TIME_FACTOR));
               /*
               PIDAT_Kp = 0.20*PIDAT_Ku;
               PIDAT_Ki = 2*PIDAT_Kp/PIDAT_Tu;
@@ -328,7 +328,7 @@ void PID_autotune(int PIDAT_test_temp)
     
     if((PIDAT_input > (PIDAT_test_temp + 55)) || (PIDAT_input > 255))
     {
-      serial_send("PID Autotune failed! Temperature to high\r\n");
+      serial_send(TXT_PID_AUTOTUNE_FAILED_TEMP_HIGH_CRLF);
       target_temp = 0;
       return;
     }
@@ -336,18 +336,18 @@ void PID_autotune(int PIDAT_test_temp)
     if(millis() - PIDAT_temp_millis > 2000) 
     {
       PIDAT_temp_millis = millis();
-      serial_send("ok T:%f @:%d\r\n", PIDAT_input, (unsigned char)PIDAT_PWM_val*1);
+      serial_send(TXT_OK_T_AT_DUTY_CRLF, PIDAT_input, (unsigned char)PIDAT_PWM_val*1);
     }
     
     if(((millis() - PIDAT_t1) + (millis() - PIDAT_t2)) > (10L*60L*1000L*2L)) 
     {
-      serial_send("PID Autotune failed! timeout\r\n");
+      serial_send(TXT_PID_AUTOTUNE_FAILED_TIMEOUT_CRLF);
       return;
     }
     
     if(PIDAT_cycles > 5) 
     {
-      serial_send("PID Autotune finished ! Place the Kp, Ki and Kd constants in the configuration.h\r\n");
+      serial_send(TXT_PID_AUTOTUNE_FINISHED_CRLF);
       return;
     }
   }
@@ -754,13 +754,13 @@ void service_TemperatureMonitor(void)
 
     if(manage_monitor <= 1)
     {
-      serial_send("MTEMP:%lu", millis());
+      serial_send(TXT_MTEMP, millis());
       if(manage_monitor<1)
       {
-        serial_send(" %d %d ", analog2temp(current_raw), target_temp);
+        serial_send(TXT_INT_INT, analog2temp(current_raw), target_temp);
         if (PIDTEMP > -1)
 		{
-          serial_send("%d\r\n", heater_duty);
+          serial_send(TXT_INT_CRLF, heater_duty);
 		}
         else
 		{
@@ -768,37 +768,37 @@ void service_TemperatureMonitor(void)
 			{
 				if(READ(HEATER_0_PIN))
 				{
-					serial_send("255\r\n");
+					serial_send(TXT_255_CRLF);
 				}
 				else
 				{
-					serial_send("0\r\n");
+					serial_send(TXT_0_CRLF);
 				}
 			}
 			else
 			{
-				serial_send("0\r\n");
+				serial_send(TXT_0_CRLF);
 			}
         }
       }
       else  // if not (manage_monitor<1)
       {
-        serial_send(" %d %d ", analog2tempBed(current_bed_raw), 
+        serial_send(TXT_INT_INT, analog2tempBed(current_bed_raw), 
 											analog2tempBed(target_bed_raw));
         if (HEATER_1_PIN > -1)
 		{
 			if(READ(HEATER_1_PIN))
             {
-				serial_send("255\r\n");
+				serial_send(TXT_255_CRLF);
 			}
 			else
             {
-				serial_send("0\r\n");
+				serial_send(TXT_0_CRLF);
 			}
         }
 		else
 		{
-			serial_send("0\r\n");
+			serial_send(TXT_0_CRLF);
         } 
       }		// end if(manage_monitor<1)
     }	// end if(manage_monitor <= 1)

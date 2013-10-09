@@ -68,8 +68,8 @@
 #define HEATER_1_PIN       14  // Bed
 #define FAN_PIN            16  // Fan
 
-#define TEMP_0_PIN          1  // Extruder
-#define TEMP_1_PIN          0  // Bed
+#define TEMP_0_PIN          1  // Extruder (ADC input number)
+#define TEMP_1_PIN          0  // Bed (ADC input number)
 
 #define LED_PIN            -1
 #define PS_ON_PIN          -1
@@ -78,6 +78,12 @@
 #define SCK_PIN            21
 #define MISO_PIN           22
 #define MOSI_PIN           23
+
+#define I2C_SCL				0
+#define I2C_SDA				1
+#define DIGIPOT_A0			-1
+#define DIGIPOT_A1			-1
+#define DIGIPOT_RESET		-1
 
 
 #endif      // PINS_H

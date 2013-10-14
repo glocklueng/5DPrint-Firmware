@@ -42,6 +42,10 @@
 #include "sdcard/makibox_sdcard.h"
 #include "language.h"
 
+#if DIGIPOTS > 0
+	#include "i2c/Master_I2C_Comms.h"
+#endif
+
 
 #ifdef USE_ARC_FUNCTION
   #include "arc_func.h"
@@ -180,7 +184,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "2.04.01 / 09.10.2013 (Digi-Pot Dev Branch)";
+static const char VERSION_TEXT[] = "2.04.02 / 15.10.2013 (Digi-Pot Dev Branch)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -478,6 +482,11 @@ void setup()
   DDRB |= (1 << PINB0);		// SS Pins set as output
   PORTB |= (1 << PINB0);	// SS Pin set high
 #endif
+
+#if DIGIPOTS > 0
+  init_I2C_Master();
+  I2C_digipots_set_defaults();
+#endif
   
   // Initialise Timer 3 / PWM for Extruder Heater, Hotbed Heater, and Fan
   init_Timer3_HW_pwm();
@@ -519,6 +528,10 @@ void loop()
 {
   // Read a command from the UART and process it.
   read_command();
+  
+#if DIGIPOTS > 0
+  Service_I2C_Master();
+#endif
 
   // Manage the heater and fan.
   manage_inactivity(1);

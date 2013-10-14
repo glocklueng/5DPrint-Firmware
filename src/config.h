@@ -84,9 +84,9 @@
 //-----------------------------------------------------------------------
 // Disables axis when it's not being used.
 //-----------------------------------------------------------------------
-#define DISABLE_X 1
-#define DISABLE_Y 1
-#define DISABLE_Z 1
+#define DISABLE_X 0
+#define DISABLE_Y 0
+#define DISABLE_Z 0
 #define DISABLE_E 0
 
 //-----------------------------------------------------------------------
@@ -346,6 +346,15 @@
 	#undef 	CFG_BLOCK_BUFFER_MASK
 	#define CFG_BLOCK_BUFFER_MASK 		0x3F
 #endif // SDSUPPORT
+
+// Set to 0 to disable Digi-Pot support
+// Set to 1 to enable Digi-Pot support
+#define DIGIPOTS			1
+
+#define DIGIPOT_XAXIS_DEFAULT			131		// 255 steps available in digi-pot
+#define DIGIPOT_YAXIS_DEFAULT			131		// 255 steps available in digi-pot
+#define DIGIPOT_ZAXIS_DEFAULT			131		// 255 steps available in digi-pot
+#define DIGIPOT_EAXIS_DEFAULT			131		// 255 steps available in digi-pot
 
 
 // Global Variables for CPU Loading Calculation

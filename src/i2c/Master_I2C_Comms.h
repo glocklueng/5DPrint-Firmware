@@ -38,7 +38,7 @@
 * Byte 8	Data
 ***************************************/
 
-//#define I2C_MSG_HEADER_SIZE			4
+#define I2C_MSG_HEADER_SIZE			0
 
 // MCP4451 DIGI-POT COMMANDS
 	// COMMAND BYTE FORMAT:		BIT		7	6	5	4	3	2	1	0
@@ -70,5 +70,7 @@ void init_I2C_Master(void);
 void Service_I2C_Master(void);
 void I2C_Send_Msg(unsigned char Slave_Address, unsigned char command, unsigned char NumofDataBytes, unsigned long Data);
 void I2C_Read_Msg(unsigned char Slave_Address, unsigned char command, unsigned char NumofDataBytes, unsigned long Data);
+void I2C_SW_Reset(void);
+void I2C_digipots_set_defaults(void);
 
 #endif

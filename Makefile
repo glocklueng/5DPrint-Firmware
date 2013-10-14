@@ -26,7 +26,8 @@ F_CPU=16000000
 MAKIBOX_OBJS   = arc_func.o heater.o main.o makibox.o pins_teensy.o \
                  planner.o stepper.o store_eeprom.o usb.o \
 				 sdcard/byteordering.o sdcard/fat.o sdcard/partition.o \
-				 sdcard/sd_raw.o sdcard/makibox_sdcard.o
+				 sdcard/sd_raw.o sdcard/makibox_sdcard.o \
+				 i2c/TWI_Master.o i2c/Master_I2C_Comms.o
 
 
 CC=avr-gcc

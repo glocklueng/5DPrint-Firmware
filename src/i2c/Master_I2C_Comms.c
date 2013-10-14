@@ -23,6 +23,7 @@
 
 #include "../i2c/TWI_Master.h"
 #include "../i2c/Master_I2C_Comms.h"
+#include "../config.h"
 #include "../pins_teensy.h"
 
 #define TWI_GEN_CALL         0x00  // The General Call address is 0
@@ -73,6 +74,9 @@ void init_I2C_Master(void)
 	PORTD |= ( (1 << PIND0) | (1 << PIND1) );
 	
 	TWI_Master_Initialise();
+	
+	// Perform SW I2C reset to ensure all devices are in a known I2C state
+	I2C_SW_Reset();
 	
 	I2C_Read_Request = 0;
 	Send_I2C_Msg = 0;
@@ -158,7 +162,7 @@ void Service_I2C_Master(void)
 void Process_I2C_Message(unsigned char I2C_ReadmessageBuf[TWI_BUFFER_SIZE])
 {	
 	switch (I2C_ReadmessageBuf[1])
-	{
+	{/*
 		case I2C_READ_E1_CURRENT_TEMP:
 			e1_current_temp = (I2C_ReadmessageBuf[4] << 8) | I2C_ReadmessageBuf[3];
 		break;
@@ -189,7 +193,7 @@ void Process_I2C_Message(unsigned char I2C_ReadmessageBuf[TWI_BUFFER_SIZE])
 		case I2C_READ_E2_TARGET_TEMP:
 			e2_target_temp = (I2C_ReadmessageBuf[4] << 8) | I2C_ReadmessageBuf[3];
 		break;
-		
+		*/
 		
 		default:
 			// Unknown message
@@ -263,6 +267,60 @@ void I2C_Read_Msg(unsigned char Slave_Address, unsigned char command, unsigned c
 }
 
 
-// void I2C_SW_Reset(void)
-//{
-//}
+void I2C_SW_Reset(void)
+{
+	TWCR =	(1<<TWEN)|                         		// TWI Interface enabled.
+			(1<<TWIE)|(1<<TWINT)|                  	// Enable TWI Interupt and clear the flag.
+			(0<<TWEA)|(1<<TWSTA)|(0<<TWSTO)|       	// Initiate a START condition.
+			(0<<TWWC);     
+
+	TWDR =	0xFF;
+	
+	TWCR =	(1<<TWEN)|                                 // TWI Interface enabled
+            (1<<TWIE)|(1<<TWINT)|                      // Enable TWI Interupt and clear the flag to send byte
+            (0<<TWEA)|(0<<TWSTA)|(0<<TWSTO)|           //
+            (0<<TWWC);   
+	
+	TWCR =	(1<<TWEN)|                              // TWI Interface enabled
+            (0<<TWIE)|(1<<TWINT)|                   // Disable TWI Interrupt and clear the flag
+            (0<<TWEA)|(1<<TWSTA)|(0<<TWSTO)|        // Initiate a START condition.
+            (0<<TWWC); 
+			
+	TWCR =	(1<<TWEN)|                              // TWI Interface enabled
+            (0<<TWIE)|(1<<TWINT)|                   // Disable TWI Interrupt and clear the flag
+            (0<<TWEA)|(0<<TWSTA)|(1<<TWSTO)|        // Initiate a STOP condition.
+            (0<<TWWC);                                 
+}
+
+
+void I2C_digipots_set_defaults(void)
+{
+	if (!I2C_Locked)
+	{
+		I2C_Locked = 1;
+		
+		TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
+		
+		I2C_messageBuf[0] = (TWI_targetSlaveAddress<<TWI_ADR_BITS) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
+		
+		I2C_messageBuf[1] = I2C_DIGIPOT_VOL_WIPER0_ADDR | I2C_DIGIPOT_WRITE;
+		I2C_messageBuf[2] = DIGIPOT_XAXIS_DEFAULT;
+		
+		I2C_messageBuf[3] = I2C_DIGIPOT_VOL_WIPER1_ADDR | I2C_DIGIPOT_WRITE;
+		I2C_messageBuf[4] = DIGIPOT_YAXIS_DEFAULT;
+		
+		I2C_messageBuf[5] = I2C_DIGIPOT_VOL_WIPER2_ADDR | I2C_DIGIPOT_WRITE;
+		I2C_messageBuf[6] = 58; //0.6V dev testing value //DIGIPOT_ZAXIS_DEFAULT;
+		
+		I2C_messageBuf[7] = I2C_DIGIPOT_VOL_WIPER3_ADDR | I2C_DIGIPOT_WRITE;
+		I2C_messageBuf[8] = 58; //0.6V dev testing value //DIGIPOT_EAXIS_DEFAULT;
+		
+		I2C_messageBuf[9] = I2C_DIGIPOT_VOL_TCON0_ADDR | I2C_DIGIPOT_WRITE | 0x01;
+		I2C_messageBuf[10] = 0xFF;
+		
+		I2C_messageBuf[11] = I2C_DIGIPOT_VOL_TCON1_ADDR | I2C_DIGIPOT_WRITE | 0x01;
+		I2C_messageBuf[12] = 0xFF;
+		
+		Send_I2C_Msg = 1;
+	}
+}

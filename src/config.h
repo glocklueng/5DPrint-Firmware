@@ -84,9 +84,9 @@
 //-----------------------------------------------------------------------
 // Disables axis when it's not being used.
 //-----------------------------------------------------------------------
-#define DISABLE_X 1
-#define DISABLE_Y 1
-#define DISABLE_Z 1
+#define DISABLE_X 0
+#define DISABLE_Y 0
+#define DISABLE_Z 0
 #define DISABLE_E 0
 
 //-----------------------------------------------------------------------
@@ -346,6 +346,11 @@
 	#undef 	CFG_BLOCK_BUFFER_MASK
 	#define CFG_BLOCK_BUFFER_MASK 		0x3F
 #endif // SDSUPPORT
+
+
+// Inactivity Timeouts
+#define INACTIVITY_STEPPERS_TIMEOUT		1200000			// ms (1,200,000 ms = 20 mins)
+#define INACTIVITY_HEATERS_TIMEOUT 		3600000			// ms (3,600,000 ms = 1 hour)
 
 
 // Global Variables for CPU Loading Calculation

@@ -180,7 +180,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "2.04 / 05.10.2013";
+static const char VERSION_TEXT[] = "2.05 / 15.10.2013";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -238,8 +238,8 @@ int hotendtC = 0, bedtempC = 0;
        
 //Inactivity shutdown variables
 unsigned long previous_millis_cmd = 0;
-unsigned long max_inactive_time = 0;
-unsigned long stepper_inactive_time = 0;
+unsigned long max_inactive_time = INACTIVITY_HEATERS_TIMEOUT;
+unsigned long stepper_inactive_time = INACTIVITY_STEPPERS_TIMEOUT;
 
 uint8_t print_paused = 0;
 

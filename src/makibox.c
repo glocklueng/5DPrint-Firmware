@@ -184,7 +184,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "2.04.02 / 15.10.2013 (Digi-Pot Dev Branch)";
+static const char VERSION_TEXT[] = "2.04.03 / 16.10.2013 (Digi-Pot Dev Branch)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -484,7 +484,14 @@ void setup()
 #endif
 
 #if DIGIPOTS > 0
+  SET_OUTPUT(DIGIPOT_RESET);
+  // Ensure the digi-pot is in a known state by resetting it.
+  WRITE(DIGIPOT_RESET, LOW);
+  delay(1);
+  WRITE(DIGIPOT_RESET, HIGH);
+  
   init_I2C_Master();
+  delay(1);
   I2C_digipots_set_defaults();
 #endif
   

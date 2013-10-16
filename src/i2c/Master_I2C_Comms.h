@@ -62,6 +62,7 @@
 
 //extern unsigned char I2C_messageBuf[TWI_BUFFER_SIZE];
 extern unsigned char Send_I2C_Msg;
+extern unsigned char I2C_Send_Msg_Size;
 extern unsigned char I2C_Read_Request;
 extern unsigned char I2C_Locked;
 extern unsigned long previous_millis_service_i2c;

@@ -40,6 +40,7 @@
 static unsigned char I2C_messageBuf[TWI_BUFFER_SIZE];
 static unsigned char I2C_ReadmessageBuf[TWI_BUFFER_SIZE];
 unsigned char Send_I2C_Msg = 0, I2C_Read_Request = 0;
+unsigned char I2C_Send_Msg_Size = 0;
 static unsigned char TWI_targetSlaveAddress = 0;
 static unsigned char TWI_operation = 0;
 unsigned char I2C_Locked = 1;
@@ -76,8 +77,9 @@ void init_I2C_Master(void)
 	TWI_Master_Initialise();
 	
 	// Perform SW I2C reset to ensure all devices are in a known I2C state
-	I2C_SW_Reset();
+	//I2C_SW_Reset();
 	
+	I2C_Send_Msg_Size = 0;
 	I2C_Read_Request = 0;
 	Send_I2C_Msg = 0;
 	I2C_Locked = 0;
@@ -92,8 +94,9 @@ void Service_I2C_Master(void)
 		{	
 			if ( ! TWI_Transceiver_Busy() )
 			{
-				TWI_Start_Transceiver_With_Data( I2C_messageBuf, I2C_messageBuf[3] + I2C_MSG_HEADER_SIZE);
+				TWI_Start_Transceiver_With_Data( I2C_messageBuf, I2C_Send_Msg_Size);
 				
+				I2C_Send_Msg_Size = 0;
 				Send_I2C_Msg = 0;
 				I2C_Locked = 0;
 			}
@@ -301,7 +304,7 @@ void I2C_digipots_set_defaults(void)
 		
 		TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
 		
-		I2C_messageBuf[0] = (TWI_targetSlaveAddress<<TWI_ADR_BITS) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
+		I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
 		
 		I2C_messageBuf[1] = I2C_DIGIPOT_VOL_WIPER0_ADDR | I2C_DIGIPOT_WRITE;
 		I2C_messageBuf[2] = DIGIPOT_XAXIS_DEFAULT;
@@ -321,6 +324,7 @@ void I2C_digipots_set_defaults(void)
 		I2C_messageBuf[11] = I2C_DIGIPOT_VOL_TCON1_ADDR | I2C_DIGIPOT_WRITE | 0x01;
 		I2C_messageBuf[12] = 0xFF;
 		
+		I2C_Send_Msg_Size = 13;
 		Send_I2C_Msg = 1;
 	}
 }

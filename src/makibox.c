@@ -180,7 +180,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "2.05 / 15.10.2013";
+static const char VERSION_TEXT[] = "2.06 / 22.10.2013";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1239,8 +1239,21 @@ void execute_mcode(struct command *cmd) {
       break;
 	  
     case 24: //M24 - Start SD print
-	  sdcard_print = 1;
-	  sdcard_print_pause = 0;
+	  if ( (cmd->has_P) && (cmd->P <= -255) )
+	  {
+		// Cancel SD print
+		serial_send(TXT_CRLF_CANCELLED_SD_CARD_PRINT_CRLF);
+		// Close file
+		sdcard_closeFile(sdcard_fd);
+		sdcard_fd = 0;
+		sdcard_print = 0;
+		serial_send(TXT_DONE_PRINTING_FILE_CRLF);
+	  }
+	  else
+	  {
+		sdcard_print = 1;
+		sdcard_print_pause = 0;
+	  }
       break;
 	  
     case 25: //M25 - Pause SD print
@@ -1947,6 +1960,23 @@ void execute_m226(struct command *cmd)
 			
 			resume_normal_print_buffer();
 			
+			print_paused = 0;
+		}
+	}
+	else if ( (cmd->has_P) && (cmd->P <= -255) )
+	{
+		// Clear plan buffer & resume normal operation
+		if (print_paused)
+		{
+			feedrate = 1000;
+			
+			// Switch off heaters
+			target_temp = 0;
+			target_raw = 0;
+			target_bed_raw = 0;
+			
+			serial_send(TXT_CRLF_CLEARING_BUFFERED_MOVES_RESUME_NORMAL_OP_CRLF);
+			resume_normal_buf_discard_all_buf_moves();
 			print_paused = 0;
 		}
 	}

@@ -187,6 +187,8 @@
 	#define TXT_EXPECTED_EEPROM_CHECKSUM_HEX_CRLF					"Expected EEPROM Checksum: 0x%X\r\n"
 	#define TXT_STORED_SETTINGS_RETRIEVED_CRLF						"Stored settings retreived\r\n"
 	#define TXT_USING_DEFAULT_SETTINGS_CRLF							"Using Default settings\r\n"
+	#define TXT_CRLF_CLEARING_BUFFERED_MOVES_RESUME_NORMAL_OP_CRLF	"\r\n-- Clearing buffered moves and resuming normal operation...\r\n"
+	#define TXT_CRLF_CANCELLED_SD_CARD_PRINT_CRLF					"\r\n-- Cancelled SD card print.\r\n"
 #else
 	// Generate error for compiler
 	#error "ERROR with language selection (in language.h)."

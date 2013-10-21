@@ -94,6 +94,11 @@ void wait_extruder_target_temp(void);
 void wait_bed_target_temp(void);
 void set_extruder_heater_max_current(struct command *cmd);
 
+#if DIGIPOTS > 0
+void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps);
+void execute_m906(struct command *cmd);
+#endif
+
 #ifndef CRITICAL_SECTION_START
 #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli()
 #define CRITICAL_SECTION_END    SREG = _sreg
@@ -183,8 +188,9 @@ void set_extruder_heater_max_current(struct command *cmd);
 // M610 - Set Extruder Heater Max Current P = 0 - 100%.
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
+// M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
 
-static const char VERSION_TEXT[] = "2.04.03 / 16.10.2013 (Digi-Pot Dev Branch)";
+static const char VERSION_TEXT[] = "2.04.04 / 20.10.2013 (Digi-Pot Dev Branch)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -482,18 +488,6 @@ void setup()
   DDRB |= (1 << PINB0);		// SS Pins set as output
   PORTB |= (1 << PINB0);	// SS Pin set high
 #endif
-
-#if DIGIPOTS > 0
-  SET_OUTPUT(DIGIPOT_RESET);
-  // Ensure the digi-pot is in a known state by resetting it.
-  WRITE(DIGIPOT_RESET, LOW);
-  delay(1);
-  WRITE(DIGIPOT_RESET, HIGH);
-  
-  init_I2C_Master();
-  delay(1);
-  I2C_digipots_set_defaults();
-#endif
   
   // Initialise Timer 3 / PWM for Extruder Heater, Hotbed Heater, and Fan
   init_Timer3_HW_pwm();
@@ -510,6 +504,18 @@ void setup()
   EEPROM_RetrieveSettings(0, 0);
   #endif
   
+#if DIGIPOTS > 0
+  SET_OUTPUT(DIGIPOT_RESET);
+  // Ensure the digi-pot is in a known state by resetting it.
+  WRITE(DIGIPOT_RESET, LOW);
+  delay(1);
+  WRITE(DIGIPOT_RESET, HIGH);
+  
+  init_I2C_Master();
+  delay(1);
+  I2C_digipots_set_defaults();
+#endif
+
   #ifdef PIDTEMP
   updatePID();
   #endif
@@ -533,12 +539,13 @@ void setup()
 //------------------------------------------------
 void loop()
 {
-  // Read a command from the UART and process it.
-  read_command();
-  
+
 #if DIGIPOTS > 0
   Service_I2C_Master();
 #endif
+
+  // Read a command from the UART and process it.
+  read_command();
 
   // Manage the heater and fan.
   manage_inactivity(1);
@@ -1849,6 +1856,12 @@ void execute_mcode(struct command *cmd) {
 			serial_send((TXT_CLOSE_BRACKETS TXT_CRLF));
 	  break;
 	  
+#if DIGIPOTS > 0
+	  case 906: // M906 - Set current limits for stepper motors
+		execute_m906(cmd);
+	  break;
+#endif
+
       default:
             serial_send(TXT_UNKNOWN_CODE_M_CRLF, cmd->code);
       break;
@@ -2377,6 +2390,72 @@ void set_extruder_heater_max_current(struct command *cmd)
 		serial_send(TXT_EXISTING_EXTRUDER_MAX_CURRENT_INT_PERCENT_CRLF, (int)(user_max_heater_duty * 100 / 250.0));
 	}
 }
+
+
+#if DIGIPOTS > 0
+// Set the current limit for Allegro A4982 stepper driver IC using the MCP4451  
+// digi-pot device.
+void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps)
+{
+	unsigned char WiperValue = (unsigned char)( ( (MilliAmps/1000.0) * 0.88 ) / 0.010430 );
+	
+	if (WiperValue > 0xFF)
+	{
+		WiperValue = 0xFF;
+	}
+	
+	switch (Axis)
+	{
+		case X_AXIS:
+			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER0_ADDR, WiperValue);
+		break;
+		
+		case Y_AXIS:
+			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER1_ADDR, WiperValue);
+		break;
+		
+		case Z_AXIS:
+			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER2_ADDR, WiperValue);
+		break;
+		
+		case E_AXIS:
+			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER3_ADDR, WiperValue);
+		break;
+		
+		default:
+		break;
+	}
+}
+
+
+// M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
+void execute_m906(struct command *cmd)
+{
+	if (cmd->has_X)
+	{
+		set_stepper_motors_max_current(X_AXIS, (unsigned short)cmd->X);
+		Service_I2C_Master();	// Send I2C message to device
+	}
+	
+	if (cmd->has_Y)
+	{
+		set_stepper_motors_max_current(Y_AXIS, (unsigned short)cmd->Y);
+		Service_I2C_Master();	// Send I2C message to device
+	}
+	
+	if (cmd->has_Z)
+	{
+		set_stepper_motors_max_current(Z_AXIS, (unsigned short)cmd->Z);
+		Service_I2C_Master();	// Send I2C message to device
+	}
+	
+	if (cmd->has_E)
+	{
+		set_stepper_motors_max_current(E_AXIS, (unsigned short)cmd->E);
+		Service_I2C_Master();	// Send I2C message to device
+	}
+}
+#endif
 
 
 /***************************************************

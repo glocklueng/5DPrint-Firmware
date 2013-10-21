@@ -7,6 +7,21 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	20 October 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Version 2.04.04 (Digi-Pot Dev Branch)
+
+Further development of functions for setting and reading digi-pot device 
+register values. Added M906 command (same as RepRap M-code) for setting the 
+current limits for each axis. Currents entered as milli-Amps and converted to 
+digi-pot wiper position internally. New functions and features not yet fully 
+tested.
+
+
+--------------------------
 DATE: 	16 October 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

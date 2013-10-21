@@ -58,11 +58,15 @@
 #define I2C_DIGIPOT_VOL_TCON1_ADDR		0xA0
 
 
-#define SERVICE_I2C_INTERVAL		100		// ms
+#define SERVICE_I2C_INTERVAL				100			// ms
+#define DIGIPOT_READ_RESULT_WAIT_TIMEOUT	2000		// ms
+#define I2C_TRANSCEIVER_BUSY_TIMEOUT		3000		// ms
 
 //extern unsigned char I2C_messageBuf[TWI_BUFFER_SIZE];
 extern unsigned char Send_I2C_Msg;
 extern unsigned char I2C_Send_Msg_Size;
+extern unsigned char I2C_Read_Req_Size;
+extern unsigned char I2C_Read_Msg_Size;
 extern unsigned char I2C_Read_Request;
 extern unsigned char I2C_Locked;
 extern unsigned long previous_millis_service_i2c;
@@ -73,5 +77,7 @@ void I2C_Send_Msg(unsigned char Slave_Address, unsigned char command, unsigned c
 void I2C_Read_Msg(unsigned char Slave_Address, unsigned char command, unsigned char NumofDataBytes, unsigned long Data);
 void I2C_SW_Reset(void);
 void I2C_digipots_set_defaults(void);
+void I2C_digipots_set_wiper(unsigned char WiperAddr, unsigned char WiperValue);
+unsigned short I2C_digipots_read(unsigned char DeviceMemAddress);
 
 #endif

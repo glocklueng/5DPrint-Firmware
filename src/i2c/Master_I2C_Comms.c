@@ -40,7 +40,7 @@
 static unsigned char I2C_messageBuf[TWI_BUFFER_SIZE];
 static unsigned char I2C_ReadmessageBuf[TWI_BUFFER_SIZE];
 unsigned char Send_I2C_Msg = 0, I2C_Read_Request = 0;
-unsigned char I2C_Send_Msg_Size = 0;
+unsigned char I2C_Send_Msg_Size = 0, I2C_Read_Req_Size = 0, I2C_Read_Msg_Size = 0;
 static unsigned char TWI_targetSlaveAddress = 0;
 static unsigned char TWI_operation = 0;
 unsigned char I2C_Locked = 1;
@@ -88,6 +88,8 @@ void init_I2C_Master(void)
 
 void Service_I2C_Master(void)
 {
+	unsigned long I2C_Transceiver_Busy_Time = 0;
+	
 	if (millis() - previous_millis_service_i2c >= SERVICE_I2C_INTERVAL)
 	{
 		if (Send_I2C_Msg)
@@ -107,15 +109,19 @@ void Service_I2C_Master(void)
 		{
 			if ( ! TWI_Transceiver_Busy() )
 			{
-				TWI_Start_Transceiver_With_Data( I2C_ReadmessageBuf, I2C_ReadmessageBuf[3] + I2C_MSG_HEADER_SIZE);
+				TWI_Start_Transceiver_With_Data( I2C_ReadmessageBuf, I2C_Read_Req_Size);
 				
 				TWI_operation = REQUEST_DATA;
 				
+				I2C_Read_Req_Size = 0;
 				I2C_Read_Request = 0;
 			}
 		}
 		
-		while ( TWI_Transceiver_Busy() );
+		I2C_Transceiver_Busy_Time = millis();
+		
+		while ( TWI_Transceiver_Busy() 
+				&& ( millis() - I2C_Transceiver_Busy_Time < I2C_TRANSCEIVER_BUSY_TIMEOUT ) );
 		
 		if ( ! TWI_Transceiver_Busy() )
 		{
@@ -127,16 +133,19 @@ void Service_I2C_Master(void)
 				// Determine what action to take now
 				  if (TWI_operation == REQUEST_DATA)
 				  { // Request/collect the data from the Slave
-					I2C_ReadmessageBuf[0] = (TWI_targetSlaveAddress<<TWI_ADR_BITS) | (TRUE<<TWI_READ_BIT); // The first byte must always consist of General Call code or the TWI slave address.
+					I2C_ReadmessageBuf[0] = (TWI_targetSlaveAddress) | (TRUE<<TWI_READ_BIT); // The first byte must always consist of General Call code or the TWI slave address.
 					TWI_Start_Transceiver_With_Data( I2C_ReadmessageBuf, TWI_BUFFER_SIZE );       
 					TWI_operation = READ_DATA_FROM_BUFFER; // Set next operation        
 				  }
 				  
-				  while ( TWI_Transceiver_Busy() );
+				  I2C_Transceiver_Busy_Time = millis();
+				  
+				  while ( TWI_Transceiver_Busy() 
+							&& ( millis() - I2C_Transceiver_Busy_Time < I2C_TRANSCEIVER_BUSY_TIMEOUT ) );
 				  
 				  if (TWI_operation == READ_DATA_FROM_BUFFER)
 				  { // Get the received data from the transceiver buffer
-					if ( TWI_Get_Data_From_Transceiver( I2C_ReadmessageBuf, TWI_BUFFER_SIZE ) )
+					if ( TWI_Get_Data_From_Transceiver( I2C_ReadmessageBuf, I2C_Read_Msg_Size ) )
 					{
 						Process_I2C_Message(I2C_ReadmessageBuf);
 					}
@@ -163,110 +172,8 @@ void Service_I2C_Master(void)
 
 
 void Process_I2C_Message(unsigned char I2C_ReadmessageBuf[TWI_BUFFER_SIZE])
-{	
-	switch (I2C_ReadmessageBuf[1])
-	{/*
-		case I2C_READ_E1_CURRENT_TEMP:
-			e1_current_temp = (I2C_ReadmessageBuf[4] << 8) | I2C_ReadmessageBuf[3];
-		break;
-		
-		
-		case I2C_READ_E2_CURRENT_TEMP:
-			e2_current_temp = (I2C_ReadmessageBuf[4] << 8) | I2C_ReadmessageBuf[3];
-		break;
-		
-		
-		case I2C_READ_ALL_E_TEMP_DUTY:
-			e1_current_temp = (I2C_ReadmessageBuf[4] << 8) | I2C_ReadmessageBuf[3];
-			e1_heater_duty = I2C_ReadmessageBuf[5];
-			
-			e2_current_temp = (I2C_ReadmessageBuf[7] << 8) | I2C_ReadmessageBuf[6];
-			e2_heater_duty = I2C_ReadmessageBuf[8];
-			
-			e1_target_temp = (I2C_ReadmessageBuf[10] << 8) | I2C_ReadmessageBuf[9];
-			e2_target_temp = (I2C_ReadmessageBuf[12] << 8) | I2C_ReadmessageBuf[11];
-		break;
-		
-		
-		case I2C_READ_E1_TARGET_TEMP:
-			e1_target_temp = (I2C_ReadmessageBuf[4] << 8) | I2C_ReadmessageBuf[3];
-		break;
-		
-		
-		case I2C_READ_E2_TARGET_TEMP:
-			e2_target_temp = (I2C_ReadmessageBuf[4] << 8) | I2C_ReadmessageBuf[3];
-		break;
-		*/
-		
-		default:
-			// Unknown message
-		break;
-	}
-}
-
-
-void I2C_Send_Msg(unsigned char Slave_Address, unsigned char command, unsigned char NumofDataBytes, unsigned long Data)
 {
-	unsigned char i;
-	
-	if (!I2C_Locked)
-	{
-		I2C_Locked = 1;
-		
-		TWI_targetSlaveAddress = Slave_Address;
-		
-		// The first byte must always consit of General Call code or the TWI slave address.
-		I2C_messageBuf[0] = (TWI_targetSlaveAddress<<TWI_ADR_BITS) | (FALSE<<TWI_READ_BIT);
-		I2C_messageBuf[1] = TWI_CMD_MASTER_WRITE;
-		I2C_messageBuf[2] = command;
-		
-		if (NumofDataBytes > 4)
-		{
-			NumofDataBytes = 4;
-		}
-		
-		I2C_messageBuf[3] = NumofDataBytes;
-		
-		for (i = 0; i < NumofDataBytes; i++)
-		{
-			I2C_messageBuf[4 + i] = (unsigned char)( ( Data >> (8 * i) ) & (0x00FF) );
-		}
-		
-		Send_I2C_Msg = 1;
-	}
-}
-
-
-void I2C_Read_Msg(unsigned char Slave_Address, unsigned char command, unsigned char NumofDataBytes, unsigned long Data)
-{
-	unsigned char i;
-	
-	if (!I2C_Locked)
-	{
-		I2C_Locked = 1;
-		
-		TWI_targetSlaveAddress = Slave_Address;
-		
-		// The first byte must always consit of General Call code or the TWI slave address.
-		I2C_ReadmessageBuf[0] = (TWI_targetSlaveAddress<<TWI_ADR_BITS) | (FALSE<<TWI_READ_BIT);
-		
-		I2C_ReadmessageBuf[1] = TWI_CMD_MASTER_READ;
-		I2C_ReadmessageBuf[2] = command;
-		
-		if (NumofDataBytes > 4)
-		{
-			NumofDataBytes = 4;
-		}
-		
-		I2C_ReadmessageBuf[3] = NumofDataBytes;
-		
-		for (i = 0; i < NumofDataBytes; i++)
-		{
-			I2C_ReadmessageBuf[4 + i] = (unsigned char)( ( Data >> (8 * i) ) & (0x00FF) );
-		}
-		
-		I2C_Read_Request = 1;
-	}
+	I2C_Read_Msg_Size = 0;
 }
 
 
@@ -313,10 +220,10 @@ void I2C_digipots_set_defaults(void)
 		I2C_messageBuf[4] = DIGIPOT_YAXIS_DEFAULT;
 		
 		I2C_messageBuf[5] = I2C_DIGIPOT_VOL_WIPER2_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[6] = 58; //0.6V dev testing value //DIGIPOT_ZAXIS_DEFAULT;
+		I2C_messageBuf[6] = DIGIPOT_ZAXIS_DEFAULT;
 		
 		I2C_messageBuf[7] = I2C_DIGIPOT_VOL_WIPER3_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[8] = 58; //0.6V dev testing value //DIGIPOT_EAXIS_DEFAULT;
+		I2C_messageBuf[8] = DIGIPOT_EAXIS_DEFAULT;
 		
 		I2C_messageBuf[9] = I2C_DIGIPOT_VOL_TCON0_ADDR | I2C_DIGIPOT_WRITE | 0x01;
 		I2C_messageBuf[10] = 0xFF;
@@ -328,3 +235,95 @@ void I2C_digipots_set_defaults(void)
 		Send_I2C_Msg = 1;
 	}
 }
+
+
+void I2C_digipots_set_all_wipers(unsigned char wiper0, unsigned char wiper1, 
+									unsigned char wiper2, unsigned char wiper3)
+{
+	if (!I2C_Locked)
+	{
+		I2C_Locked = 1;
+		
+		TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
+		
+		I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
+		
+		I2C_messageBuf[1] = I2C_DIGIPOT_VOL_WIPER0_ADDR | I2C_DIGIPOT_WRITE;
+		I2C_messageBuf[2] = wiper0;
+		
+		I2C_messageBuf[3] = I2C_DIGIPOT_VOL_WIPER1_ADDR | I2C_DIGIPOT_WRITE;
+		I2C_messageBuf[4] = wiper1;
+		
+		I2C_messageBuf[5] = I2C_DIGIPOT_VOL_WIPER2_ADDR | I2C_DIGIPOT_WRITE;
+		I2C_messageBuf[6] = wiper2;
+		
+		I2C_messageBuf[7] = I2C_DIGIPOT_VOL_WIPER3_ADDR | I2C_DIGIPOT_WRITE;
+		I2C_messageBuf[8] = wiper3;
+		
+		I2C_Send_Msg_Size = 9;
+		Send_I2C_Msg = 1;
+	}
+}
+
+
+void I2C_digipots_set_wiper(unsigned char WiperAddr, unsigned char WiperValue)
+{
+	if (!I2C_Locked)
+	{
+		I2C_Locked = 1;
+		
+		TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
+		
+		I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
+		
+		I2C_messageBuf[1] = WiperAddr | I2C_DIGIPOT_WRITE;
+		I2C_messageBuf[2] = WiperValue;
+		
+		I2C_Send_Msg_Size = 3;
+		Send_I2C_Msg = 1;
+	}
+}
+
+
+unsigned short I2C_digipots_read(unsigned char DeviceMemAddress)
+{
+	unsigned long WaitForDigipotRead_Millis = 0;
+	
+	if (!I2C_Locked)
+	{
+		I2C_Locked = 1;
+		
+		TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
+		
+		I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
+		
+		I2C_messageBuf[1] = DeviceMemAddress | I2C_DIGIPOT_READ;
+		
+		I2C_Read_Req_Size = 2;
+		I2C_Read_Msg_Size = 2;
+		I2C_Read_Request = 1;
+		
+		WaitForDigipotRead_Millis = millis();
+		
+		// Wait for read result
+		while ( ( millis() - WaitForDigipotRead_Millis < DIGIPOT_READ_RESULT_WAIT_TIMEOUT)
+				&& (I2C_Read_Msg_Size) )
+		{
+			Service_I2C_Master();
+		}
+		
+		if (I2C_Read_Msg_Size)
+		{
+			return (0xFFFF);
+		}
+		else
+		{
+			return ( (I2C_ReadmessageBuf[0] << 8) | I2C_ReadmessageBuf[1] ) ;
+		}
+	}
+	else
+	{
+		return (0xFFFF);
+	}
+}
+

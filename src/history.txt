@@ -12,6 +12,17 @@ AUTHOR:	JTK WONG
 		XTRONTEC Limited
 		www.xtrontec.com
 --------------------------
+Version 2.07
+
+M226 P-255 will not switch off heaters now.
+
+
+--------------------------
+DATE: 	22 October 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
 Version 2.06
 
 M226 command updated to include an option to resume from the paused print but 

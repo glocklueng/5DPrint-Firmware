@@ -180,7 +180,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "2.06 / 22.10.2013";
+static const char VERSION_TEXT[] = "2.07 / 22.10.2013";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1969,11 +1969,6 @@ void execute_m226(struct command *cmd)
 		if (print_paused)
 		{
 			feedrate = 1000;
-			
-			// Switch off heaters
-			target_temp = 0;
-			target_raw = 0;
-			target_bed_raw = 0;
 			
 			serial_send(TXT_CRLF_CLEARING_BUFFERED_MOVES_RESUME_NORMAL_OP_CRLF);
 			resume_normal_buf_discard_all_buf_moves();

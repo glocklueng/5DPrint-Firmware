@@ -190,7 +190,7 @@ void execute_m906(struct command *cmd);
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 // M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
 
-static const char VERSION_TEXT[] = "2.04.04 / 20.10.2013 (Digi-Pot Dev Branch)";
+static const char VERSION_TEXT[] = "2.04.05 / 24.10.2013 (Digi-Pot Dev Branch)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -2431,28 +2431,58 @@ void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps
 // M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
 void execute_m906(struct command *cmd)
 {
+	unsigned long WaitForI2CSendTimer = 0;
+	
 	if (cmd->has_X)
 	{
 		set_stepper_motors_max_current(X_AXIS, (unsigned short)cmd->X);
-		Service_I2C_Master();	// Send I2C message to device
+		
+		WaitForI2CSendTimer = millis();
+		
+		while ( I2C_Locked 
+				&& ( millis() - WaitForI2CSendTimer < I2C_TRANSCEIVER_BUSY_TIMEOUT ) )
+		{
+			Service_I2C_Master();	// Send I2C message to device
+		}
 	}
 	
 	if (cmd->has_Y)
 	{
 		set_stepper_motors_max_current(Y_AXIS, (unsigned short)cmd->Y);
-		Service_I2C_Master();	// Send I2C message to device
+		
+		WaitForI2CSendTimer = millis();
+		
+		while ( I2C_Locked 
+				&& ( millis() - WaitForI2CSendTimer < I2C_TRANSCEIVER_BUSY_TIMEOUT ) )
+		{
+			Service_I2C_Master();	// Send I2C message to device
+		}
 	}
 	
 	if (cmd->has_Z)
 	{
 		set_stepper_motors_max_current(Z_AXIS, (unsigned short)cmd->Z);
-		Service_I2C_Master();	// Send I2C message to device
+		
+		WaitForI2CSendTimer = millis();
+		
+		while ( I2C_Locked 
+				&& ( millis() - WaitForI2CSendTimer < I2C_TRANSCEIVER_BUSY_TIMEOUT ) )
+		{
+			Service_I2C_Master();	// Send I2C message to device
+		}
 	}
 	
 	if (cmd->has_E)
 	{
 		set_stepper_motors_max_current(E_AXIS, (unsigned short)cmd->E);
-		Service_I2C_Master();	// Send I2C message to device
+		
+		WaitForI2CSendTimer = millis();
+		
+		while ( I2C_Locked 
+				&& ( millis() - WaitForI2CSendTimer < I2C_TRANSCEIVER_BUSY_TIMEOUT ) )
+		{
+			Service_I2C_Master();	// Send I2C message to device
+		}
 	}
 }
 #endif

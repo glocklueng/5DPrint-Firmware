@@ -7,6 +7,17 @@ Save as plain text file so that no special tools are required to view this file.
 
 
 --------------------------
+DATE: 	24 October 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Version 2.04.05 (Digi-Pot Dev Branch)
+
+Fix M906 command only issuing I2C command to first parameter.
+
+
+--------------------------
 DATE: 	20 October 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

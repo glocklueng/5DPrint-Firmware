@@ -95,7 +95,6 @@ void wait_bed_target_temp(void);
 void set_extruder_heater_max_current(struct command *cmd);
 
 #if DIGIPOTS > 0
-void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps);
 void execute_m906(struct command *cmd);
 #endif
 
@@ -190,7 +189,7 @@ void execute_m906(struct command *cmd);
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 // M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
 
-static const char VERSION_TEXT[] = "2.04.05 / 24.10.2013 (Digi-Pot Dev Branch)";
+static const char VERSION_TEXT[] = "2.04.06 / 04.11.2013 (Digi-Pot Dev Branch)";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -2393,97 +2392,69 @@ void set_extruder_heater_max_current(struct command *cmd)
 
 
 #if DIGIPOTS > 0
-// Set the current limit for Allegro A4982 stepper driver IC using the MCP4451  
-// digi-pot device.
-void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps)
-{
-	unsigned char WiperValue = (unsigned char)( ( (MilliAmps/1000.0) * 0.88 ) / 0.010430 );
-	
-	if (WiperValue > 0xFF)
-	{
-		WiperValue = 0xFF;
-	}
-	
-	switch (Axis)
-	{
-		case X_AXIS:
-			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER0_ADDR, WiperValue);
-		break;
-		
-		case Y_AXIS:
-			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER1_ADDR, WiperValue);
-		break;
-		
-		case Z_AXIS:
-			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER2_ADDR, WiperValue);
-		break;
-		
-		case E_AXIS:
-			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER3_ADDR, WiperValue);
-		break;
-		
-		default:
-		break;
-	}
-}
-
-
 // M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
 void execute_m906(struct command *cmd)
 {
-	unsigned long WaitForI2CSendTimer = 0;
-	
 	if (cmd->has_X)
 	{
-		set_stepper_motors_max_current(X_AXIS, (unsigned short)cmd->X);
-		
-		WaitForI2CSendTimer = millis();
-		
-		while ( I2C_Locked 
-				&& ( millis() - WaitForI2CSendTimer < I2C_TRANSCEIVER_BUSY_TIMEOUT ) )
+		if (cmd->X > 0)
 		{
-			Service_I2C_Master();	// Send I2C message to device
+			set_stepper_motors_max_current(X_AXIS, (unsigned short)cmd->X);
+		}
+		else
+		{
+			set_stepper_motors_max_current(X_AXIS, 0);
 		}
 	}
 	
 	if (cmd->has_Y)
 	{
-		set_stepper_motors_max_current(Y_AXIS, (unsigned short)cmd->Y);
-		
-		WaitForI2CSendTimer = millis();
-		
-		while ( I2C_Locked 
-				&& ( millis() - WaitForI2CSendTimer < I2C_TRANSCEIVER_BUSY_TIMEOUT ) )
+		if (cmd->Y > 0)
 		{
-			Service_I2C_Master();	// Send I2C message to device
+			set_stepper_motors_max_current(Y_AXIS, (unsigned short)cmd->Y);
+		}
+		else
+		{
+			set_stepper_motors_max_current(Y_AXIS, 0);
 		}
 	}
 	
 	if (cmd->has_Z)
 	{
-		set_stepper_motors_max_current(Z_AXIS, (unsigned short)cmd->Z);
-		
-		WaitForI2CSendTimer = millis();
-		
-		while ( I2C_Locked 
-				&& ( millis() - WaitForI2CSendTimer < I2C_TRANSCEIVER_BUSY_TIMEOUT ) )
+		if (cmd->Z > 0)
 		{
-			Service_I2C_Master();	// Send I2C message to device
+			set_stepper_motors_max_current(Z_AXIS, (unsigned short)cmd->Z);
+		}
+		else
+		{
+			set_stepper_motors_max_current(Z_AXIS, 0);
 		}
 	}
 	
 	if (cmd->has_E)
 	{
-		set_stepper_motors_max_current(E_AXIS, (unsigned short)cmd->E);
-		
-		WaitForI2CSendTimer = millis();
-		
-		while ( I2C_Locked 
-				&& ( millis() - WaitForI2CSendTimer < I2C_TRANSCEIVER_BUSY_TIMEOUT ) )
+		if (cmd->E > 0)
 		{
-			Service_I2C_Master();	// Send I2C message to device
+			set_stepper_motors_max_current(E_AXIS, (unsigned short)cmd->E);
+		}
+		else
+		{
+			set_stepper_motors_max_current(E_AXIS, 0);
 		}
 	}
+	
+	
+	if ( (cmd->has_X) || (cmd->has_Y) || (cmd->has_Z) || (cmd->has_E) )
+	{
+		EEPROM_StoreSettings();
+		serial_send(TXT_NEW_STEPPER_MOTOR_MAX_CURRENTS_SET_CRLF);
+		serial_send(TXT_CRLF);
+	}
+	
+	serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF, max_x_motor_current, 
+																max_y_motor_current,
+																max_z_motor_current,
+																max_e_motor_current);
 }
 #endif
 

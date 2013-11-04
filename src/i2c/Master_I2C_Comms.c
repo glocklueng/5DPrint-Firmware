@@ -25,6 +25,7 @@
 #include "../i2c/Master_I2C_Comms.h"
 #include "../config.h"
 #include "../pins_teensy.h"
+#include "../stepper.h"
 
 #define TWI_GEN_CALL         0x00  // The General Call address is 0
 
@@ -214,16 +215,20 @@ void I2C_digipots_set_defaults(void)
 		I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
 		
 		I2C_messageBuf[1] = I2C_DIGIPOT_VOL_WIPER0_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[2] = DIGIPOT_XAXIS_DEFAULT;
+		I2C_messageBuf[2] = (unsigned char)( ( (max_x_motor_current/1000.0) * 8 * ALLEGRO_A4982_RS ) / DIGIPOT_VOLTS_PER_STEP );
+		//max_x_motor_current = (I2C_messageBuf[2] * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
 		
 		I2C_messageBuf[3] = I2C_DIGIPOT_VOL_WIPER1_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[4] = DIGIPOT_YAXIS_DEFAULT;
+		I2C_messageBuf[4] = (unsigned char)( ( (max_y_motor_current/1000.0) * 8 * ALLEGRO_A4982_RS ) / DIGIPOT_VOLTS_PER_STEP );
+		//max_y_motor_current = (I2C_messageBuf[4] * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
 		
 		I2C_messageBuf[5] = I2C_DIGIPOT_VOL_WIPER2_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[6] = DIGIPOT_ZAXIS_DEFAULT;
+		I2C_messageBuf[6] = (unsigned char)( ( (max_z_motor_current/1000.0) * 8 * ALLEGRO_A4982_RS ) / DIGIPOT_VOLTS_PER_STEP );
+		//max_z_motor_current = (I2C_messageBuf[6] * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
 		
 		I2C_messageBuf[7] = I2C_DIGIPOT_VOL_WIPER3_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[8] = DIGIPOT_EAXIS_DEFAULT;
+		I2C_messageBuf[8] = (unsigned char)( ( (max_e_motor_current/1000.0) * 8 * ALLEGRO_A4982_RS ) / DIGIPOT_VOLTS_PER_STEP );
+		//max_e_motor_current = (I2C_messageBuf[8] * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
 		
 		I2C_messageBuf[9] = I2C_DIGIPOT_VOL_TCON0_ADDR | I2C_DIGIPOT_WRITE | 0x01;
 		I2C_messageBuf[10] = 0xFF;

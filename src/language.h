@@ -187,6 +187,8 @@
 	#define TXT_EXPECTED_EEPROM_CHECKSUM_HEX_CRLF					"Expected EEPROM Checksum: 0x%X\r\n"
 	#define TXT_STORED_SETTINGS_RETRIEVED_CRLF						"Stored settings retreived\r\n"
 	#define TXT_USING_DEFAULT_SETTINGS_CRLF							"Using Default settings\r\n"
+	#define TXT_NEW_STEPPER_MOTOR_MAX_CURRENTS_SET_CRLF				"-- New stepper motor maximum currents have been set.\r\n"
+	#define TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF			"-- Max Motor Currents:\r\n-- M906 X=%dmA Y=%dmA Z=%dmA E=%dmA\r\n"
 #else
 	// Generate error for compiler
 	#error "ERROR with language selection (in language.h)."

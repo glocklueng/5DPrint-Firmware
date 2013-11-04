@@ -28,11 +28,12 @@
 #include <string.h>
 #include <util/crc16.h>
 
-#include "store_eeprom.h"
 #include "config.h"
+#include "store_eeprom.h"
 #include "usb.h"
 #include "heater.h"
 #include "language.h"
+#include "stepper.h"
 
 #ifdef PIDTEMP
  //extern unsigned int PID_Kp, PID_Ki, PID_Kd;
@@ -123,7 +124,14 @@ void EEPROM_StoreSettings()
    EEPROM_write_setting(Ki_address, &ki, sizeof(ki));     //Ki
    EEPROM_write_setting(Kd_address, &kd, sizeof(kd));     //Kd
   #endif
-
+  
+  #if DIGIPOTS > 0
+   EEPROM_write_setting(max_x_motor_current_address, &max_x_motor_current, sizeof(max_x_motor_current));
+   EEPROM_write_setting(max_y_motor_current_address, &max_y_motor_current, sizeof(max_y_motor_current));
+   EEPROM_write_setting(max_z_motor_current_address, &max_z_motor_current, sizeof(max_z_motor_current));
+   EEPROM_write_setting(max_e_motor_current_address, &max_e_motor_current, sizeof(max_e_motor_current));
+  #endif
+  
   unsigned short checksum = EEPROM_Checksum();
   EEPROM_write_setting(EEPROM_CHECKSUM_ADDR, &checksum, sizeof(checksum));
   serial_send(TXT_SETTINGS_STORED_CRLF);
@@ -183,9 +191,18 @@ void EEPROM_printSettings()
     #ifdef PIDTEMP
       serial_send(TXT_PID_SETTINGS_CRLF_M301_P_I_D_CRLF, PID_Kp, PID_Ki, PID_Kd); 
     #endif
+	
+	#if DIGIPOTS > 0
+	  serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF, max_x_motor_current, 
+																 max_y_motor_current,
+																 max_z_motor_current,
+																 max_e_motor_current);
+	#endif
+	
   #else
     serial_send(TXT_PRINTING_OF_EEPROM_SETTINGS_DISABLED_CRLF);
-  #endif
+  #endif	// #ifdef PRINT_EEPROM_SETTINGS
+	
 	
 	EEPROM_read_setting(EEPROM_CHECKSUM_ADDR, &stored_checksum, 
 													sizeof(stored_checksum));
@@ -236,6 +253,13 @@ void EEPROM_RetrieveSettings(int def, int printout)
        EEPROM_read_setting(Ki_address, &PID_Ki, sizeof(PID_Ki));
        EEPROM_read_setting(Kd_address, &PID_Kd, sizeof(PID_Kd));
       #endif
+	  
+	  #if DIGIPOTS > 0
+	   EEPROM_read_setting(max_x_motor_current_address, &max_x_motor_current, sizeof(max_x_motor_current));
+	   EEPROM_read_setting(max_y_motor_current_address, &max_y_motor_current, sizeof(max_y_motor_current));
+       EEPROM_read_setting(max_z_motor_current_address, &max_z_motor_current, sizeof(max_z_motor_current));
+       EEPROM_read_setting(max_e_motor_current_address, &max_e_motor_current, sizeof(max_e_motor_current));
+	  #endif
 
       serial_send(TXT_STORED_SETTINGS_RETRIEVED_CRLF);
     }
@@ -263,6 +287,13 @@ void EEPROM_RetrieveSettings(int def, int printout)
        PID_Ki = PID_IGAIN;
        PID_Kd = PID_DGAIN;
       #endif
+	  
+	  #if DIGIPOTS > 0
+	   max_x_motor_current = XAXIS_DEFAULT_MAX_CURRENT;
+	   max_y_motor_current = YAXIS_DEFAULT_MAX_CURRENT;
+	   max_z_motor_current = ZAXIS_DEFAULT_MAX_CURRENT;
+	   max_e_motor_current = EAXIS_DEFAULT_MAX_CURRENT;
+	  #endif
 
       serial_send(TXT_USING_DEFAULT_SETTINGS_CRLF);
     }

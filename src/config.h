@@ -351,10 +351,11 @@
 // Set to 1 to enable Digi-Pot support
 #define DIGIPOTS			1
 
-#define DIGIPOT_XAXIS_DEFAULT			144		// 255 steps available in digi-pot
-#define DIGIPOT_YAXIS_DEFAULT			144		// 255 steps available in digi-pot
-#define DIGIPOT_ZAXIS_DEFAULT			144		// 255 steps available in digi-pot
-#define DIGIPOT_EAXIS_DEFAULT			144		// 255 steps available in digi-pot
+// Note that accuracy is limited by resolution of the digi-pot.
+#define XAXIS_DEFAULT_MAX_CURRENT		1700	// mA
+#define YAXIS_DEFAULT_MAX_CURRENT		1700	// mA
+#define ZAXIS_DEFAULT_MAX_CURRENT		1700	// mA
+#define EAXIS_DEFAULT_MAX_CURRENT		1700	// mA
 
 
 // Global Variables for CPU Loading Calculation

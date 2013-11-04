@@ -34,6 +34,10 @@
 #include "stepper.h"
 #include "heater.h"
 
+#if DIGIPOTS > 0
+	#include "i2c/Master_I2C_Comms.h"
+	#include "store_eeprom.h"
+#endif
 
 #ifndef CRITICAL_SECTION_START
 #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli()
@@ -172,6 +176,14 @@ static volatile uint8_t endstop_y_hit=0;
 static volatile uint8_t endstop_z_hit=0;
 
 block_t resume_buffer[PRINT_PAUSED_BLOCK_BUF_SIZE] = {{0}};
+
+#if DIGIPOTS > 0
+	unsigned short max_x_motor_current = 0;	// mA
+	unsigned short max_y_motor_current = 0;	// mA
+	unsigned short max_z_motor_current = 0;	// mA
+	unsigned short max_e_motor_current = 0;	// mA
+#endif
+
 
 #if X_MIN_PIN > -1
   static uint8_t old_x_min_endstop=0;
@@ -912,4 +924,56 @@ void st_synchronize()
       manage_fan_start_speed();
     #endif
   }
+}
+
+
+// Set the current limit for Allegro A4982 stepper driver IC using the MCP4451  
+// digi-pot device.
+void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps)
+{
+	unsigned long WaitForI2CSendTimer = 0;
+	unsigned char WiperValue = (unsigned char)( ( (MilliAmps/1000.0) * 8 * ALLEGRO_A4982_RS ) / DIGIPOT_VOLTS_PER_STEP );
+	
+	if (WiperValue > 0xFF)
+	{
+		WiperValue = 0xFF;
+	}
+	
+	switch (Axis)
+	{
+		case X_AXIS:
+			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER0_ADDR, WiperValue);
+			//max_x_motor_current = (WiperValue * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
+			max_x_motor_current = MilliAmps;
+		break;
+		
+		case Y_AXIS:
+			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER1_ADDR, WiperValue);
+			//max_y_motor_current = (WiperValue * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
+			max_y_motor_current = MilliAmps;
+		break;
+		
+		case Z_AXIS:
+			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER2_ADDR, WiperValue);
+			//max_z_motor_current = (WiperValue * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
+			max_z_motor_current = MilliAmps;
+		break;
+		
+		case E_AXIS:
+			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER3_ADDR, WiperValue);
+			//max_e_motor_current = (WiperValue * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
+			max_e_motor_current = MilliAmps;
+		break;
+		
+		default:
+		break;
+	}
+	
+	WaitForI2CSendTimer = millis();
+	
+	while ( I2C_Locked 
+			&& ( millis() - WaitForI2CSendTimer < I2C_TRANSCEIVER_BUSY_TIMEOUT ) )
+	{
+		Service_I2C_Master();	// Send I2C message to device
+	}
 }

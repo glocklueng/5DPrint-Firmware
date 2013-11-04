@@ -27,6 +27,16 @@
 #define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
 #define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
 
+#define ALLEGRO_A4982_RS				0.11		// Ohms
+#define DIGIPOT_VOLTS_PER_STEP			0.010430	// V/step
+
+#if DIGIPOTS > 0
+	extern unsigned short max_x_motor_current;
+	extern unsigned short max_y_motor_current;
+	extern unsigned short max_z_motor_current;
+	extern unsigned short max_e_motor_current;
+#endif
+
 #if (DEBUG > -1)
 	extern uint32_t timer1_compa_isr_exe_micros;
 	extern uint32_t timer1_compa_isr_exe_micros_min;
@@ -61,4 +71,9 @@ void set_print_paused_buffer(void);
 void clear_plan_buffer(void);
 void resume_normal_print_buffer(void);
 
+#if DIGIPOTS > 0
+	void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps);
 #endif
+
+
+#endif	// #ifndef STEPPER_H

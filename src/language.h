@@ -189,6 +189,8 @@
 	#define TXT_USING_DEFAULT_SETTINGS_CRLF							"Using Default settings\r\n"
 	#define TXT_CRLF_CLEARING_BUFFERED_MOVES_RESUME_NORMAL_OP_CRLF	"\r\n-- Clearing buffered moves and resuming normal operation...\r\n"
 	#define TXT_CRLF_CANCELLED_SD_CARD_PRINT_CRLF					"\r\n-- Cancelled SD card print.\r\n"
+	#define TXT_STEPPER_MOTORS_AUTO_DISABLED_DUE_TO_INACTIVITY_CRLF	"-- Stepper motors automatically disabled due to inactivity timeout.\r\n"
+	#define TXT_HEATERS_AND_MOTORS_DISABLED_DUE_INACTIVITY_CRLF 	"-- Heaters and motors automatically disabled due to inactivity timeout.\r\n"
 #else
 	// Generate error for compiler
 	#error "ERROR with language selection (in language.h)."

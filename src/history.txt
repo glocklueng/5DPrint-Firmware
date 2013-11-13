@@ -5,6 +5,23 @@ Makibox A6 Firmware - History / Change Log
 Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
+--------------------------
+DATE: 	13 November 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Version 2.08
+
+Stepper motor inactivity time now based on actual none movement rather general 
+host to printer command inactivity.
+
+Added text feedback to indicate that the printer has automatically disabled the 
+motors and/or the heaters.
+
+Fixed small bug when aborting a paused print. The motor positions were not 
+updated to the true current positions.
+
 
 --------------------------
 DATE: 	22 October 2013

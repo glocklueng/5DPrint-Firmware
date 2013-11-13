@@ -180,7 +180,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "2.07 / 22.10.2013";
+static const char VERSION_TEXT[] = "2.08 / 13.11.2013";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -238,6 +238,7 @@ int hotendtC = 0, bedtempC = 0;
        
 //Inactivity shutdown variables
 unsigned long previous_millis_cmd = 0;
+unsigned long previous_millis_g_cmd = 0;
 unsigned long max_inactive_time = INACTIVITY_HEATERS_TIMEOUT;
 unsigned long stepper_inactive_time = INACTIVITY_STEPPERS_TIMEOUT;
 
@@ -1094,17 +1095,20 @@ void execute_gcode(struct command *cmd)
         get_coordinates(cmd); // For X Y Z E F
         prepare_move();
         previous_millis_cmd = millis();
+		previous_millis_g_cmd = millis();
         break;
       #ifdef USE_ARC_FUNCTION
       case 2: // G2  - CW ARC
         get_arc_coordinates(cmd);
         prepare_arc_move(1);
         previous_millis_cmd = millis();
+		previous_millis_g_cmd = millis();
         break;
       case 3: // G3  - CCW ARC
         get_arc_coordinates(cmd);
         prepare_arc_move(0);
         previous_millis_cmd = millis();
+		previous_millis_g_cmd = millis();
         break; 
       #endif  
       case 4: // G4 dwell
@@ -1121,6 +1125,7 @@ void execute_gcode(struct command *cmd)
         saved_feedrate = feedrate;
         saved_feedmultiply = feedmultiply;
         previous_millis_cmd = millis();
+		previous_millis_g_cmd = millis();
         
         feedmultiply = 100;    
       
@@ -1153,6 +1158,7 @@ void execute_gcode(struct command *cmd)
         feedmultiply = saved_feedmultiply;
       
         previous_millis_cmd = millis();
+		previous_millis_g_cmd = millis();
         break;
       case 90: // G90
         relative_mode = 0;
@@ -1904,6 +1910,8 @@ void execute_m201(struct command *cmd)
 
 void execute_m226(struct command *cmd)
 {	
+	st_position_t pos;
+	
 	if ((cmd->has_P) && (cmd->P == 0))
 	{	// Resume print
 		if (print_paused)
@@ -1972,6 +1980,16 @@ void execute_m226(struct command *cmd)
 			
 			serial_send(TXT_CRLF_CLEARING_BUFFERED_MOVES_RESUME_NORMAL_OP_CRLF);
 			resume_normal_buf_discard_all_buf_moves();
+			
+			pos = st_get_current_position();
+			current_position[X_AXIS] = pos.x ? (pos.x / (float)(axis_steps_per_unit[X_AXIS])) : 0;
+			current_position[Y_AXIS] = pos.y ? (pos.y / (float)(axis_steps_per_unit[Y_AXIS])) : 0;
+			current_position[Z_AXIS] = pos.z ? (pos.z / (float)(axis_steps_per_unit[Z_AXIS])) : 0;
+			current_position[E_AXIS] = (pos.e != 0) ? (pos.e / (float)(axis_steps_per_unit[E_AXIS])) : 0;
+			
+			plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],
+								current_position[Z_AXIS], current_position[E_AXIS]);
+								
 			print_paused = 0;
 		}
 	}
@@ -2158,9 +2176,17 @@ void manage_inactivity(unsigned char debug)
 { 
   manage_heater();
   
-  if( (millis()-previous_millis_cmd) >  max_inactive_time ) if(max_inactive_time) kill(); 
+  if( (millis()-previous_millis_cmd) >  max_inactive_time )
+  {
+	if(max_inactive_time)
+	{
+		kill();
+		serial_send(TXT_HEATERS_AND_MOTORS_DISABLED_DUE_INACTIVITY_CRLF);
+		previous_millis_cmd = millis();
+	}
+  }
   
-  if( (millis()-previous_millis_cmd) >  stepper_inactive_time ) if(stepper_inactive_time) 
+  if( (millis()-previous_millis_g_cmd) >  stepper_inactive_time ) if(stepper_inactive_time) 
   { 
 	#if (DEBUG > -1)
 		PreemptionFlag |= 0x0004;
@@ -2169,7 +2195,10 @@ void manage_inactivity(unsigned char debug)
     disable_x(); 
     disable_y(); 
     disable_z(); 
-    disable_e(); 
+    disable_e();
+	
+	serial_send(TXT_STEPPER_MOTORS_AUTO_DISABLED_DUE_TO_INACTIVITY_CRLF);
+	previous_millis_g_cmd = millis();
   }
   check_axes_activity();
 }

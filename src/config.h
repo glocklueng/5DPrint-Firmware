@@ -311,8 +311,9 @@
 // When temperature exceeds max temp, your heater will be switched off.
 // This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
 // You should use MINTEMP for thermistor short/failure protection.
-#define MAXTEMP		270
-#define BEDMAXTEMP 	150
+#define MAXTEMP				270
+#define BEDMAXTEMP 			150
+#define SAFETY_MAX_TEMP		290
 
 // User Max Temp
 // These are the maximum target temperatures that the user can request.

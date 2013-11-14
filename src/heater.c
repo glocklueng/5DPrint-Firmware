@@ -372,7 +372,7 @@ void PID_autotune(int PIDAT_test_temp)
  
  void manage_heater()
  {
-  int current_temp;
+  int current_temp = 0;
  
   service_TemperatureMonitor();
  
@@ -533,6 +533,21 @@ void PID_autotune(int PIDAT_test_temp)
 		service_BedHeaterSimpleControl(current_bed_raw, target_bed_raw);
 	} 	// #ifdef BED_PIDTEMP
   }		//end if (TEMP_1_PIN == -1)
+  
+  
+  // Safety check to try and catch case when bed and extruder heater connectors 
+  // have been swapped around accidentally.
+  if ( ( analog2tempBed(current_bed_raw) >= SAFETY_MAX_TEMP ) 
+						|| ( current_temp >= SAFETY_MAX_TEMP ) )
+  {
+	if ( (target_bed_raw != 0) || (target_temp != 0) )
+	{
+		target_bed_raw = 0;				// Switch off bed heater
+		target_temp = target_raw = 0;	// Switch off extruder heater
+		serial_send(TXT_ALL_HEATERS_DISABLED_SAFETY_TEMP_EXCEEDED_CRLF);
+		serial_send(TXT_CHECK_HEATER_AND_THEMISTOR_CONNS_ARE_CORRECT_CRLF);
+	}
+  }
 }
 
 

@@ -5,6 +5,21 @@ Makibox A6 Firmware - History / Change Log
 Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
+
+--------------------------
+DATE: 	14 November 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Version 2.10
+
+Added #define SAFETY_MAX_TEMP to config.h. This is then used to check if any of 
+the thermistors exceed this temperature. If exceeded both heaters are turned off.
+This should cover the case when the extruder and bed heaters have been plugged 
+in the wrong way around.
+
+
 --------------------------
 DATE: 	14 November 2013
 AUTHOR:	JTK WONG

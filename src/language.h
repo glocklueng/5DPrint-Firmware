@@ -191,6 +191,8 @@
 	#define TXT_CRLF_CANCELLED_SD_CARD_PRINT_CRLF					"\r\n-- Cancelled SD card print.\r\n"
 	#define TXT_STEPPER_MOTORS_AUTO_DISABLED_DUE_TO_INACTIVITY_CRLF	"-- Stepper motors automatically disabled due to inactivity timeout.\r\n"
 	#define TXT_HEATERS_AND_MOTORS_DISABLED_DUE_INACTIVITY_CRLF 	"-- Heaters and motors automatically disabled due to inactivity timeout.\r\n"
+	#define TXT_ALL_HEATERS_DISABLED_SAFETY_TEMP_EXCEEDED_CRLF		"-- *** All heaters disabled. Safety temperature exceeded.\r\n"
+	#define TXT_CHECK_HEATER_AND_THEMISTOR_CONNS_ARE_CORRECT_CRLF	"-- Check all heater and thermistor connections are correct.\r\n"
 #else
 	// Generate error for compiler
 	#error "ERROR with language selection (in language.h)."

@@ -6,6 +6,19 @@ Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
 --------------------------
+DATE: 	14 November 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Version 2.09
+
+Changed X, Y, and Z max lengths in config.h this is to match the actual physical 
+limits for the current production parts and fittings. Also changed _MAX_FEEDRATE 
+to 60 mm/s for X and Y axis.
+
+
+--------------------------
 DATE: 	13 November 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited

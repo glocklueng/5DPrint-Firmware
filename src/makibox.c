@@ -156,7 +156,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 // M220 - set speed factor override percentage S=factor in percent 
 // M221 - set extruder multiply factor S100 --> original Extrude Speed 
 
-// M226 - M226 / M226 P1 = Pause print  M226 P0 = resume print 
+// M226 - M226 / M226 P1 = Pause print  M226 P0 = resume print M226 P-255 = discard plan buffer contents and resume normal operation
 
 // M301 - Set PID parameters P I and D
 // M303 - PID relay autotune S<temperature> sets the target temperature. (default target temperature = 150C)
@@ -180,7 +180,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "2.08 / 13.11.2013";
+static const char VERSION_TEXT[] = "2.09 / 14.11.2013";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;

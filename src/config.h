@@ -116,14 +116,14 @@
 //-----------------------------------------------------------------------
 // Max Lengths
 //-----------------------------------------------------------------------
-#define X_MAX_LENGTH 115
-#define Y_MAX_LENGTH 155
-#define Z_MAX_LENGTH 90
+#define X_MAX_LENGTH 108
+#define Y_MAX_LENGTH 149
+#define Z_MAX_LENGTH 86
 
 //-----------------------------------------------------------------------
 //// MOVEMENT SETTINGS
 //-----------------------------------------------------------------------
-#define _MAX_FEEDRATE {120, 120, 20, 45} // (mm/sec)    
+#define _MAX_FEEDRATE {60, 60, 20, 45} // (mm/sec)    
 #define _HOMING_FEEDRATE {1500,1500,120} // (mm/min) !!
 #define _AXIS_RELATIVE_MODES {0, 0, 0, 0}
 
@@ -254,13 +254,6 @@
 // How often should the heater check for new temp readings, in milliseconds
 #define HEATER_CHECK_INTERVAL	100
 #define BED_CHECK_INTERVAL		1000
-
-// Comment the following line to enable heat management during acceleration
-#define DISABLE_CHECK_DURING_ACC
-#ifndef DISABLE_CHECK_DURING_ACC
-  // Uncomment the following line to disable heat management during moves
-  //#define DISABLE_CHECK_DURING_MOVE
-#endif
 
 
 /// Hot Bed PID settings:

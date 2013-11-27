@@ -67,6 +67,7 @@ extern int target_bed_raw;
 extern int current_bed_raw;
 extern unsigned long previous_millis_heater, previous_millis_bed_heater;
 extern unsigned char manage_monitor;
+extern unsigned short periodic_temp_report;
 
 #if (PIDTEMP > -1)
 	extern int temp_iState;
@@ -101,7 +102,7 @@ extern unsigned char manage_monitor;
     extern float autotemp_min;
     extern float autotemp_factor;
     extern int   autotemp_setpoint;
-    extern bool autotemp_enabled;
+    extern bool  autotemp_enabled;
 #endif
 
 

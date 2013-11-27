@@ -80,6 +80,7 @@
 	#define TXT_MAX_ALLOWED_BED_TEMP_IS_INT_DEGC_CRLF				"/" "/ Max allowed bed temperature is %ddegC\r\n"
 	#define TXT_SETTING_TARGET_BED_TEMP_TO_INT_DEGC_CRLF			"/" "/ Setting target bed temperature to %ddegC\r\n"
 	#define TXT_OK_T_INT											"ok T:%d"											// *** Host / System Text String
+	#define TXT_DASH_DASH_T_INT										"-- T:%d"
 	#define TXT_D_INT_PERCENT										" D%d%%"											// *** Host / System Text String
 	#define TXT_A_INT												" A%d"												// *** Host / System Text String
 	#define TXT_B_INT												" B:%d"												// *** Host / System Text String
@@ -192,7 +193,9 @@
 	#define TXT_STEPPER_MOTORS_AUTO_DISABLED_DUE_TO_INACTIVITY_CRLF	"-- Stepper motors automatically disabled due to inactivity timeout.\r\n"
 	#define TXT_HEATERS_AND_MOTORS_DISABLED_DUE_INACTIVITY_CRLF 	"-- Heaters and motors automatically disabled due to inactivity timeout.\r\n"
 	#define TXT_ALL_HEATERS_DISABLED_SAFETY_TEMP_EXCEEDED_CRLF		"-- *** All heaters disabled. Safety temperature exceeded.\r\n"
-	#define TXT_CHECK_HEATER_AND_THEMISTOR_CONNS_ARE_CORRECT_CRLF	"-- Check all heater and thermistor connections are correct.\r\n"
+	#define TXT_CHECK_HEATER_AND_THERMISTOR_CONNS_ARE_CORRECT_CRLF	"-- Check all heater and thermistor connections are correct.\r\n"
+	#define TXT_COLD_EXTRUSION_PREVENTED_CRLF						"-- Cold extrusion prevented.\r\n"
+	#define TXT_LONG_EXTRUSION_PREVENTED_CRLF						"-- Long extrusion prevented.\r\n"
 #else
 	// Generate error for compiler
 	#error "ERROR with language selection (in language.h)."

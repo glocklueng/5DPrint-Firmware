@@ -119,4 +119,8 @@ void enable_endstops(uint8_t check);
 uint8_t blocks_queued();
 uint8_t blocks_available();
 
+#if PREVENT_DANGEROUS_EXTRUDE > 0
+	extern unsigned char prevent_cold_extrude;
+#endif
+
 #endif

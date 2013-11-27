@@ -148,7 +148,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 // M119 - Show Endstopper State 
 // M201 - Set maximum acceleration in units/s^2 for print moves (M201 X1000 Y1000)
 // M202 - Set maximum feedrate that your machine can sustain (M203 X200 Y200 Z300 E10000) in mm/sec
-// M203 - Set temperture monitor to Sx
+// M203 - Set temperture monitor to Sx; Px sets regular temperature reporting to every x seconds.
 // M204 - Set default acceleration: S normal moves T filament only moves (M204 S3000 T7000) in mm/sec^2
 // M205 - advanced settings:  minimum travel speed S=while printing T=travel only,  X=maximum xy jerk, Z=maximum Z jerk
 // M206 - set additional homing offset
@@ -159,6 +159,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 // M226 - M226 / M226 P1 = Pause print  M226 P0 = resume print M226 P-255 = discard plan buffer contents and resume normal operation
 
 // M301 - Set PID parameters P I and D
+// M302 - Enable / Disable Cold Extrudes P1 = allow cold extrudes; P0 = Do not allow cold extrudes
 // M303 - PID relay autotune S<temperature> sets the target temperature. (default target temperature = 150C)
 
 // M400 - Finish all moves
@@ -180,7 +181,7 @@ void set_extruder_heater_max_current(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 
-static const char VERSION_TEXT[] = "2.10 / 14.11.2013";
+static const char VERSION_TEXT[] = "2.11.00 / 27.11.2013";
 
 #ifdef PIDTEMP
  unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
@@ -1641,6 +1642,11 @@ void execute_mcode(struct command *cmd) {
           if (cmd->has_S)
             manage_monitor = cmd->S;
           if(manage_monitor==100) manage_monitor=1; // Set 100 to heated bed
+		  
+		  if (cmd->has_P)
+		  {
+			periodic_temp_report = cmd->P;
+		  }
       break;
 	  
       case 204: // M204 acceleration S normal moves T filmanent only moves
@@ -1692,6 +1698,27 @@ void execute_mcode(struct command *cmd) {
 		serial_send(TXT_PID_SETTINGS_CHANGED_NOT_SAVED_TO_MEM_CRLF);
       break;
 #endif //PIDTEMP      
+
+#if PREVENT_DANGEROUS_EXTRUDE > 0
+	  case 302:	// M302 - Enable / Disable Cold Extrudes P1 = allow cold extrudes; P0 = Do not allow cold extrudes
+		if (cmd->has_P)
+		{
+			if (cmd->P >= 1)
+			{
+				prevent_cold_extrude = 0;
+			}
+			else if (cmd->P < 1)
+			{
+				prevent_cold_extrude = 1;
+			}
+		}
+		else
+		{
+			prevent_cold_extrude = 0;
+		}
+	  break;
+#endif
+	  
 #ifdef PID_AUTOTUNE
       case 303: // M303 PID autotune
         if (cmd->has_S)

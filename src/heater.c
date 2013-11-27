@@ -48,7 +48,8 @@ int current_raw_maxval = -32000;
 int current_raw_minval = 32000;
 int target_bed_raw = 0;
 int current_bed_raw = 0;
-unsigned long previous_millis_heater, previous_millis_bed_heater, previous_millis_monitor;
+unsigned long previous_millis_heater, previous_millis_bed_heater;
+unsigned long previous_millis_monitor = 0, previous_millis_periodic_temp_report = 0;
 
 #ifdef PIDTEMP
   int temp_iState = 0;
@@ -108,6 +109,7 @@ unsigned long previous_millis_heater, previous_millis_bed_heater, previous_milli
 	int maxttemp; /* = temp2analogh(MAXTEMP); */
 #endif
 
+unsigned short periodic_temp_report = 0;
 
 #define HEAT_INTERVAL 250
 
@@ -537,15 +539,15 @@ void PID_autotune(int PIDAT_test_temp)
   
   // Safety check to try and catch case when bed and extruder heater connectors 
   // have been swapped around accidentally.
-  if ( ( analog2tempBed(current_bed_raw) >= SAFETY_MAX_TEMP ) 
-						|| ( current_temp >= SAFETY_MAX_TEMP ) )
+  if ( ( analog2tempBed(current_bed_raw) >= MAXTEMP ) 
+						|| ( current_temp >= MAXTEMP ) )
   {
 	if ( (target_bed_raw != 0) || (target_temp != 0) )
 	{
 		target_bed_raw = 0;				// Switch off bed heater
 		target_temp = target_raw = 0;	// Switch off extruder heater
 		serial_send(TXT_ALL_HEATERS_DISABLED_SAFETY_TEMP_EXCEEDED_CRLF);
-		serial_send(TXT_CHECK_HEATER_AND_THEMISTOR_CONNS_ARE_CORRECT_CRLF);
+		serial_send(TXT_CHECK_HEATER_AND_THERMISTOR_CONNS_ARE_CORRECT_CRLF);
 	}
   }
 }
@@ -762,6 +764,8 @@ void service_BedHeaterSimpleControl(int current_bed_raw, int target_bed_raw)
 
 void service_TemperatureMonitor(void)
 {
+  int hotendtC = 0, bedtempC = 0;
+  
   //Temperature Monitor for repetier
   if((millis() - previous_millis_monitor) > 250 )
   {
@@ -820,6 +824,34 @@ void service_TemperatureMonitor(void)
   
   }	// end if((millis() - previous_millis_monitor) > 250 )
 	// END Temperature Monitor for repetier
+	
+	
+  if (periodic_temp_report)
+  {
+	if( (millis() - previous_millis_periodic_temp_report) > (periodic_temp_report * 1000) )
+	{
+		previous_millis_periodic_temp_report = millis();
+		
+		#if (TEMP_0_PIN > -1)
+          hotendtC = analog2temp(current_raw);
+        #endif
+        #if TEMP_1_PIN > -1
+          bedtempC = analog2tempBed(current_bed_raw);
+        #endif
+		
+        serial_send(TXT_DASH_DASH_T_INT, hotendtC);
+        #ifdef PIDTEMP
+            serial_send(TXT_D_INT_PERCENT, (int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ));
+        #endif
+        #if TEMP_1_PIN > -1
+            serial_send(TXT_B_INT, bedtempC);
+        #endif
+		#ifdef BED_PIDTEMP
+			serial_send(TXT_D_INT_PERCENT, (int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
+		#endif
+        serial_send(TXT_CRLF);
+	} // if( (millis() - previous_millis_periodic_temp_report) > (periodic_temp_report * 1000) )
+  } // if (periodic_temp_report)
 }
 
 

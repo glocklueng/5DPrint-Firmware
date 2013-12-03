@@ -31,6 +31,9 @@
 #include "makibox.h"
 #include "planner.h"
 #include "stepper.h"
+#include "heater.h"
+#include "language.h"
+#include "usb.h"
 
 #ifdef USE_ARC_FUNCTION
   #include "arc_func.h"
@@ -101,6 +104,10 @@ volatile unsigned char block_buffer_tail = 0;           // Index of the block to
 
 volatile unsigned char block_buffer_size = CFG_BLOCK_BUFFER_SIZE;
 volatile unsigned char block_buffer_mask = CFG_BLOCK_BUFFER_MASK;
+
+#if PREVENT_DANGEROUS_EXTRUDE > 0
+	unsigned char prevent_cold_extrude = DEFAULT_PREVENT_DANGEROUS_EXTRUDE_START_MODE;
+#endif
 
 //===========================================================================
 //=============================private variables ============================
@@ -416,6 +423,8 @@ uint8_t retract_feedrate_aktiv = 0;
 // calculation the caller must also provide the physical length of the line in millimeters.
 void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
 {
+  int current_temp;
+  
   // Calculate the buffer head after we push this byte
   int next_buffer_head = next_block_index(block_buffer_head);
 
@@ -436,6 +445,28 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   target[Y_AXIS] = lround(y*axis_steps_per_unit[Y_AXIS]);
   target[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);     
   target[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);
+  
+  current_temp = analog2temp( current_raw );
+  
+  #if PREVENT_DANGEROUS_EXTRUDE > 0
+  if(target[E_AXIS]!=position[E_AXIS])
+  {
+    if(current_temp < EXTRUDE_MINTEMP && prevent_cold_extrude)
+    {
+      position[E_AXIS]=target[E_AXIS]; //behave as if the move really took place, but ignore E part
+      serial_send(TXT_COLD_EXTRUSION_PREVENTED_CRLF);
+    }
+    
+    #if PREVENT_LENGTHY_EXTRUDE > 0
+    if(labs(target[E_AXIS]-position[E_AXIS]) > axis_steps_per_unit[E_AXIS] * EXTRUDE_MAXLENGTH)
+    {
+      position[E_AXIS]=target[E_AXIS]; //behave as if the move really took place, but ignore E part
+      serial_send(TXT_LONG_EXTRUSION_PREVENTED_CRLF);
+    }
+    #endif
+  }
+  #endif
+  
   
   // Prepare to set up new block
   block_t *block = &block_buffer[block_buffer_head];

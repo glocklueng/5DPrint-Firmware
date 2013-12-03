@@ -5,55 +5,177 @@ Makibox A6 Firmware - History / Change Log
 Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
+--------------------------
+DATE: 	03 December 2013
+AUTHOR:	CJM LAI
+        Makible Limited
+--------------------------
+Merged JTK Wong's digi-pot-dev branch and previous commited messages are shown below.
 
---------------------------
-DATE: 	04 November 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
+******** MERGE ***********
+
+DATE:   04 November 2013
 Version 2.04.06 (Digi-Pot Dev Branch)
-
+AUTHOR:	JTK WONG
+ 		XTRONTEC Limited
+		www.xtrontec.com
+********
 Max stepper motors currents saved to EEPROM.
+********
 
-
---------------------------
 DATE: 	24 October 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
 Version 2.04.05 (Digi-Pot Dev Branch)
-
-Fix M906 command only issuing I2C command to first parameter.
-
-
---------------------------
-DATE: 	20 October 2013
 AUTHOR:	JTK WONG
-		XTRONTEC Limited
+ 		XTRONTEC Limited
 		www.xtrontec.com
---------------------------
-Version 2.04.04 (Digi-Pot Dev Branch)
+********
+Fix M906 command only issuing I2C command to first parameter.
+********
 
+DATE: 	20 October 2013
+Version 2.04.04 (Digi-Pot Dev Branch)
+AUTHOR:	JTK WONG
+ 		XTRONTEC Limited
+		www.xtrontec.com
+********
 Further development of functions for setting and reading digi-pot device 
 register values. Added M906 command (same as RepRap M-code) for setting the 
 current limits for each axis. Currents entered as milli-Amps and converted to 
 digi-pot wiper position internally. New functions and features not yet fully 
 tested.
+********
+
+DATE: 	16 October 2013
+Version 2.04.03 (Digi-Pot Dev Branch)
+AUTHOR:	JTK WONG
+ 		XTRONTEC Limited
+		www.xtrontec.com
+********
+Setup and drive the digi-pot RESET pin. Take out the I2C_SW_Reset() call in the 
+initialisation routine for the time being. Do not left-shift the slave address. 
+Added global variable to specify length of I2C message.
+********
+
+DATE: 	15 October 2013
+Version 2.04.02 (Digi-Pot Dev Branch)
+AUTHOR:	JTK WONG
+ 		XTRONTEC Limited
+		www.xtrontec.com
+********
+First test of digi-pot I2C initialisation and default settings code. Makefile 
+adjusted to compile the I2C objects.
+********
+
+DATE: 	09 October 2013
+Version 2.04.01 (Digi-Pot Dev Branch)
+AUTHOR:	JTK WONG
+ 		XTRONTEC Limited
+		www.xtrontec.com
+********
+Setting up new branch in repository for MCP4551 digi-pot I2C code.
+********
+
+******** END OF MERGE ***********
 
 
 --------------------------
-DATE: 	16 October 2013
+DATE: 	27 November 2013
+AUTHOR:	JTK WONG
+ 		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Version 2.11.00
+
+Added option to regularly report the temperatures via the M203 command.
+M203 P5 will request that the firmware reports temperature status every 5 seconds.
+The format will be similar to that of the M105 response except there is not a OK 
+prefix.
+
+Added extra minor 'dot' in version numbering. This will be used for indicating 
+very very minor changes.
+
+Added option to include cold extrude protection.
+
+Adjusted default PID parameters for the hotend. This should give a greater / 
+faster response to errors / disturbances. For existing systems please remember 
+that they will use settings saved within the EEPROM. Issue a M502 command to 
+load and save the defaults to EEPROM.
+
+
+--------------------------
+DATE: 	14 November 2013
 AUTHOR:	JTK WONG
 		XTRONTEC Limited
 		www.xtrontec.com
 --------------------------
-Version 2.04.03 (Digi-Pot Dev Branch)
+Version 2.10
 
-Setup and drive the digi-pot RESET pin. Take out the I2C_SW_Reset() call in the 
-initialisation routine for the time being. Do not left-shift the slave address. 
-Added global variable to specify length of I2C message.
+Added #define SAFETY_MAX_TEMP to config.h. This is then used to check if any of 
+the thermistors exceed this temperature. If exceeded both heaters are turned off.
+This should cover the case when the extruder and bed heaters have been plugged 
+in the wrong way around.
+
+
+--------------------------
+DATE: 	14 November 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Version 2.09
+
+Changed X, Y, and Z max lengths in config.h this is to match the actual physical 
+limits for the current production parts and fittings. Also changed _MAX_FEEDRATE 
+to 60 mm/s for X and Y axis.
+
+
+--------------------------
+DATE: 	13 November 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Version 2.08
+
+Stepper motor inactivity time now based on actual none movement rather general 
+host to printer command inactivity.
+
+Added text feedback to indicate that the printer has automatically disabled the 
+motors and/or the heaters.
+
+Fixed small bug when aborting a paused print. The motor positions were not 
+updated to the true current positions.
+
+
+--------------------------
+DATE: 	22 October 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Version 2.07
+
+M226 P-255 will not switch off heaters now.
+
+
+--------------------------
+DATE: 	22 October 2013
+AUTHOR:	JTK WONG
+		XTRONTEC Limited
+		www.xtrontec.com
+--------------------------
+Version 2.06
+
+M226 command updated to include an option to resume from the paused print but 
+also discard all moves stored in the plan buffer. Allows the host to cancel the 
+current print without having to wait for previously buffered moves to all be 
+completed first. Sending a M226 P-255 command will resume from a paused print 
+state and also discard the current buffered moves.
+
+Also added option in SD card code to cancel the SD card print. This is done 
+via the M24 command which is also used to start or resume a SD card print.
+Sending a M24 P-255 command will abort the current SD card print and close the 
+SD card file.
 
 
 --------------------------
@@ -62,22 +184,15 @@ AUTHOR:	JTK WONG
 		XTRONTEC Limited
 		www.xtrontec.com
 --------------------------
-Version 2.04.02 (Digi-Pot Dev Branch)
+Version 2.05
 
-First test of digi-pot I2C initialisation and default settings code. Makefile 
-adjusted to compile the I2C objects.
+Stepper motors are not disabled immediately when idle. This appears to improve 
+print quality.
 
+Stepper motors are now disabled automatically after 20 minutes of inactivity.
 
---------------------------
-DATE: 	09 October 2013
-AUTHOR:	JTK WONG
-		XTRONTEC Limited
-		www.xtrontec.com
---------------------------
-Version 2.04.01 (Digi-Pot Dev Branch)
-
-Setting up new branch in repository for MCP4551 digi-pot I2C code.
-
+Hot-end and hot-bed heaters are disabled automatically after 1 hour of 
+inactivity.
 
 
 --------------------------

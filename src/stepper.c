@@ -870,11 +870,15 @@ void get_current_printer_state(void)
 
 void set_print_paused_buffer(void)
 {
+	CRITICAL_SECTION_START;
+	
 	block_buffer_size = PRINT_PAUSED_BLOCK_BUF_SIZE;
 	block_buffer_mask = PRINT_PAUSED_BLOCK_BUF_MASK;
 	
 	block_buffer_tail = 0;
 	block_buffer_head = 0;
+	
+	CRITICAL_SECTION_END;
 }
 
 
@@ -900,6 +904,8 @@ void clear_plan_buffer(void)
 
 void resume_normal_print_buffer(void)
 {
+	CRITICAL_SECTION_START;
+	
 	block_buffer_size = CFG_BLOCK_BUFFER_SIZE;
 	block_buffer_mask = CFG_BLOCK_BUFFER_MASK;
 	
@@ -912,6 +918,22 @@ void resume_normal_print_buffer(void)
 	// Copy block_buffer_head and block_buffer_tail from saved data
 	block_buffer_head = paused_data.block_buffer_head; 
 	block_buffer_tail = paused_data.block_buffer_tail;
+	
+	CRITICAL_SECTION_END;
+}
+
+
+void resume_normal_buf_discard_all_buf_moves(void)
+{
+	CRITICAL_SECTION_START;
+	
+	block_buffer_size = CFG_BLOCK_BUFFER_SIZE;
+	block_buffer_mask = CFG_BLOCK_BUFFER_MASK;
+	
+	block_buffer_tail = 0;
+	block_buffer_head = 0;
+	
+	CRITICAL_SECTION_END;
 }
 
 

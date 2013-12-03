@@ -116,14 +116,14 @@
 //-----------------------------------------------------------------------
 // Max Lengths
 //-----------------------------------------------------------------------
-#define X_MAX_LENGTH 115
-#define Y_MAX_LENGTH 155
-#define Z_MAX_LENGTH 90
+#define X_MAX_LENGTH 108
+#define Y_MAX_LENGTH 149
+#define Z_MAX_LENGTH 86
 
 //-----------------------------------------------------------------------
 //// MOVEMENT SETTINGS
 //-----------------------------------------------------------------------
-#define _MAX_FEEDRATE {120, 120, 20, 45} // (mm/sec)    
+#define _MAX_FEEDRATE {60, 60, 20, 45} // (mm/sec)    
 #define _HOMING_FEEDRATE {1500,1500,120} // (mm/min) !!
 #define _AXIS_RELATIVE_MODES {0, 0, 0, 0}
 
@@ -239,10 +239,10 @@
 #define PID_FUNCTIONAL_RANGE	12 
 
 //PID Controler Settings
-#define PID_INTEGRAL_DRIVE_MAX	80 		// too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
-#define PID_PGAIN 				2000 	//256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
-#define PID_IGAIN 				15   	//256 is 1.0 
-#define PID_DGAIN 				1000	//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
+#define PID_INTEGRAL_DRIVE_MAX	110 	// too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
+#define PID_PGAIN 				6000 	//2000 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
+#define PID_IGAIN 				30   	//256 is 1.0 
+#define PID_DGAIN 				2000	//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 #endif
 
@@ -252,15 +252,8 @@
 #define HOTEND_HEATUP_TIMEOUT	600000	// ms
 
 // How often should the heater check for new temp readings, in milliseconds
-#define HEATER_CHECK_INTERVAL	100
-#define BED_CHECK_INTERVAL		1000
-
-// Comment the following line to enable heat management during acceleration
-#define DISABLE_CHECK_DURING_ACC
-#ifndef DISABLE_CHECK_DURING_ACC
-  // Uncomment the following line to disable heat management during moves
-  //#define DISABLE_CHECK_DURING_MOVE
-#endif
+#define HEATER_CHECK_INTERVAL	50		//100
+#define BED_CHECK_INTERVAL		500
 
 
 /// Hot Bed PID settings:
@@ -318,8 +311,8 @@
 // When temperature exceeds max temp, your heater will be switched off.
 // This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
 // You should use MINTEMP for thermistor short/failure protection.
-#define MAXTEMP		270
-#define BEDMAXTEMP 	150
+#define MAXTEMP				270
+#define BEDMAXTEMP 			150
 
 // User Max Temp
 // These are the maximum target temperatures that the user can request.
@@ -356,6 +349,21 @@
 #define YAXIS_DEFAULT_MAX_CURRENT		1700	// mA
 #define ZAXIS_DEFAULT_MAX_CURRENT		1700	// mA
 #define EAXIS_DEFAULT_MAX_CURRENT		1700	// mA
+
+
+// Inactivity Timeouts
+#define INACTIVITY_STEPPERS_TIMEOUT		1200000			// ms (1,200,000 ms = 20 mins)
+#define INACTIVITY_HEATERS_TIMEOUT 		3600000			// ms (3,600,000 ms = 1 hour)
+
+
+// Prevents dangerous Extruder moves, i.e. if the temperature is under the limit
+#define PREVENT_DANGEROUS_EXTRUDE	1
+#define DEFAULT_PREVENT_DANGEROUS_EXTRUDE_START_MODE	0	// 0 = Off by default on startup (must be enabled via M-code)
+//if PREVENT_DANGEROUS_EXTRUDE is on, you can still disable (uncomment) very long bits of extrusion separately.
+#define PREVENT_LENGTHY_EXTRUDE		0
+
+#define EXTRUDE_MINTEMP 170
+#define EXTRUDE_MAXLENGTH (X_MAX_LENGTH + Y_MAX_LENGTH) //prevent extrusion of very large distances.
 
 
 // Global Variables for CPU Loading Calculation

@@ -70,6 +70,7 @@ void get_current_printer_state(void);
 void set_print_paused_buffer(void);
 void clear_plan_buffer(void);
 void resume_normal_print_buffer(void);
+void resume_normal_buf_discard_all_buf_moves(void);
 
 #if DIGIPOTS > 0
 	void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps);

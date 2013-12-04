@@ -178,10 +178,10 @@ static volatile uint8_t endstop_z_hit=0;
 block_t resume_buffer[PRINT_PAUSED_BLOCK_BUF_SIZE] = {{0}};
 
 #if DIGIPOTS > 0
-	unsigned short max_x_motor_current = 0;	// mA
-	unsigned short max_y_motor_current = 0;	// mA
-	unsigned short max_z_motor_current = 0;	// mA
-	unsigned short max_e_motor_current = 0;	// mA
+    unsigned short max_x_motor_current = XAXIS_DEFAULT_MAX_CURRENT;	// mA
+    unsigned short max_y_motor_current = YAXIS_DEFAULT_MAX_CURRENT;	// mA
+    unsigned short max_z_motor_current = ZAXIS_DEFAULT_MAX_CURRENT;	// mA
+    unsigned short max_e_motor_current = EAXIS_DEFAULT_MAX_CURRENT;	// mA
 #endif
 
 
@@ -954,37 +954,27 @@ void st_synchronize()
 void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps)
 {
 	unsigned long WaitForI2CSendTimer = 0;
-	unsigned char WiperValue = (unsigned char)( ( (MilliAmps/1000.0) * 8 * ALLEGRO_A4982_RS ) / DIGIPOT_VOLTS_PER_STEP );
-	
-	if (WiperValue > 0xFF)
-	{
-		WiperValue = 0xFF;
-	}
 	
 	switch (Axis)
 	{
 		case X_AXIS:
-			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER0_ADDR, WiperValue);
-			//max_x_motor_current = (WiperValue * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
-			max_x_motor_current = MilliAmps;
+			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER0_ADDR, MilliAmps);
+            max_x_motor_current = MilliAmps;
 		break;
 		
 		case Y_AXIS:
-			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER1_ADDR, WiperValue);
-			//max_y_motor_current = (WiperValue * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
-			max_y_motor_current = MilliAmps;
+			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER1_ADDR, MilliAmps);
+            max_y_motor_current = MilliAmps;
 		break;
 		
 		case Z_AXIS:
-			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER2_ADDR, WiperValue);
-			//max_z_motor_current = (WiperValue * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
-			max_z_motor_current = MilliAmps;
+			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER2_ADDR, MilliAmps);
+            max_z_motor_current = MilliAmps;
 		break;
 		
 		case E_AXIS:
-			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER3_ADDR, WiperValue);
-			//max_e_motor_current = (WiperValue * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
-			max_e_motor_current = MilliAmps;
+			I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER3_ADDR, MilliAmps);
+            max_e_motor_current = MilliAmps;
 		break;
 		
 		default:

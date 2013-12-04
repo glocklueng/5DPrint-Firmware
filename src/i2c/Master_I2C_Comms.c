@@ -49,7 +49,7 @@ unsigned long previous_millis_service_i2c = 0;
 
 unsigned char TWI_Act_On_Failure_In_Last_Transmission ( unsigned char TWIerrorMsg );
 void Process_I2C_Message(unsigned char I2C_messageBuf[TWI_BUFFER_SIZE]);
-
+unsigned char currentToWiperValue(unsigned short current);
 
 unsigned char TWI_Act_On_Failure_In_Last_Transmission ( unsigned char TWIerrorMsg )
 {
@@ -203,6 +203,13 @@ void I2C_SW_Reset(void)
             (0<<TWWC);                                 
 }
 
+unsigned char currentToWiperValue (unsigned short current)
+{
+    unsigned char wiperValue;
+    wiperValue = (unsigned char) (( (current/1000.0) * 8 * ALLEGRO_A4982_RS ) / DIGIPOT_VOLTS_PER_STEP);
+    if (wiperValue > 0xFF) wiperValue  = 0xFF;
+    return wiperValue;
+}
 
 void I2C_digipots_set_defaults(void)
 {
@@ -215,23 +222,19 @@ void I2C_digipots_set_defaults(void)
 		I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
 		
 		I2C_messageBuf[1] = I2C_DIGIPOT_VOL_WIPER0_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[2] = (unsigned char)( ( (max_x_motor_current/1000.0) * 8 * ALLEGRO_A4982_RS ) / DIGIPOT_VOLTS_PER_STEP );
-		//max_x_motor_current = (I2C_messageBuf[2] * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
-		
+        I2C_messageBuf[2] = currentToWiperValue (max_x_motor_current);
+				
 		I2C_messageBuf[3] = I2C_DIGIPOT_VOL_WIPER1_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[4] = (unsigned char)( ( (max_y_motor_current/1000.0) * 8 * ALLEGRO_A4982_RS ) / DIGIPOT_VOLTS_PER_STEP );
-		//max_y_motor_current = (I2C_messageBuf[4] * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
-		
+        I2C_messageBuf[4] = currentToWiperValue (max_y_motor_current);
+				
 		I2C_messageBuf[5] = I2C_DIGIPOT_VOL_WIPER2_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[6] = (unsigned char)( ( (max_z_motor_current/1000.0) * 8 * ALLEGRO_A4982_RS ) / DIGIPOT_VOLTS_PER_STEP );
-		//max_z_motor_current = (I2C_messageBuf[6] * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
-		
+        I2C_messageBuf[6] = currentToWiperValue (max_z_motor_current);
+				
 		I2C_messageBuf[7] = I2C_DIGIPOT_VOL_WIPER3_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[8] = (unsigned char)( ( (max_e_motor_current/1000.0) * 8 * ALLEGRO_A4982_RS ) / DIGIPOT_VOLTS_PER_STEP );
-		//max_e_motor_current = (I2C_messageBuf[8] * DIGIPOT_VOLTS_PER_STEP * 1000) / (8 * ALLEGRO_A4982_RS);
-		
+        I2C_messageBuf[8] = currentToWiperValue (max_e_motor_current);
+				
 		I2C_messageBuf[9] = I2C_DIGIPOT_VOL_TCON0_ADDR | I2C_DIGIPOT_WRITE | 0x01;
-		I2C_messageBuf[10] = 0xFF;
+		I2C_messageBuf[10] = 0xFF; 
 		
 		I2C_messageBuf[11] = I2C_DIGIPOT_VOL_TCON1_ADDR | I2C_DIGIPOT_WRITE | 0x01;
 		I2C_messageBuf[12] = 0xFF;
@@ -242,8 +245,10 @@ void I2C_digipots_set_defaults(void)
 }
 
 
-void I2C_digipots_set_all_wipers(unsigned char wiper0, unsigned char wiper1, 
-									unsigned char wiper2, unsigned char wiper3)
+void I2C_digipots_set_all_wipers(unsigned short MilliAmps0,
+                                 unsigned short MilliAmps1,
+                                 unsigned short MilliAmps2,
+                                 unsigned short MilliAmps3)
 {
 	if (!I2C_Locked)
 	{
@@ -254,16 +259,16 @@ void I2C_digipots_set_all_wipers(unsigned char wiper0, unsigned char wiper1,
 		I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
 		
 		I2C_messageBuf[1] = I2C_DIGIPOT_VOL_WIPER0_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[2] = wiper0;
+		I2C_messageBuf[2] = currentToWiperValue(MilliAmps0);
 		
 		I2C_messageBuf[3] = I2C_DIGIPOT_VOL_WIPER1_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[4] = wiper1;
+		I2C_messageBuf[4] = currentToWiperValue(MilliAmps1);
 		
 		I2C_messageBuf[5] = I2C_DIGIPOT_VOL_WIPER2_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[6] = wiper2;
+		I2C_messageBuf[6] = currentToWiperValue(MilliAmps2);
 		
 		I2C_messageBuf[7] = I2C_DIGIPOT_VOL_WIPER3_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[8] = wiper3;
+		I2C_messageBuf[8] = currentToWiperValue(MilliAmps2);
 		
 		I2C_Send_Msg_Size = 9;
 		Send_I2C_Msg = 1;
@@ -271,7 +276,8 @@ void I2C_digipots_set_all_wipers(unsigned char wiper0, unsigned char wiper1,
 }
 
 
-void I2C_digipots_set_wiper(unsigned char WiperAddr, unsigned char WiperValue)
+void I2C_digipots_set_wiper(unsigned char WiperAddr, 
+                            unsigned short MilliAmps)
 {
 	if (!I2C_Locked)
 	{
@@ -282,7 +288,7 @@ void I2C_digipots_set_wiper(unsigned char WiperAddr, unsigned char WiperValue)
 		I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
 		
 		I2C_messageBuf[1] = WiperAddr | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[2] = WiperValue;
+		I2C_messageBuf[2] = currentToWiperValue(MilliAmps);
 		
 		I2C_Send_Msg_Size = 3;
 		Send_I2C_Msg = 1;

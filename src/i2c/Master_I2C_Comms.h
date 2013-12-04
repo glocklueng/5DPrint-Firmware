@@ -77,7 +77,8 @@ void I2C_Send_Msg(unsigned char Slave_Address, unsigned char command, unsigned c
 void I2C_Read_Msg(unsigned char Slave_Address, unsigned char command, unsigned char NumofDataBytes, unsigned long Data);
 void I2C_SW_Reset(void);
 void I2C_digipots_set_defaults(void);
-void I2C_digipots_set_wiper(unsigned char WiperAddr, unsigned char WiperValue);
+void I2C_digipots_set_wiper(unsigned char WiperAddr, 
+                            unsigned short MilliAmps);
 unsigned short I2C_digipots_read(unsigned char DeviceMemAddress);
 
 #endif

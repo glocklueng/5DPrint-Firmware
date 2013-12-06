@@ -41,6 +41,7 @@
 #include "stepper.h"
 #include "sdcard/makibox_sdcard.h"
 #include "language.h"
+#include "tone.h"
 
 #if DIGIPOTS > 0
 	#include "i2c/Master_I2C_Comms.h"
@@ -166,6 +167,7 @@ void execute_m906(struct command *cmd);
 
 // M226 - M226 / M226 P1 = Pause print  M226 P0 = resume print M226 P-255 = discard plan buffer contents and resume normal operation
 
+// M300 - Starts the buzzer with freqeuncy f and period p
 // M301 - Set PID parameters P I and D
 // M302 - Enable / Disable Cold Extrudes P1 = allow cold extrudes; P0 = Do not allow cold extrudes
 // M303 - PID relay autotune S<temperature> sets the target temperature. (default target temperature = 150C)
@@ -389,8 +391,11 @@ void setup()
     SET_OUTPUT(E_ENABLE_PIN);
   if(!E_ENABLE_ON) WRITE(E_ENABLE_PIN,HIGH);
   #endif
-
+  
+  
   //Initialize Microstep Pins - steppers default to 16 Step
+  //Only used when DIGIPOT is used
+  #if DIGIPOT > 0
   #if (X_MS1_PIN > -1)
     SET_OUTPUT(X_MS1_PIN);
     WRITE(X_MS1_PIN, HIGH);
@@ -423,6 +428,7 @@ void setup()
     SET_OUTPUT(E_MS2_PIN);
     WRITE(E_MS2_PIN, HIGH);
   #endif
+  #endif // end of #if DIGIPOT > 0
 
   //endstops and pullups
   #ifdef ENDSTOPPULLUPS
@@ -549,6 +555,10 @@ void setup()
   init_I2C_Master();
   delay(1);
   I2C_digipots_set_defaults();
+#endif
+
+#if BUZZER_SUPPORT > 0
+  buzzer_init();
 #endif
 
   #ifdef PIDTEMP
@@ -1748,7 +1758,15 @@ void execute_mcode(struct command *cmd) {
 	  case 226:	// M226 - M226 / M226 P1 = Pause print  M226 P0 = resume print
 		execute_m226(cmd);
 	  break;
-	  
+
+#if BUZZER_SUPPORT > 0 
+    case 300: // M300 - Starts the buzzer with freqeuncy f and period p
+        if(cmd->has_F) BUZZER_F = (unsigned short) cmd->F;
+        if(cmd->has_P) BUZZER_P = (unsigned short) cmd->P;
+        buzzer_tone();
+    break;
+#endif
+
 #ifdef PIDTEMP
       case 301: // M301
 		if(cmd->has_P) PID_Kp = (unsigned int)cmd->P;

@@ -74,7 +74,7 @@
 #define PS_ON_PIN          -1
 #define KILL_PIN           37 // PINE5
 
-#define BUZZER_PIN         10       
+#define BUZZER_PIN         10 // PINC0      
 
 #define SDCD_PIN           47 // PINE3
 #define SDCS_PIN           20 // PINB0

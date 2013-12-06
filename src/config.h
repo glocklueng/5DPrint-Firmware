@@ -344,6 +344,10 @@
 // Set to 1 to enable Digi-Pot support
 #define DIGIPOTS			1
 
+// Set to 0 to disable Buzzer support
+// Set to 1 to enable Buzzer support
+#define BUZZER_SUPPORT      1
+
 // Note that accuracy is limited by resolution of the digi-pot.
 #define XAXIS_DEFAULT_MAX_CURRENT		1700	// mA
 #define YAXIS_DEFAULT_MAX_CURRENT		1700	// mA

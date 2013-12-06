@@ -57,7 +57,7 @@ unsigned char reset_flags;
 
 void board_init(void)
 {
-	cli();
+    cli();
 	CLKPR = 0x80;
 	CLKPR = CPU_PRESCALER;
 	
@@ -66,9 +66,9 @@ void board_init(void)
 	TCCR0B = (1<<CS01) | (1<<CS00);		// div 64 prescaler
 	TIMSK0 |= (1<<TOIE0);
 	
-	// timer 1 -> Stepper Motors Drive and Heater Control (Initialised later in setup();
-	// timer 2 -> Not used;
-	// timer 3 -> HW PWM for Heaters and Fan - initialised later in setup();
+	// timer 1 -> Stepper Motors Drive and Heater Control - Initialised later in setup();
+	// timer 2 -> Buzzer Drive                            - Initialised later in setup();
+	// timer 3 -> HW PWM for Heaters and Fan              - initialised later in setup();
 	
 	// ADC
 	ADCSRA = (1<<ADEN) | (ADC_PRESCALER + ADC_PRESCALE_ADJUST);

@@ -49,6 +49,8 @@
 #include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include "board_io.h"
+#include "pins.h"
 #include "pins_teensy.h"
 #include "config.h"
 #include "pgmspace.h"
@@ -263,6 +265,8 @@
 
 #define USBSTATE __attribute__ ((section (".noinit")))
 
+#define USB_LED_FLASH_INTERVAL  100 // ms
+
 
 /**************************************************************************
  *
@@ -457,6 +461,19 @@ volatile uint8_t cdc_line_rtsdtr=0;
 
 // "peek buffer" for usb_serial
 int16_t peek_buf;
+
+// USB LED
+unsigned char usb_led_status = 0;
+unsigned long previous_millis_usb_led = 0;
+
+
+/**************************************************************************
+ *
+ *  Private Functions Prototypes - only used inside the module
+ *
+ **************************************************************************/
+
+void toggle_usb_led(void);
 
 
 /**************************************************************************
@@ -831,6 +848,14 @@ uint8_t usb_serial_rts(void)
  *
  **************************************************************************/
 
+void toggle_usb_led(void){
+    if (millis() - previous_millis_usb_led > USB_LED_FLASH_INTERVAL){
+        previous_millis_usb_led = millis();
+        usb_led_status = ~usb_led_status;
+        WRITE(USB_LED_PIN, usb_led_status);
+    }
+}
+
 // USB Device Interrupt - handle all device-level events
 // the transmit buffer flushing is triggered by the start of frame
 //
@@ -875,7 +900,7 @@ ISR(USB_GEN_vect)
     }
     // USB suspended
     if (intbits & (1<<SUSPI)) {
-        // USB Suspend (inactivity for 3ms)
+        // USB Suspend (inactivity for 3ms)        
         UDIEN = (1<<WAKEUPE);
         usb_configuration = 0;
         usb_suspended = 1;
@@ -890,6 +915,7 @@ ISR(USB_GEN_vect)
         // reduce to less than 2.5 mA, which means using
         // powerdown mode, but that breaks the Arduino
         // user's paradigm....
+        WRITE(USB_LED_PIN, LOW);
     }
     // USB active
     if (usb_suspended && (intbits & (1<<WAKEUPI))) {
@@ -901,6 +927,7 @@ ISR(USB_GEN_vect)
 #endif
         UDIEN = (1<<EORSTE)|(1<<SOFE)|(1<<SUSPE);
         usb_suspended = 0;
+        WRITE(USB_LED_PIN, HIGH);
         return;
     }
 }

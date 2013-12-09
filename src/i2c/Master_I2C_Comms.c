@@ -78,7 +78,8 @@ void init_I2C_Master(void)
 	TWI_Master_Initialise();
 	
 	// Perform SW I2C reset to ensure all devices are in a known I2C state
-	//I2C_SW_Reset();
+	I2C_SW_Reset();
+        delay(1);
 	
 	I2C_Send_Msg_Size = 0;
 	I2C_Read_Request = 0;
@@ -181,8 +182,8 @@ void Process_I2C_Message(unsigned char I2C_ReadmessageBuf[TWI_BUFFER_SIZE])
 void I2C_SW_Reset(void)
 {
 	TWCR =	(1<<TWEN)|                         		// TWI Interface enabled.
-			(1<<TWIE)|(1<<TWINT)|                  	// Enable TWI Interupt and clear the flag.
-			(0<<TWEA)|(1<<TWSTA)|(0<<TWSTO)|       	// Initiate a START condition.
+            (1<<TWIE)|(1<<TWINT)|                  	// Enable TWI Interupt and clear the flag.
+            (0<<TWEA)|(1<<TWSTA)|(0<<TWSTO)|       	// Initiate a START condition.
 			(0<<TWWC);     
 
 	TWDR =	0xFF;

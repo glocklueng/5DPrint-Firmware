@@ -546,12 +546,12 @@ void setup()
   #endif
   
 #if DIGIPOTS > 0
-  SET_OUTPUT(DIGIPOT_RESET);
+  // SET_OUTPUT(DIGIPOT_RESET);
   // Ensure the digi-pot is in a known state by resetting it.
-  WRITE(DIGIPOT_RESET, LOW);
-  delay(1);
-  WRITE(DIGIPOT_RESET, HIGH);
-  
+  // WRITE(DIGIPOT_RESET, LOW);
+  // delay(1);
+  // WRITE(DIGIPOT_RESET, HIGH);
+    
   init_I2C_Master();
   delay(1);
   I2C_digipots_set_defaults();

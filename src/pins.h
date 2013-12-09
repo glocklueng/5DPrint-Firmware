@@ -86,6 +86,6 @@
 #define I2C_SDA			    1
 #define DIGIPOT_A0		   -1
 #define DIGIPOT_A1		   -1
-#define DIGIPOT_RESET		2
+//#define DIGIPOT_RESET		    2
 
 #endif // PINS_H

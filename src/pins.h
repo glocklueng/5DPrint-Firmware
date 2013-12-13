@@ -34,33 +34,34 @@
 
 #define X_STEP_PIN         28 // PINA0
 #define X_DIR_PIN          29 // PINA1
-#define X_ENABLE_PIN       12 // PINC2
+#define X_ENABLE_PIN       17 // PINC7
 #define X_MS1_PIN          25 // PINB5
 #define X_MS2_PIN          26 // PINB6
 #define X_MIN_PIN          18 // PINE6
 #define X_MAX_PIN          -1
 
+
 #define Y_STEP_PIN         30 // PINA2
 #define Y_DIR_PIN          31 // PINA3
-#define Y_ENABLE_PIN       11 // PINC1
-#define Y_MS1_PIN          8  // PINE0
-#define Y_MS2_PIN          9  // PINE1
+#define Y_ENABLE_PIN       13 // PINC3
+#define Y_MS1_PIN          9  // PINE1
+#define Y_MS2_PIN          8  // PINE0
 #define Y_MIN_PIN          19 // PINE7
 #define Y_MAX_PIN          -1
 
 #define Z_STEP_PIN         32 // PINA4
 #define Z_DIR_PIN          33 // PINA5
-#define Z_ENABLE_PIN       17 // PINC7
-#define Z_MS1_PIN          4  // PIND4
-#define Z_MS2_PIN          5  // PIND5
+#define Z_ENABLE_PIN       12 // PINC2
+#define Z_MS1_PIN          7  // PIND7
+#define Z_MS2_PIN          6  // PIND6
 #define Z_MIN_PIN          36 // PINE4
 #define Z_MAX_PIN          -1
 
 #define E_STEP_PIN         34 // PINA6
 #define E_DIR_PIN          35 // PINA7
-#define E_ENABLE_PIN       13 // PINC3
-#define E_MS1_PIN          6  // PIND6
-#define E_MS2_PIN          7  // PIND7
+#define E_ENABLE_PIN       11 // PINC1
+#define E_MS1_PIN          5  // PIND5
+#define E_MS2_PIN          4  // PIND4
 
 #define HEATER_0_PIN       15 // PINC5, Extruder
 #define HEATER_1_PIN       14 // PINC4, Bed

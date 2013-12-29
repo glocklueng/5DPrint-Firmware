@@ -37,16 +37,15 @@
 #define X_ENABLE_PIN       17 // PINC7
 #define X_MS1_PIN          25 // PINB5
 #define X_MS2_PIN          26 // PINB6
-#define X_MIN_PIN          18 // PINE6
+#define X_MIN_PIN          37 // PINE5
 #define X_MAX_PIN          -1
-
 
 #define Y_STEP_PIN         30 // PINA2
 #define Y_DIR_PIN          31 // PINA3
 #define Y_ENABLE_PIN       13 // PINC3
 #define Y_MS1_PIN          9  // PINE1
 #define Y_MS2_PIN          8  // PINE0
-#define Y_MIN_PIN          19 // PINE7
+#define Y_MIN_PIN          36 // PINE4
 #define Y_MAX_PIN          -1
 
 #define Z_STEP_PIN         32 // PINA4
@@ -54,7 +53,7 @@
 #define Z_ENABLE_PIN       12 // PINC2
 #define Z_MS1_PIN          7  // PIND7
 #define Z_MS2_PIN          6  // PIND6
-#define Z_MIN_PIN          36 // PINE4
+#define Z_MIN_PIN          19 // PINE7
 #define Z_MAX_PIN          -1
 
 #define E_STEP_PIN         34 // PINA6
@@ -73,7 +72,7 @@
 #define LED_PIN            -1
 #define USB_LED_PIN        24 // PINB4
 #define PS_ON_PIN          -1
-#define KILL_PIN           37 // PINE5
+#define KILL_PIN           18 // PINE6
 
 #define BUZZER_PIN         10 // PINC0      
 

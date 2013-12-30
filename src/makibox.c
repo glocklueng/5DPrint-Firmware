@@ -274,11 +274,20 @@ unsigned char manage_monitor = 255;
 	static unsigned short sdcard_writebuf_pos = 0;
 #endif
 
+// TODO: 
+// The MS1, MS2 should be set once in setup loop, but that doesn't work
+// Added here in the enable motor functions to ensure the MS1, MS2 pins are set
 
 void enable_x()
 {
 #if X_ENABLE_PIN > -1
   WRITE(X_ENABLE_PIN, X_ENABLE_ON);
+#endif
+#if X_MS1_PIN > -1
+  WRITE(X_MS1_PIN, HIGH);
+#endif
+#if X_MX2_PIN > -1
+  WRITE(X_MS2_PIN, HIGH);
 #endif
 }
 void disable_x()
@@ -292,6 +301,12 @@ void enable_y()
 #if Y_ENABLE_PIN > -1
   WRITE(Y_ENABLE_PIN, Y_ENABLE_ON);
 #endif
+#if Y_MS1_PIN > -1
+  WRITE(Y_MS1_PIN, HIGH);
+#endif
+#if Y_MX2_PIN > -1
+  WRITE(Y_MS2_PIN, HIGH);
+#endif
 }
 void disable_y()
 {
@@ -304,6 +319,12 @@ void enable_z()
 #if Z_ENABLE_PIN > -1
   WRITE(Z_ENABLE_PIN, Z_ENABLE_ON);
 #endif
+#if Z_MS1_PIN > -1
+  WRITE(Z_MS1_PIN, HIGH);
+#endif
+#if Z_MS2_PIN > -1
+  WRITE(Z_MS2_PIN, HIGH);
+#endif
 }
 void disable_z()
 {
@@ -315,6 +336,12 @@ void enable_e()
 {
 #if E_ENABLE_PIN > -1
   WRITE(E_ENABLE_PIN, E_ENABLE_ON);
+#endif
+#if E_MS1_PIN > -1
+  WRITE(E_MS1_PIN, HIGH);
+#endif
+#if E_MS2_PIN > -1
+  WRITE(E_MS2_PIN, HIGH);
 #endif
 }
 void disable_e()
@@ -374,7 +401,6 @@ void setup()
   #endif
   
   //Initialize Enable Pins - steppers default to disabled.
-  
   #if (X_ENABLE_PIN > -1)
     SET_OUTPUT(X_ENABLE_PIN);
   if(!X_ENABLE_ON) WRITE(X_ENABLE_PIN,HIGH);
@@ -394,8 +420,6 @@ void setup()
   
   
   //Initialize Microstep Pins - steppers default to 16 Step
-  //Only used when DIGIPOT is used
-  #if DIGIPOT > 0
   #if (X_MS1_PIN > -1)
     SET_OUTPUT(X_MS1_PIN);
     WRITE(X_MS1_PIN, HIGH);
@@ -428,7 +452,6 @@ void setup()
     SET_OUTPUT(E_MS2_PIN);
     WRITE(E_MS2_PIN, HIGH);
   #endif
-  #endif // end of #if DIGIPOT > 0
 
   //endstops and pullups
   #ifdef ENDSTOPPULLUPS

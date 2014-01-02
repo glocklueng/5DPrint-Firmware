@@ -1850,6 +1850,9 @@ void execute_mcode(struct command *cmd) {
           axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
         }
 		EEPROM_StoreSettings();
+                // TODO:
+                // M502 command doesn't reset the digipot resistor values automatically
+                // Check other settings too
       break;
 	  
       case 503: // M503 - print current settings
@@ -2599,14 +2602,16 @@ void execute_m906(struct command *cmd)
 		}
 	}
 	
-	
+	/* M906 should initate a temprorary change
+           and M500 should save the EEPROM Settings
+          
 	if ( (cmd->has_X) || (cmd->has_Y) || (cmd->has_Z) || (cmd->has_E) )
 	{
 		EEPROM_StoreSettings();
 		serial_send(TXT_NEW_STEPPER_MOTOR_MAX_CURRENTS_SET_CRLF);
 		serial_send(TXT_CRLF);
 	}
-	
+	*/
 	serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF, max_x_motor_current, 
 																max_y_motor_current,
 																max_z_motor_current,

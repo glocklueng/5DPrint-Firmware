@@ -331,7 +331,7 @@
 
 // Set to 0 to disable SD Card support
 // Set to 1 to enable SD Card support
-#define SDSUPPORT			0
+#define SDSUPPORT			1
 
 #if SDSUPPORT < 1
 	#undef 	CFG_BLOCK_BUFFER_SIZE

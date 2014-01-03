@@ -38,6 +38,13 @@
 	extern unsigned short max_e_motor_current;
 #endif
 
+#if SET_MICROSTEP > 0
+extern unsigned short microstep_x[2];
+extern unsigned short microstep_y[2];
+extern unsigned short microstep_z[2];
+extern unsigned short microstep_e[2];
+#endif
+
 #if (DEBUG > -1)
 	extern uint32_t timer1_compa_isr_exe_micros;
 	extern uint32_t timer1_compa_isr_exe_micros_min;

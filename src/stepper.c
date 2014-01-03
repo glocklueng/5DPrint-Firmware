@@ -184,6 +184,14 @@ block_t resume_buffer[PRINT_PAUSED_BLOCK_BUF_SIZE] = {{0}};
     unsigned short max_e_motor_current = EAXIS_DEFAULT_MAX_CURRENT;	// mA
 #endif
 
+#if SET_MICROSTEP > 0
+// Default microstep resolution = 16th step
+unsigned short microstep_x[2]={HIGH, HIGH};
+unsigned short microstep_y[2]={HIGH, HIGH};
+unsigned short microstep_z[2]={HIGH, HIGH};
+unsigned short microstep_e[2]={HIGH, HIGH};
+#endif
+
 
 #if X_MIN_PIN > -1
   static uint8_t old_x_min_endstop=0;
@@ -285,14 +293,38 @@ unsigned short calc_timer(unsigned short step_rate)
 void trapezoid_generator_reset()
 {
   deceleration_time = 0;
-  
-  
+    
   // step_rate to timer interval
   acc_step_rate = current_block->initial_rate;
   acceleration_time = calc_timer(acc_step_rate);
   OCR1A = acceleration_time;
   OCR1A_nominal = calc_timer(current_block->nominal_rate);
-    
+
+  // Set microstep resolution
+#if X_MS1_PIN > -1
+  WRITE(X_MS1_PIN, microstep_x[0]);
+#endif
+#if X_MX2_PIN > -1
+  WRITE(X_MS2_PIN, microstep_x[1]);
+#endif
+#if Y_MS1_PIN > -1
+  WRITE(Y_MS1_PIN, microstep_y[0]);
+#endif
+#if Y_MX2_PIN > -1
+  WRITE(Y_MS2_PIN, microstep_y[1]);
+#endif
+#if Z_MS1_PIN > -1
+  WRITE(Z_MS1_PIN, microstep_z[0]);
+#endif
+#if Z_MS2_PIN > -1
+  WRITE(Z_MS2_PIN, microstep_z[1]);
+#endif
+#if E_MS1_PIN > -1
+  WRITE(E_MS1_PIN, microstep_e[0]);
+#endif
+#if E_MS2_PIN > -1
+  WRITE(E_MS2_PIN, microstep_e[1]);
+#endif
 }
 
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.  

@@ -344,6 +344,10 @@
 // Set to 1 to enable Digi-Pot support
 #define DIGIPOTS			1
 
+// Set to 0 to disable microstep select support
+// Set to 1 to enable microstep select support
+#define SET_MICROSTEP 1
+
 // Set to 0 to disable Buzzer support
 // Set to 1 to enable Buzzer support
 #define BUZZER_SUPPORT      1

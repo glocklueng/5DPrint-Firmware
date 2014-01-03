@@ -98,6 +98,9 @@ void set_extruder_heater_max_current(struct command *cmd);
 #if DIGIPOTS > 0
 void execute_m906(struct command *cmd);
 #endif
+#if SET_MICROSTEP > 0
+void execute_m907(struct command *cmd);
+#endif
 
 #ifndef CRITICAL_SECTION_START
 #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli()
@@ -191,6 +194,7 @@ void execute_m906(struct command *cmd);
 
 // M852 - Enter Boot Loader Command (Requires correct F pass code)
 // M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
+// M907 - Set microstep settings for stepper motors. e.g. M906 X16 Y16 Z16 E16
 
 static const char VERSION_TEXT[] = "2.11.00 / 27.11.2013";
 
@@ -278,17 +282,17 @@ unsigned char manage_monitor = 255;
 // The MS1, MS2 should be set once in setup loop, but that doesn't work
 // Added here in the enable motor functions to ensure the MS1, MS2 pins are set
 
+// TODO:
+// Currently, MS1, MS2 are set during the plan linear buffer stage
+// These settings will need to be buffered like direction
+// and be able to change on  the fly in the future
+
 void enable_x()
 {
 #if X_ENABLE_PIN > -1
   WRITE(X_ENABLE_PIN, X_ENABLE_ON);
 #endif
-#if X_MS1_PIN > -1
-  WRITE(X_MS1_PIN, HIGH);
-#endif
-#if X_MX2_PIN > -1
-  WRITE(X_MS2_PIN, HIGH);
-#endif
+
 }
 void disable_x()
 {
@@ -300,12 +304,6 @@ void enable_y()
 {
 #if Y_ENABLE_PIN > -1
   WRITE(Y_ENABLE_PIN, Y_ENABLE_ON);
-#endif
-#if Y_MS1_PIN > -1
-  WRITE(Y_MS1_PIN, HIGH);
-#endif
-#if Y_MX2_PIN > -1
-  WRITE(Y_MS2_PIN, HIGH);
 #endif
 }
 void disable_y()
@@ -319,12 +317,6 @@ void enable_z()
 #if Z_ENABLE_PIN > -1
   WRITE(Z_ENABLE_PIN, Z_ENABLE_ON);
 #endif
-#if Z_MS1_PIN > -1
-  WRITE(Z_MS1_PIN, HIGH);
-#endif
-#if Z_MS2_PIN > -1
-  WRITE(Z_MS2_PIN, HIGH);
-#endif
 }
 void disable_z()
 {
@@ -336,12 +328,6 @@ void enable_e()
 {
 #if E_ENABLE_PIN > -1
   WRITE(E_ENABLE_PIN, E_ENABLE_ON);
-#endif
-#if E_MS1_PIN > -1
-  WRITE(E_MS1_PIN, HIGH);
-#endif
-#if E_MS2_PIN > -1
-  WRITE(E_MS2_PIN, HIGH);
 #endif
 }
 void disable_e()
@@ -1984,6 +1970,11 @@ void execute_mcode(struct command *cmd) {
 		execute_m906(cmd);
 	  break;
 #endif
+#if SET_MICROSTEP > 0
+    case 907: // M907 Set microstep settings for stepper motors
+        execute_m907(cmd);
+        break;
+#endif
 
       default:
             serial_send(TXT_UNKNOWN_CODE_M_CRLF, cmd->code);
@@ -2619,6 +2610,29 @@ void execute_m906(struct command *cmd)
 }
 #endif
 
+#if SET_MICROSTEP > 0
+void num2MS(float val, unsigned short* MS){
+    if (val == 2 || val == 16) MS[0] = HIGH;
+    else if (val == 1 || val == 4) MS[0] = LOW;
+    else MS[0] = HIGH;
+
+    if (val == 4 || val == 16) MS[1] = HIGH;
+    else if (val == 1 || val == 2) MS[1] = LOW;
+    else MS[1] = HIGH;
+
+    // TODO: 
+    // Need to add checking for invalid values
+    // For now, any invalid values return the motor to microstepping
+}
+
+void execute_m907(struct command *cmd)
+{
+    if (cmd->has_X) num2MS(cmd->X, microstep_x);
+    if (cmd->has_Y) num2MS(cmd->Y, microstep_y);
+    if (cmd->has_Z) num2MS(cmd->Z, microstep_z);
+    if (cmd->has_E) num2MS(cmd->X, microstep_e);
+}
+#endif
 
 /***************************************************
 * JumpToBootloader(void)

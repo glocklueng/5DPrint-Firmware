@@ -2631,6 +2631,9 @@ void execute_m907(struct command *cmd)
     if (cmd->has_Y) num2MS(cmd->Y, microstep_y);
     if (cmd->has_Z) num2MS(cmd->Z, microstep_z);
     if (cmd->has_E) num2MS(cmd->X, microstep_e);
+    serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M907_X_Y_Z_E_CRLF, 
+                microstep_x, microstep_y,
+                microstep_z, microstep_e);
 }
 #endif
 

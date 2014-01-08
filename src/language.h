@@ -201,6 +201,8 @@
     #define TXT_NEW_STEPPER_MOTOR_MAX_CURRENTS_SET_CRLF				"-- New stepper motor maximum currents have been set.\r\n"
     #define TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF			"-- Max Motor Currents:\r\n-- M906 X=%dmA Y=%dmA Z=%dmA E=%dmA\r\n"
 
+// Additional lines for microstepping setting
+#define TXT_MAX_MOTOR_CURRENTS_CRLF_M907_X_Y_Z_E_CRLF			"-- Microstep resolution:\r\n-- M907 X=%dmA Y=%dmA Z=%dmA E=%dmA\r\n"
 // End of (LANGUAGE == 0), ENGLISH
 
 #else

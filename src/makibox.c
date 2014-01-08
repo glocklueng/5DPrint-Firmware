@@ -530,10 +530,10 @@ void setup()
   //Setup SD Card / SPI Pins
   DDRB |= (1 << PINB2);		// MOSI Pin
   DDRB |= (1 << PINB1);		// SCK Pin
-  DDRB |= (1 << PINB6);		// CS Pin set as output
+  DDRB |= (1 << PINB0);		// CS Pin set as output
   DDRB &= ~(1 << PINB3);	// MISO
 
-  PORTB |= (1 << PINB6);	// Unselect Card (CS pin high)
+  PORTB |= (1 << PINB0);	// Unselect Card (CS pin high)
   
   DDRB |= (1 << PINB0);		// SS Pins set as output
   PORTB |= (1 << PINB0);	// SS Pin set high

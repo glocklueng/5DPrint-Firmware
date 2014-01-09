@@ -2625,6 +2625,16 @@ void wait_extruder_target_temp(void)
         // For now, any invalid values return the motor to microstepping
     }
 
+    int MS2num(unsigned short* MS){
+        if (MS[0]){
+            if (MS[1]) return 16;
+            else return 2;               
+        }
+        else{
+            if (MS[1]) return 4;
+            else return 1;  
+        }
+    }
 
     void execute_m907(struct command *cmd)
     {
@@ -2633,8 +2643,9 @@ void wait_extruder_target_temp(void)
         if (cmd->has_Z) num2MS(cmd->Z, microstep_z);
         if (cmd->has_E) num2MS(cmd->X, microstep_e);
         serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M907_X_Y_Z_E_CRLF, 
-                    microstep_x, microstep_y,
-                    microstep_z, microstep_e);
+                    MS2num(microstep_x), MS2num(microstep_y),
+                    MS2num(microstep_z), MS2num(microstep_e)
+                    );
     }
 #endif
 

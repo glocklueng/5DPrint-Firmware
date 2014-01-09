@@ -356,6 +356,8 @@ void TIMER0_OVF_vect()
 
 void delay(uint32_t ms)
 {
+    for (uint32_t i=0; i<ms; i++) delayMicroseconds(1000);
+    /*
     uint16_t start = (uint16_t)micros();
 
     while (ms > 0) {
@@ -389,6 +391,7 @@ void delay(uint32_t ms)
     } while (timer0_millis_count - start <= ms);
     sei();
 #endif
+    */
 }
 
 

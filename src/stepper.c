@@ -229,6 +229,55 @@ static uint8_t old_z_max_endstop=0;
 //  step_events_completed reaches block->decelerate_after after which it decelerates until the trapezoid generator is reset.
 //  The slope of acceleration is calculated with the leib ramp alghorithm.
 
+
+void enable_x() {
+#if X_ENABLE_PIN > -1
+    WRITE(X_ENABLE_PIN, X_ENABLE_ON);
+#endif
+}
+
+void disable_x() {
+#if X_ENABLE_PIN > -1
+    WRITE(X_ENABLE_PIN,!X_ENABLE_ON);
+#endif
+}
+
+void enable_y() {
+#if Y_ENABLE_PIN > -1
+    WRITE(Y_ENABLE_PIN, Y_ENABLE_ON);
+#endif
+}
+
+void disable_y() {
+#if Y_ENABLE_PIN > -1
+    WRITE(Y_ENABLE_PIN,!Y_ENABLE_ON);
+#endif
+}
+
+void enable_z() {
+#if Z_ENABLE_PIN > -1
+    WRITE(Z_ENABLE_PIN, Z_ENABLE_ON);
+#endif
+}
+
+void disable_z() {
+#if Z_ENABLE_PIN > -1
+    WRITE(Z_ENABLE_PIN,!Z_ENABLE_ON);
+#endif
+}
+
+void enable_e() {
+#if E_ENABLE_PIN > -1
+    WRITE(E_ENABLE_PIN, E_ENABLE_ON);
+#endif
+}
+
+void disable_e() {
+#if E_ENABLE_PIN > -1
+    WRITE(E_ENABLE_PIN,!E_ENABLE_ON);
+#endif
+}
+
 void st_wake_up() {
     //  TCNT1 = 0;
     if(!busy) ENABLE_STEPPER_DRIVER_INTERRUPT();  

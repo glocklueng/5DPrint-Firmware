@@ -278,70 +278,9 @@ static char sdcard_writebuf[SDCARD_WRITEBUF_SIZE];
 static unsigned short sdcard_writebuf_pos = 0;
 #endif
 
-// TODO: 
-// The MS1, MS2 should be set once in setup loop, but that doesn't work
-// Added here in the enable motor functions to ensure the MS1, MS2 pins are set
-
-// TODO:
-// Currently, MS1, MS2 are set during the plan linear buffer stage
-// These settings will need to be buffered like direction
-// and be able to change on  the fly in the future
-
-void enable_x()
-{
-#if X_ENABLE_PIN > -1
-    WRITE(X_ENABLE_PIN, X_ENABLE_ON);
-#endif
-
-}
-void disable_x()
-{
-#if X_ENABLE_PIN > -1
-    WRITE(X_ENABLE_PIN,!X_ENABLE_ON);
-#endif
-}
-void enable_y()
-{
-#if Y_ENABLE_PIN > -1
-    WRITE(Y_ENABLE_PIN, Y_ENABLE_ON);
-#endif
-}
-void disable_y()
-{
-#if Y_ENABLE_PIN > -1
-    WRITE(Y_ENABLE_PIN,!Y_ENABLE_ON);
-#endif
-}
-void enable_z()
-{
-#if Z_ENABLE_PIN > -1
-    WRITE(Z_ENABLE_PIN, Z_ENABLE_ON);
-#endif
-}
-void disable_z()
-{
-#if Z_ENABLE_PIN > -1
-    WRITE(Z_ENABLE_PIN,!Z_ENABLE_ON);
-#endif
-}
-void enable_e()
-{
-#if E_ENABLE_PIN > -1
-    WRITE(E_ENABLE_PIN, E_ENABLE_ON);
-#endif
-}
-void disable_e()
-{
-#if E_ENABLE_PIN > -1
-    WRITE(E_ENABLE_PIN,!E_ENABLE_ON);
-#endif
-}
-
-
 #define MIN(a,b) ((a)<(b)?(a):(b))                                               
 #define MAX(a,b) ((a)>(b)?(a):(b))                                               
 #define CONSTRAIN(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt))) 
-
 
 int FreeRam1(void)
 {

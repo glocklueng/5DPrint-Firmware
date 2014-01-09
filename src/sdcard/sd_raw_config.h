@@ -18,115 +18,115 @@ extern "C"
 {
 #endif
 
-/**
- * \addtogroup sd_raw
- *
- * @{
- */
-/**
- * \file
- * MMC/SD support configuration (license: GPLv2 or LGPLv2.1)
- */
+    /**
+     * \addtogroup sd_raw
+     *
+     * @{
+     */
+    /**
+     * \file
+     * MMC/SD support configuration (license: GPLv2 or LGPLv2.1)
+     */
 
-/**
- * \ingroup sd_raw_config
- * Controls MMC/SD write support.
- *
- * Set to 1 to enable MMC/SD write support, set to 0 to disable it.
- */
+    /**
+     * \ingroup sd_raw_config
+     * Controls MMC/SD write support.
+     *
+     * Set to 1 to enable MMC/SD write support, set to 0 to disable it.
+     */
 #define SD_RAW_WRITE_SUPPORT 1
 
-/**
- * \ingroup sd_raw_config
- * Controls MMC/SD write buffering.
- *
- * Set to 1 to buffer write accesses, set to 0 to disable it.
- *
- * \note This option has no effect when SD_RAW_WRITE_SUPPORT is 0.
- */
+    /**
+     * \ingroup sd_raw_config
+     * Controls MMC/SD write buffering.
+     *
+     * Set to 1 to buffer write accesses, set to 0 to disable it.
+     *
+     * \note This option has no effect when SD_RAW_WRITE_SUPPORT is 0.
+     */
 #define SD_RAW_WRITE_BUFFERING 1
 
-/**
- * \ingroup sd_raw_config
- * Controls MMC/SD access buffering.
- * 
- * Set to 1 to save static RAM, but be aware that you will
- * lose performance.
- *
- * \note When SD_RAW_WRITE_SUPPORT is 1, SD_RAW_SAVE_RAM will
- *       be reset to 0.
- */
+    /**
+     * \ingroup sd_raw_config
+     * Controls MMC/SD access buffering.
+     * 
+     * Set to 1 to save static RAM, but be aware that you will
+     * lose performance.
+     *
+     * \note When SD_RAW_WRITE_SUPPORT is 1, SD_RAW_SAVE_RAM will
+     *       be reset to 0.
+     */
 #define SD_RAW_SAVE_RAM 1
 
-/**
- * \ingroup sd_raw_config
- * Controls support for SDHC cards.
- *
- * Set to 1 to support so-called SDHC memory cards, i.e. SD
- * cards with more than 2 gigabytes of memory.
- */
+    /**
+     * \ingroup sd_raw_config
+     * Controls support for SDHC cards.
+     *
+     * Set to 1 to support so-called SDHC memory cards, i.e. SD
+     * cards with more than 2 gigabytes of memory.
+     */
 #define SD_RAW_SDHC 1
 
-/**
- * @}
- */
+    /**
+     * @}
+     */
 
-/* defines for customisation of sd/mmc port access */
-#if defined(__AVR_ATmega8__) || \
-    defined(__AVR_ATmega48__) || \
-    defined(__AVR_ATmega48P__) || \
-    defined(__AVR_ATmega88__) || \
-    defined(__AVR_ATmega88P__) || \
-    defined(__AVR_ATmega168__) || \
-    defined(__AVR_ATmega168P__) || \
+    /* defines for customisation of sd/mmc port access */
+#if defined(__AVR_ATmega8__) ||                 \
+    defined(__AVR_ATmega48__) ||                \
+    defined(__AVR_ATmega48P__) ||               \
+    defined(__AVR_ATmega88__) ||                \
+    defined(__AVR_ATmega88P__) ||               \
+    defined(__AVR_ATmega168__) ||               \
+    defined(__AVR_ATmega168P__) ||              \
     defined(__AVR_ATmega328P__)
-    #define configure_pin_mosi() DDRB |= (1 << DDB3)
-    #define configure_pin_sck() DDRB |= (1 << DDB5)
-    #define configure_pin_ss() DDRB |= (1 << DDB2)
-    #define configure_pin_miso() DDRB &= ~(1 << DDB4)
+#define configure_pin_mosi() DDRB |= (1 << DDB3)
+#define configure_pin_sck() DDRB |= (1 << DDB5)
+#define configure_pin_ss() DDRB |= (1 << DDB2)
+#define configure_pin_miso() DDRB &= ~(1 << DDB4)
 
-    #define select_card() PORTB &= ~(1 << PORTB2)
-    #define unselect_card() PORTB |= (1 << PORTB2)
-#elif defined(__AVR_ATmega16__) || \
-      defined(__AVR_ATmega32__)
-    #define configure_pin_mosi() DDRB |= (1 << DDB5)
-    #define configure_pin_sck() DDRB |= (1 << DDB7)
-    #define configure_pin_ss() DDRB |= (1 << DDB4)
-    #define configure_pin_miso() DDRB &= ~(1 << DDB6)
+#define select_card() PORTB &= ~(1 << PORTB2)
+#define unselect_card() PORTB |= (1 << PORTB2)
+#elif defined(__AVR_ATmega16__) ||              \
+    defined(__AVR_ATmega32__)
+#define configure_pin_mosi() DDRB |= (1 << DDB5)
+#define configure_pin_sck() DDRB |= (1 << DDB7)
+#define configure_pin_ss() DDRB |= (1 << DDB4)
+#define configure_pin_miso() DDRB &= ~(1 << DDB6)
 
-    #define select_card() PORTB &= ~(1 << PORTB4)
-    #define unselect_card() PORTB |= (1 << PORTB4)
-#elif defined(__AVR_ATmega64__) || \
-      defined(__AVR_ATmega128__) || \
-      defined(__AVR_ATmega169__)
-    #define configure_pin_mosi() DDRB |= (1 << DDB2)
-    #define configure_pin_sck() DDRB |= (1 << DDB1)
-    #define configure_pin_ss() DDRB |= (1 << DDB0)
-    #define configure_pin_miso() DDRB &= ~(1 << DDB3)
+#define select_card() PORTB &= ~(1 << PORTB4)
+#define unselect_card() PORTB |= (1 << PORTB4)
+#elif defined(__AVR_ATmega64__) ||              \
+    defined(__AVR_ATmega128__) ||               \
+    defined(__AVR_ATmega169__)
+#define configure_pin_mosi() DDRB |= (1 << DDB2)
+#define configure_pin_sck() DDRB |= (1 << DDB1)
+#define configure_pin_ss() DDRB |= (1 << DDB0)
+#define configure_pin_miso() DDRB &= ~(1 << DDB3)
 
-    #define select_card() PORTB &= ~(1 << PORTB0)
-    #define unselect_card() PORTB |= (1 << PORTB0)
+#define select_card() PORTB &= ~(1 << PORTB0)
+#define unselect_card() PORTB |= (1 << PORTB0)
 #elif defined(__AVR_AT90USB1286__)		// For Makibox A6 / PrintRBoard
     // TODO:
     // 1. Include these settings into the config.h file
     //    just to centralize things
     // 2. Need to add SDCD pin settings and relevant functions
-	#define configure_pin_mosi()			DDRB |= (1 << PINB2)
-    #define configure_pin_sck() 			DDRB |= (1 << PINB1)
-    #define configure_pin_ss() 				DDRB |= (1 << PINB0)
-    #define configure_pin_miso() 			DDRB &= ~(1 << PINB3)
+#define configure_pin_mosi()			DDRB |= (1 << PINB2)
+#define configure_pin_sck() 			DDRB |= (1 << PINB1)
+#define configure_pin_ss() 				DDRB |= (1 << PINB0)
+#define configure_pin_miso() 			DDRB &= ~(1 << PINB3)
 
-    #define select_card() 			        PORTB &= ~(1 << PINB0)
-    #define unselect_card() 				PORTB |= (1 << PINB0)
+#define select_card() 			        PORTB &= ~(1 << PINB0)
+#define unselect_card() 				PORTB |= (1 << PINB0)
 	
-	// SS Pin (B0) used as Y-Stop input.
-	// When SPI is active and SS input is low this forces the SPI in to slave 
-	// mode! Set the pin to operate as an output prior to SPI operations. 
-	// Then set back to input when exiting from SPI operation.
-	#define configure_ss_pin_as_output()	{DDRB |= (1 << PINB0); PORTB |= (1 << PINB0);}
-        //#define configure_ss_pin_as_input()		DDRB &= ~(1 << PINB0)
+    // SS Pin (B0) used as Y-Stop input.
+    // When SPI is active and SS input is low this forces the SPI in to slave 
+    // mode! Set the pin to operate as an output prior to SPI operations. 
+    // Then set back to input when exiting from SPI operation.
+#define configure_ss_pin_as_output()	{DDRB |= (1 << PINB0); PORTB |= (1 << PINB0);}
+    //#define configure_ss_pin_as_input()		DDRB &= ~(1 << PINB0)
 #else
-    #error "no sd/mmc pin mapping available!"
+#error "no sd/mmc pin mapping available!"
 #endif
 
 #define configure_pin_available()  DDRE &= ~(1 << DDE3)
@@ -141,7 +141,7 @@ extern "C"
     typedef uint32_t offset_t;
 #endif
 
-/* configuration checks */
+    /* configuration checks */
 #if SD_RAW_WRITE_SUPPORT
 #undef SD_RAW_SAVE_RAM
 #define SD_RAW_SAVE_RAM 0

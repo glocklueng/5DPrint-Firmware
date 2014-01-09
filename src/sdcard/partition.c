@@ -16,7 +16,7 @@
 #include <string.h>
 
 #if USE_DYNAMIC_MEMORY
-    #include <stdlib.h>
+#include <stdlib.h>
 #endif
 
 /**
@@ -71,15 +71,15 @@ struct partition_struct* partition_open(device_read_t device_read, device_read_i
         return 0;
 
     if(index >= 0)
-    {
-        /* read specified partition table index */
-        if(!device_read(0x01be + index * 0x10, buffer, sizeof(buffer)))
-            return 0;
+        {
+            /* read specified partition table index */
+            if(!device_read(0x01be + index * 0x10, buffer, sizeof(buffer)))
+                return 0;
 
-        /* abort on empty partition entry */
-        if(buffer[4] == 0x00)
-            return 0;
-    }
+            /* abort on empty partition entry */
+            if(buffer[4] == 0x00)
+                return 0;
+        }
 
     /* allocate partition descriptor */
 #if USE_DYNAMIC_MEMORY
@@ -90,12 +90,12 @@ struct partition_struct* partition_open(device_read_t device_read, device_read_i
     new_partition = partition_handles;
     uint8_t i;
     for(i = 0; i < PARTITION_COUNT; ++i)
-    {
-        if(new_partition->type == PARTITION_TYPE_FREE)
-            break;
+        {
+            if(new_partition->type == PARTITION_TYPE_FREE)
+                break;
 
-        ++new_partition;
-    }
+            ++new_partition;
+        }
     if(i >= PARTITION_COUNT)
         return 0;
 #endif
@@ -109,15 +109,15 @@ struct partition_struct* partition_open(device_read_t device_read, device_read_i
     new_partition->device_write_interval = device_write_interval;
 
     if(index >= 0)
-    {
-        new_partition->type = buffer[4];
-        new_partition->offset = read32(&buffer[8]);
-        new_partition->length = read32(&buffer[12]);
-    }
+        {
+            new_partition->type = buffer[4];
+            new_partition->offset = read32(&buffer[8]);
+            new_partition->length = read32(&buffer[12]);
+        }
     else
-    {
-        new_partition->type = 0xff;
-    }
+        {
+            new_partition->type = 0xff;
+        }
 
     return new_partition;
 }

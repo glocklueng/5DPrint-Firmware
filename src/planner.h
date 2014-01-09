@@ -1,24 +1,24 @@
 /*
- Makibox A6 Firmware
- Based on Sprinter (master branch, 1 Sep 2012).
- Designed for Printrboard (Rev B).
- ---
- Copyright (c) 2012-2013 by Makible Limited.
+  Makibox A6 Firmware
+  Based on Sprinter (master branch, 1 Sep 2012).
+  Designed for Printrboard (Rev B).
+  ---
+  Copyright (c) 2012-2013 by Makible Limited.
  
- This file is part of the Makibox A6 Firmware.
+  This file is part of the Makibox A6 Firmware.
  
- Makibox A6 Firmware is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  Makibox A6 Firmware is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
  
- The Makibox A6 Firmware is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  The Makibox A6 Firmware is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
  
- You should have received a copy of the GNU General Public License
- along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef PLANNER_H
@@ -30,54 +30,54 @@
 // "nominal" values are as specified in the source g-code and may never
 // actually be reached if acceleration management is active.
 struct block {
-  // Fields used by the bresenham algorithm for tracing the line
-  long steps_x;
-  long steps_y;
-  long steps_z;
-  long steps_e;  // Step count along each axis
+    // Fields used by the bresenham algorithm for tracing the line
+    long steps_x;
+    long steps_y;
+    long steps_z;
+    long steps_e;  // Step count along each axis
 
-  unsigned long step_event_count;  // The number of step events required to complete this block
-  long accelerate_until;           // The index of the step event on which to stop acceleration
-  long decelerate_after;           // The index of the step event on which to start decelerating
-  long acceleration_rate;          // The acceleration rate used for acceleration calculation
-  unsigned char direction_bits;    // The direction bit set for this block (refers to *_DIRECTION_BIT in config.h)
+    unsigned long step_event_count;  // The number of step events required to complete this block
+    long accelerate_until;           // The index of the step event on which to stop acceleration
+    long decelerate_after;           // The index of the step event on which to start decelerating
+    long acceleration_rate;          // The acceleration rate used for acceleration calculation
+    unsigned char direction_bits;    // The direction bit set for this block (refers to *_DIRECTION_BIT in config.h)
 
-  // Fields used by the motion planner to manage acceleration
-//  float speed_x, speed_y, speed_z, speed_e;        // Nominal mm/minute for each axis
-  float nominal_speed;                               // The nominal speed for this block in mm/min  
-  float entry_speed;                                 // Entry speed at previous-current junction in mm/min
-  float max_entry_speed;                             // Maximum allowable junction entry speed in mm/min
-  float millimeters;                                 // The total travel of this block in mm
-  float acceleration;                                // acceleration mm/sec^2
-  unsigned char recalculate_flag;                    // Planner flag to recalculate trapezoids on entry junction
-  unsigned char nominal_length_flag;                 // Planner flag for nominal speed always reached
+    // Fields used by the motion planner to manage acceleration
+    //  float speed_x, speed_y, speed_z, speed_e;        // Nominal mm/minute for each axis
+    float nominal_speed;                               // The nominal speed for this block in mm/min  
+    float entry_speed;                                 // Entry speed at previous-current junction in mm/min
+    float max_entry_speed;                             // Maximum allowable junction entry speed in mm/min
+    float millimeters;                                 // The total travel of this block in mm
+    float acceleration;                                // acceleration mm/sec^2
+    unsigned char recalculate_flag;                    // Planner flag to recalculate trapezoids on entry junction
+    unsigned char nominal_length_flag;                 // Planner flag for nominal speed always reached
 
 
-  // Settings for the trapezoid generator
-  long nominal_rate;                        // The nominal step rate for this block in step_events/sec 
-  long initial_rate;                        // The jerk-adjusted step rate at start of block  
-  long final_rate;                          // The minimal rate at exit
-  long acceleration_st;                     // acceleration steps/sec^2
-  volatile char busy;
+    // Settings for the trapezoid generator
+    long nominal_rate;                        // The nominal step rate for this block in step_events/sec 
+    long initial_rate;                        // The jerk-adjusted step rate at start of block  
+    long final_rate;                          // The minimal rate at exit
+    long acceleration_st;                     // acceleration steps/sec^2
+    volatile char busy;
 };
 
 typedef struct block block_t;
 
 
 typedef struct {
-	float paused_pos_x;
-	float paused_pos_y;
-	float paused_pos_z;
-	float paused_pos_e;
-	int hotend_target_temp;
-	int hotend_target_temp_raw;
-	int target_bed_temp_raw;
-	unsigned char block_buffer_head;
-	unsigned char block_buffer_tail;
-	float current_position_x;
-	float current_position_y;
-	float current_position_z;
-	float current_position_e;
+    float paused_pos_x;
+    float paused_pos_y;
+    float paused_pos_z;
+    float paused_pos_e;
+    int hotend_target_temp;
+    int hotend_target_temp_raw;
+    int target_bed_temp_raw;
+    unsigned char block_buffer_head;
+    unsigned char block_buffer_tail;
+    float current_position_x;
+    float current_position_y;
+    float current_position_z;
+    float current_position_e;
 } paused_data_t;
 
 // This is used adjust the circular plan buffer when the print has been paused
@@ -120,7 +120,7 @@ uint8_t blocks_queued();
 uint8_t blocks_available();
 
 #if PREVENT_DANGEROUS_EXTRUDE > 0
-	extern unsigned char prevent_cold_extrude;
+extern unsigned char prevent_cold_extrude;
 #endif
 
 #endif

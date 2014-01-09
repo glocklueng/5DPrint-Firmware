@@ -1,24 +1,24 @@
- /*
- Makibox A6 Firmware
- Based on Sprinter (master branch, 1 Sep 2012).
- Designed for Printrboard (Rev B).
- ---
- Copyright (c) 2012-2013 by Makible Limited.
+/*
+  Makibox A6 Firmware
+  Based on Sprinter (master branch, 1 Sep 2012).
+  Designed for Printrboard (Rev B).
+  ---
+  Copyright (c) 2012-2013 by Makible Limited.
  
- This file is part of the Makibox A6 Firmware.
+  This file is part of the Makibox A6 Firmware.
  
- Makibox A6 Firmware is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  Makibox A6 Firmware is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
  
- The Makibox A6 Firmware is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  The Makibox A6 Firmware is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
  
- You should have received a copy of the GNU General Public License
- along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef CONFIGURATION_H
@@ -219,10 +219,10 @@
 //The result of this function is only send with the Temperaturerequest to the host
 //#define AUTOTEMP 
 #ifdef AUTOTEMP
-    #define AUTO_TEMP_MAX		300
-    #define AUTO_TEMP_MIN		205
-    #define AUTO_TEMP_FACTOR	0.025
-    #define AUTOTEMP_OLDWEIGHT	0.98
+#define AUTO_TEMP_MAX		300
+#define AUTO_TEMP_MIN		205
+#define AUTO_TEMP_FACTOR	0.025
+#define AUTOTEMP_OLDWEIGHT	0.98
 #endif
 
 //// PID settings:
@@ -334,10 +334,10 @@
 #define SDSUPPORT			1
 
 #if SDSUPPORT < 1
-	#undef 	CFG_BLOCK_BUFFER_SIZE
-	#define CFG_BLOCK_BUFFER_SIZE 		64
-	#undef 	CFG_BLOCK_BUFFER_MASK
-	#define CFG_BLOCK_BUFFER_MASK 		0x3F
+#undef 	CFG_BLOCK_BUFFER_SIZE
+#define CFG_BLOCK_BUFFER_SIZE 		64
+#undef 	CFG_BLOCK_BUFFER_MASK
+#define CFG_BLOCK_BUFFER_MASK 		0x3F
 #endif // SDSUPPORT
 
 // Set to 0 to disable Digi-Pot support
@@ -376,12 +376,12 @@
 
 // Global Variables for CPU Loading Calculation
 #if (DEBUG > -1)
-	extern uint16_t PreemptionFlag;
-	extern uint32_t previous_bckgnd_task_start_time;
-	extern uint32_t bckgnd_task_time;
-	extern unsigned char cpu_loading, peak_cpu_load, average_cpu_load;
-	extern uint32_t previous_millis_cpu_util;
-	extern uint32_t bckgnd_loop_count;
+extern uint16_t PreemptionFlag;
+extern uint32_t previous_bckgnd_task_start_time;
+extern uint32_t bckgnd_task_time;
+extern unsigned char cpu_loading, peak_cpu_load, average_cpu_load;
+extern uint32_t previous_millis_cpu_util;
+extern uint32_t bckgnd_loop_count;
 #endif
 
 #endif

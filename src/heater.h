@@ -1,29 +1,29 @@
 /*
- Makibox A6 Firmware
- Based on Sprinter (master branch, 1 Sep 2012).
- Designed for Printrboard (Rev B).
- ---
- Copyright (c) 2012-2013 by Makible Limited.
+  Makibox A6 Firmware
+  Based on Sprinter (master branch, 1 Sep 2012).
+  Designed for Printrboard (Rev B).
+  ---
+  Copyright (c) 2012-2013 by Makible Limited.
  
- This file is part of the Makibox A6 Firmware.
+  This file is part of the Makibox A6 Firmware.
  
- Makibox A6 Firmware is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  Makibox A6 Firmware is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
  
- The Makibox A6 Firmware is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  The Makibox A6 Firmware is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
  
- You should have received a copy of the GNU General Public License
- along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- This softwarepart for Heatercontrol is based on Sprinter
- big thanks to kliment (https://github.com/kliment/Sprinter)
+  This softwarepart for Heatercontrol is based on Sprinter
+  big thanks to kliment (https://github.com/kliment/Sprinter)
  
 */
 
@@ -70,60 +70,60 @@ extern unsigned char manage_monitor;
 extern unsigned short periodic_temp_report;
 
 #if (PIDTEMP > -1)
-	extern int temp_iState;
-	extern int temp_dState;
-	extern int prev_temp;
-	extern int pTerm;
-	extern int iTerm;
-	extern int dTerm;
-	extern int error;
-	extern int heater_duty;
-	extern int user_max_heater_duty;
-	extern unsigned int PID_Kp, PID_Ki, PID_Kd;
+extern int temp_iState;
+extern int temp_dState;
+extern int prev_temp;
+extern int pTerm;
+extern int iTerm;
+extern int dTerm;
+extern int error;
+extern int heater_duty;
+extern int user_max_heater_duty;
+extern unsigned int PID_Kp, PID_Ki, PID_Kd;
 #endif
 
 
 #if (BED_PIDTEMP > -1)
-	extern int temp_bed_iState;
-	extern int temp_bed_dState;
-	extern int prev_bed_temp;
-	extern int bed_pTerm;
-	extern int bed_iTerm;
-	extern int bed_dTerm;
-	extern int bed_error;
-	extern int bed_heater_duty;
-	extern int user_max_bed_heater_duty;
-	extern unsigned int bed_PID_Kp, bed_PID_Ki, bed_PID_Kd;
+extern int temp_bed_iState;
+extern int temp_bed_dState;
+extern int prev_bed_temp;
+extern int bed_pTerm;
+extern int bed_iTerm;
+extern int bed_dTerm;
+extern int bed_error;
+extern int bed_heater_duty;
+extern int user_max_bed_heater_duty;
+extern unsigned int bed_PID_Kp, bed_PID_Ki, bed_PID_Kd;
 #endif
 
 
 #ifdef AUTOTEMP
-    extern float autotemp_max;
-    extern float autotemp_min;
-    extern float autotemp_factor;
-    extern int   autotemp_setpoint;
-    extern bool  autotemp_enabled;
+extern float autotemp_max;
+extern float autotemp_min;
+extern float autotemp_factor;
+extern int   autotemp_setpoint;
+extern bool  autotemp_enabled;
 #endif
 
 
 #ifdef SMOOTHING
-	extern uint32_t nma;
+extern uint32_t nma;
 #endif
 
 
 #ifdef WATCHPERIOD
-	extern int watch_temp;
-	extern unsigned long watchmillis;
+extern int watch_temp;
+extern unsigned long watchmillis;
 #endif
 
 
 #ifdef PID_AUTOTUNE
-	void PID_autotune(int PIDAT_test_temp);
+void PID_autotune(int PIDAT_test_temp);
 #endif
 
 
 #if (PIDTEMP > -1) || (BED_PIDTEMP > -1)
-	void updatePID();
+void updatePID();
 #endif
 
 void manage_heater();

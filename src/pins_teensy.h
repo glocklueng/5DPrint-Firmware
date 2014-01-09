@@ -1,24 +1,24 @@
 /*
- Makibox A6 Firmware
- Based on Sprinter (master branch, 1 Sep 2012).
- Designed for Printrboard (Rev B).
- ---
- Copyright (c) 2012-2013 by Makible Limited.
+  Makibox A6 Firmware
+  Based on Sprinter (master branch, 1 Sep 2012).
+  Designed for Printrboard (Rev B).
+  ---
+  Copyright (c) 2012-2013 by Makible Limited.
  
- This file is part of the Makibox A6 Firmware.
+  This file is part of the Makibox A6 Firmware.
  
- Makibox A6 Firmware is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  Makibox A6 Firmware is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
  
- The Makibox A6 Firmware is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  The Makibox A6 Firmware is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
  
- You should have received a copy of the GNU General Public License
- along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef _core_pins_h_
 #define _core_pins_h_
@@ -420,7 +420,7 @@ void _restart_Teensyduino_(void) __attribute__((noreturn));
 extern uint8_t w_analog_reference;
 static inline void analogReference(uint8_t mode)
 {
-	w_analog_reference = (mode << 6);
+    w_analog_reference = (mode << 6);
 }
 #endif
 
@@ -432,18 +432,18 @@ extern volatile uint32_t timer0_millis_count;
 static inline uint32_t millis(void) __attribute__((always_inline, unused));
 static inline uint32_t millis(void)
 {
-	uint32_t out;
-	asm volatile(
-		"in	__tmp_reg__, __SREG__"		"\n\t"
-		"cli"					"\n\t"
-		"lds	%A0, timer0_millis_count"	"\n\t"
-		"lds	%B0, timer0_millis_count+1"	"\n\t"
-		"lds	%C0, timer0_millis_count+2"	"\n\t"
-		"lds	%D0, timer0_millis_count+3"	"\n\t"
-		"out	__SREG__, __tmp_reg__"
-		: "=r" (out) : : "r0"
-	);
-	return out;
+    uint32_t out;
+    asm volatile(
+                 "in	__tmp_reg__, __SREG__"		"\n\t"
+                 "cli"					"\n\t"
+                 "lds	%A0, timer0_millis_count"	"\n\t"
+                 "lds	%B0, timer0_millis_count+1"	"\n\t"
+                 "lds	%C0, timer0_millis_count+2"	"\n\t"
+                 "lds	%D0, timer0_millis_count+3"	"\n\t"
+                 "out	__SREG__, __tmp_reg__"
+                 : "=r" (out) : : "r0"
+                 );
+    return out;
 }
 
 extern uint32_t _micros(void) __attribute__((noinline));
@@ -451,103 +451,103 @@ extern uint32_t _micros(void) __attribute__((noinline));
 static inline uint32_t micros(void) __attribute__((always_inline, unused));
 static inline uint32_t micros(void)
 {
-	register uint32_t out asm("r22");
-	asm volatile("call _micros" : "=d" (out) : : "r0");
-	return out;
+    register uint32_t out asm("r22");
+    asm volatile("call _micros" : "=d" (out) : : "r0");
+    return out;
 }
 
 
 static inline void delayMicroseconds(uint16_t) __attribute__((always_inline, unused));
-static inline void delayMicroseconds(uint16_t usec)
+                                               static inline void delayMicroseconds(uint16_t usec)
 {
-	if (__builtin_constant_p(usec)) {
-		#if F_CPU == 16000000L
-		uint16_t tmp = usec * 4;
-		#elif F_CPU == 8000000L
-		uint16_t tmp = usec * 2;
-		#elif F_CPU == 4000000L
-		uint16_t tmp = usec;
-		#elif F_CPU == 2000000L
-		uint16_t tmp = usec / 2;
-		if (usec == 1) {
-			asm volatile("rjmp L%=\nL%=:\n" ::);
-		}
-		#elif F_CPU == 1000000L
-		uint16_t tmp = usec / 4;
-		if (usec == 1) {
-			asm volatile("nop\n");
-		} else if (usec == 2) {
-			asm volatile("rjmp L%=\nL%=:\n" ::);
-		} else if (usec == 3) {
-			asm volatile("rjmp L%=\nL%=:\n" ::);
-			asm volatile("nop\n");
-		}
-		#else
-		#error "Clock must be 16, 8, 4, 2 or 1 MHz"
-		#endif
-		if (tmp > 0) {
-			if (tmp < 256) {
-				uint8_t tmp2 = tmp;
-				asm volatile(
-				"L_%=_loop:"				// 1 to load
-					"subi	%0, 1"		"\n\t"	// 2
-					"brne	L_%=_loop"	"\n\t"	// 2 (1 on last)
-					: "=d" (tmp2)
-					: "0" (tmp2)
-				);
-			} else {
-				asm volatile(
-				"L_%=_loop:"				// 2 to load
-					"sbiw	%A0, 1"		"\n\t"	// 2
-					"brne	L_%=_loop"	"\n\t"	// 2 (1 on last)
-					: "=w" (tmp)
-					: "0" (tmp)
-				);
-			}
-		}
-	} else {
-		asm volatile(
-		#if F_CPU == 16000000L
-			"sbiw	%A0, 2"			"\n\t"	// 2
-			"brcs	L_%=_end"		"\n\t"	// 1
-			"breq	L_%=_end"		"\n\t"	// 1
-			"lsl	%A0"			"\n\t"	// 1
-			"rol	%B0"			"\n\t"	// 1
-			"lsl	%A0"			"\n\t"	// 1
-			"rol	%B0"			"\n\t"	// 1  overhead: (8)/4 = 2us
-		#elif F_CPU == 8000000L
-			"sbiw	%A0, 3"			"\n\t"	// 2
-			"brcs	L_%=_end"		"\n\t"	// 1
-			"breq	L_%=_end"		"\n\t"	// 1
-			"lsl	%A0"			"\n\t"	// 1
-			"rol	%B0"			"\n\t"	// 1  overhead: (6)/2 = 3 us
-		#elif F_CPU == 4000000L
-			"sbiw	%A0, 4"			"\n\t"	// 2
-			"brcs	L_%=_end"		"\n\t"	// 1
-			"breq	L_%=_end"		"\n\t"	// 1  overhead: (4) = 4 us
-		#elif F_CPU == 2000000L
-			"sbiw	%A0, 12"		"\n\t"	// 2
-			"brcs	L_%=_end"		"\n\t"	// 1
-			"breq	L_%=_end"		"\n\t"	// 1
-			"lsr	%B0"			"\n\t"	// 1
-			"ror	%A0"			"\n\t"	// 1  overhead: (6)*2 = 12 us
-		#elif F_CPU == 1000000L
-			"sbiw	%A0, 32"		"\n\t"	// 2
-			"brcs	L_%=_end"		"\n\t"	// 1
-			"breq	L_%=_end"		"\n\t"	// 1
-			"lsr	%B0"			"\n\t"	// 1
-			"ror	%A0"			"\n\t"	// 1
-			"lsr	%B0"			"\n\t"	// 1
-			"ror	%A0"			"\n\t"	// 1  overhead: (8)*4 = 32 us
-		#endif
-		"L_%=_loop:"
-			"sbiw	%A0, 1"			"\n\t"	// 2
-			"brne	L_%=_loop"		"\n\t"	// 2
-		"L_%=_end:"
-			: "=w" (usec)
-			: "0" (usec)
-		);
-	}
+    if (__builtin_constant_p(usec)) {
+#if F_CPU == 16000000L
+        uint16_t tmp = usec * 4;
+#elif F_CPU == 8000000L
+        uint16_t tmp = usec * 2;
+#elif F_CPU == 4000000L
+        uint16_t tmp = usec;
+#elif F_CPU == 2000000L
+        uint16_t tmp = usec / 2;
+        if (usec == 1) {
+            asm volatile("rjmp L%=\nL%=:\n" ::);
+        }
+#elif F_CPU == 1000000L
+        uint16_t tmp = usec / 4;
+        if (usec == 1) {
+            asm volatile("nop\n");
+        } else if (usec == 2) {
+            asm volatile("rjmp L%=\nL%=:\n" ::);
+        } else if (usec == 3) {
+            asm volatile("rjmp L%=\nL%=:\n" ::);
+            asm volatile("nop\n");
+        }
+#else
+#error "Clock must be 16, 8, 4, 2 or 1 MHz"
+#endif
+        if (tmp > 0) {
+            if (tmp < 256) {
+                uint8_t tmp2 = tmp;
+                asm volatile(
+                             "L_%=_loop:"				// 1 to load
+                             "subi	%0, 1"		"\n\t"	// 2
+                             "brne	L_%=_loop"	"\n\t"	// 2 (1 on last)
+                             : "=d" (tmp2)
+                             : "0" (tmp2)
+                             );
+            } else {
+                asm volatile(
+                             "L_%=_loop:"				// 2 to load
+                             "sbiw	%A0, 1"		"\n\t"	// 2
+                             "brne	L_%=_loop"	"\n\t"	// 2 (1 on last)
+                             : "=w" (tmp)
+                             : "0" (tmp)
+                             );
+            }
+        }
+    } else {
+        asm volatile(
+#if F_CPU == 16000000L
+                     "sbiw	%A0, 2"			"\n\t"	// 2
+                     "brcs	L_%=_end"		"\n\t"	// 1
+                     "breq	L_%=_end"		"\n\t"	// 1
+                     "lsl	%A0"			"\n\t"	// 1
+                     "rol	%B0"			"\n\t"	// 1
+                     "lsl	%A0"			"\n\t"	// 1
+                     "rol	%B0"			"\n\t"	// 1  overhead: (8)/4 = 2us
+#elif F_CPU == 8000000L
+                     "sbiw	%A0, 3"			"\n\t"	// 2
+                     "brcs	L_%=_end"		"\n\t"	// 1
+                     "breq	L_%=_end"		"\n\t"	// 1
+                     "lsl	%A0"			"\n\t"	// 1
+                     "rol	%B0"			"\n\t"	// 1  overhead: (6)/2 = 3 us
+#elif F_CPU == 4000000L
+                     "sbiw	%A0, 4"			"\n\t"	// 2
+                     "brcs	L_%=_end"		"\n\t"	// 1
+                     "breq	L_%=_end"		"\n\t"	// 1  overhead: (4) = 4 us
+#elif F_CPU == 2000000L
+                     "sbiw	%A0, 12"		"\n\t"	// 2
+                     "brcs	L_%=_end"		"\n\t"	// 1
+                     "breq	L_%=_end"		"\n\t"	// 1
+                     "lsr	%B0"			"\n\t"	// 1
+                     "ror	%A0"			"\n\t"	// 1  overhead: (6)*2 = 12 us
+#elif F_CPU == 1000000L
+                     "sbiw	%A0, 32"		"\n\t"	// 2
+                     "brcs	L_%=_end"		"\n\t"	// 1
+                     "breq	L_%=_end"		"\n\t"	// 1
+                     "lsr	%B0"			"\n\t"	// 1
+                     "ror	%A0"			"\n\t"	// 1
+                     "lsr	%B0"			"\n\t"	// 1
+                     "ror	%A0"			"\n\t"	// 1  overhead: (8)*4 = 32 us
+#endif
+                     "L_%=_loop:"
+                     "sbiw	%A0, 1"			"\n\t"	// 2
+                     "brne	L_%=_loop"		"\n\t"	// 2
+                     "L_%=_end:"
+                     : "=w" (usec)
+                     : "0" (usec)
+                     );
+    }
 }
 
 #endif

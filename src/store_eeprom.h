@@ -1,24 +1,24 @@
 /*
- Makibox A6 Firmware
- Based on Sprinter (master branch, 1 Sep 2012).
- Designed for Printrboard (Rev B).
- ---
- Copyright (c) 2012-2013 by Makible Limited.
+  Makibox A6 Firmware
+  Based on Sprinter (master branch, 1 Sep 2012).
+  Designed for Printrboard (Rev B).
+  ---
+  Copyright (c) 2012-2013 by Makible Limited.
  
- This file is part of the Makibox A6 Firmware.
+  This file is part of the Makibox A6 Firmware.
  
- Makibox A6 Firmware is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  Makibox A6 Firmware is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
  
- The Makibox A6 Firmware is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  The Makibox A6 Firmware is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
  
- You should have received a copy of the GNU General Public License
- along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
@@ -43,7 +43,7 @@ extern float max_z_jerk;
 extern float max_e_jerk;
 
 #ifdef SLOWDOWN
-	extern unsigned long minsegmenttime;
+extern unsigned long minsegmenttime;
 #endif
 
 

@@ -1,24 +1,24 @@
 /*
- Makibox A6 Firmware
- Based on Sprinter (master branch, 1 Sep 2012).
- Designed for Printrboard (Rev B).
- ---
- Copyright (c) 2012-2013 by Makible Limited.
+  Makibox A6 Firmware
+  Based on Sprinter (master branch, 1 Sep 2012).
+  Designed for Printrboard (Rev B).
+  ---
+  Copyright (c) 2012-2013 by Makible Limited.
  
- This file is part of the Makibox A6 Firmware.
+  This file is part of the Makibox A6 Firmware.
  
- Makibox A6 Firmware is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  Makibox A6 Firmware is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
  
- The Makibox A6 Firmware is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  The Makibox A6 Firmware is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
  
- You should have received a copy of the GNU General Public License
- along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef STEPPER_H
@@ -32,10 +32,10 @@
 #define DIGIPOT_VOLTS_PER_STEP			0.0067817	// V/step
 
 #if DIGIPOTS > 0
-	extern unsigned short max_x_motor_current;
-	extern unsigned short max_y_motor_current;
-	extern unsigned short max_z_motor_current;
-	extern unsigned short max_e_motor_current;
+extern unsigned short max_x_motor_current;
+extern unsigned short max_y_motor_current;
+extern unsigned short max_z_motor_current;
+extern unsigned short max_e_motor_current;
 #endif
 
 #if SET_MICROSTEP > 0
@@ -46,9 +46,9 @@ extern unsigned short microstep_e[2];
 #endif
 
 #if (DEBUG > -1)
-	extern uint32_t timer1_compa_isr_exe_micros;
-	extern uint32_t timer1_compa_isr_exe_micros_min;
-	extern uint32_t timer1_compa_isr_exe_micros_max;
+extern uint32_t timer1_compa_isr_exe_micros;
+extern uint32_t timer1_compa_isr_exe_micros_min;
+extern uint32_t timer1_compa_isr_exe_micros_max;
 #endif
 
 extern unsigned short virtual_steps_x;
@@ -62,10 +62,10 @@ extern uint8_t pause_print_req;
 extern uint8_t print_paused;
 
 typedef struct {
-	long x;
-	long y;
-	long z;
-	long e;
+    long x;
+    long y;
+    long z;
+    long e;
 } st_position_t;
 
 void st_init();
@@ -81,7 +81,7 @@ void resume_normal_print_buffer(void);
 void resume_normal_buf_discard_all_buf_moves(void);
 
 #if DIGIPOTS > 0
-	void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps);
+void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps);
 #endif
 
 

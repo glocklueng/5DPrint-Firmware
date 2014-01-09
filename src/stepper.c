@@ -76,77 +76,76 @@ paused_data_t paused_data = {0};
 // uses:
 // r26 to store 0
 // r27 to store the byte 1 of the 24 bit result
-#define MultiU16X8toH16(intRes, charIn1, intIn2)        \
-    asm volatile (                                      \
-                  "clr r26 \n\t"                        \
-                  "mul %A1, %B2 \n\t"                   \
-                  "movw %A0, r0 \n\t"                   \
-                  "mul %A1, %A2 \n\t"                   \
-                  "add %A0, r1 \n\t"                    \
-                  "adc %B0, r26 \n\t"                   \
-                  "lsr r0 \n\t"                         \
-                  "adc %A0, r26 \n\t"                   \
-                  "adc %B0, r26 \n\t"                   \
-                  "clr r1 \n\t"                         \
-                  :                                     \
-                    "=&r" (intRes)                      \
-                  :                                     \
-                    "d" (charIn1),                      \
-                    "d" (intIn2)                        \
-                  :                                     \
-                    "r26"                               \
-                   )
+#define MultiU16X8toH16(intRes, charIn1, intIn2)                        \
+    asm volatile (                                                      \
+                  "clr r26 \n\t"                                        \
+                  "mul %A1, %B2 \n\t"                                   \
+                  "movw %A0, r0 \n\t"                                   \
+                  "mul %A1, %A2 \n\t"                                   \
+                  "add %A0, r1 \n\t"                                    \
+                  "adc %B0, r26 \n\t"                                   \
+                  "lsr r0 \n\t"                                         \
+                  "adc %A0, r26 \n\t"                                   \
+                  "adc %B0, r26 \n\t"                                   \
+                  "clr r1 \n\t"                                         \
+                  :                                                     \
+                                                                        "=&r" (intRes) \
+                  :                                                     \
+                                                                        "d" (charIn1), \
+                                                                        "d" (intIn2) \
+                  :                                                     \
+                                                                        "r26" \
+                                                                        )
 
 // intRes = longIn1 * longIn2 >> 24
 // uses:
 // r26 to store 0
 // r27 to store the byte 1 of the 48bit result
-#define MultiU24X24toH16(intRes, longIn1, longIn2)      \
-    asm volatile (                                      \
-                  "clr r26 \n\t"                        \
-                  "mul %A1, %B2 \n\t"                   \
-                  "mov r27, r1 \n\t"                    \
-                  "mul %B1, %C2 \n\t"                   \
-                  "movw %A0, r0 \n\t"                   \
-                  "mul %C1, %C2 \n\t"                   \
-                  "add %B0, r0 \n\t"                    \
-                  "mul %C1, %B2 \n\t"                   \
-                  "add %A0, r0 \n\t"                    \
-                  "adc %B0, r1 \n\t"                    \
-                  "mul %A1, %C2 \n\t"                   \
-                  "add r27, r0 \n\t"                    \
-                  "adc %A0, r1 \n\t"                    \
-                  "adc %B0, r26 \n\t"                   \
-                  "mul %B1, %B2 \n\t"                   \
-                  "add r27, r0 \n\t"                    \
-                  "adc %A0, r1 \n\t"                    \
-                  "adc %B0, r26 \n\t"                   \
-                  "mul %C1, %A2 \n\t"                   \
-                  "add r27, r0 \n\t"                    \
-                  "adc %A0, r1 \n\t"                    \
-                  "adc %B0, r26 \n\t"                   \
-                  "mul %B1, %A2 \n\t"                   \
-                  "add r27, r1 \n\t"                    \
-                  "adc %A0, r26 \n\t"                   \
-                  "adc %B0, r26 \n\t"                   \
-                  "lsr r27 \n\t"                        \
-                  "adc %A0, r26 \n\t"                   \
-                  "adc %B0, r26 \n\t"                   \
-                  "clr r1 \n\t"                         \
-                  :                                     \
-                    "=&r" (intRes)                      \
-                  :                                     \
-                    "d" (longIn1),                      \
-                    "d" (longIn2)                       \
-                  :                                     \
-                    "r26" , "r27"                       \
-                   )
+#define MultiU24X24toH16(intRes, longIn1, longIn2)                      \
+    asm volatile (                                                      \
+                  "clr r26 \n\t"                                        \
+                  "mul %A1, %B2 \n\t"                                   \
+                  "mov r27, r1 \n\t"                                    \
+                  "mul %B1, %C2 \n\t"                                   \
+                  "movw %A0, r0 \n\t"                                   \
+                  "mul %C1, %C2 \n\t"                                   \
+                  "add %B0, r0 \n\t"                                    \
+                  "mul %C1, %B2 \n\t"                                   \
+                  "add %A0, r0 \n\t"                                    \
+                  "adc %B0, r1 \n\t"                                    \
+                  "mul %A1, %C2 \n\t"                                   \
+                  "add r27, r0 \n\t"                                    \
+                  "adc %A0, r1 \n\t"                                    \
+                  "adc %B0, r26 \n\t"                                   \
+                  "mul %B1, %B2 \n\t"                                   \
+                  "add r27, r0 \n\t"                                    \
+                  "adc %A0, r1 \n\t"                                    \
+                  "adc %B0, r26 \n\t"                                   \
+                  "mul %C1, %A2 \n\t"                                   \
+                  "add r27, r0 \n\t"                                    \
+                  "adc %A0, r1 \n\t"                                    \
+                  "adc %B0, r26 \n\t"                                   \
+                  "mul %B1, %A2 \n\t"                                   \
+                  "add r27, r1 \n\t"                                    \
+                  "adc %A0, r26 \n\t"                                   \
+                  "adc %B0, r26 \n\t"                                   \
+                  "lsr r27 \n\t"                                        \
+                  "adc %A0, r26 \n\t"                                   \
+                  "adc %B0, r26 \n\t"                                   \
+                  "clr r1 \n\t"                                         \
+                  :                                                     \
+                                                                        "=&r" (intRes) \
+                  :                                                     \
+                                                                        "d" (longIn1), \
+                                                                        "d" (longIn2) \
+                  :                                                     \
+                                                                        "r26" , "r27" \
+                                                                        )
 
 // Some useful constants
 
 uint8_t check_endstops = 1;
-void enable_endstops(uint8_t check)
-{
+void enable_endstops(uint8_t check){
     check_endstops = check;
 }
 
@@ -230,24 +229,19 @@ static uint8_t old_z_max_endstop=0;
 //  step_events_completed reaches block->decelerate_after after which it decelerates until the trapezoid generator is reset.
 //  The slope of acceleration is calculated with the leib ramp alghorithm.
 
-void st_wake_up() 
-{
+void st_wake_up() {
     //  TCNT1 = 0;
-    if(!busy) 
-        ENABLE_STEPPER_DRIVER_INTERRUPT();  
+    if(!busy) ENABLE_STEPPER_DRIVER_INTERRUPT();  
 }
 
 
-void st_sleep() 
-{
+void st_sleep() {
     //  TCNT1 = 0;
-    if(!busy) 
-        DISABLE_STEPPER_DRIVER_INTERRUPT();  
+    if(!busy) DISABLE_STEPPER_DRIVER_INTERRUPT();  
 }
 
 
-unsigned short calc_timer(unsigned short step_rate)
-{
+unsigned short calc_timer(unsigned short step_rate) {
     unsigned short timer;
     unsigned long fcpu_div_500k = (F_CPU/500000L);
   
@@ -261,37 +255,32 @@ unsigned short calc_timer(unsigned short step_rate)
         step_rate = (step_rate >> 1)&0x7fff;
         step_loops = 2;
     }
-    else {
-        step_loops = 1;
-    } 
+    else step_loops = 1; 
   
     if(step_rate < fcpu_div_500k) step_rate = fcpu_div_500k;
     step_rate -= fcpu_div_500k; // Correct for minimal speed
   
     //if(step_rate >= (8*256)) // higher step rate
-    if(step_rate >= 2048) // higher step rate
-        { // higher step rate 
-            unsigned short table_address = (unsigned short)&speed_lookuptable_fast[(unsigned char)(step_rate>>8)][0];
-            unsigned char tmp_step_rate = (step_rate & 0x00ff);
-            unsigned short gain = (unsigned short)pgm_read_word_near(table_address+2);
-            MultiU16X8toH16(timer, tmp_step_rate, gain);
-            timer = (unsigned short)pgm_read_word_near(table_address) - timer;
-        }
-    else 
-        { // lower step rates
-            unsigned short table_address = (unsigned short)&speed_lookuptable_slow[0][0];
-            table_address += ((step_rate)>>1) & 0xfffc;
-            timer = (unsigned short)pgm_read_word_near(table_address);
-            timer -= (((unsigned short)pgm_read_word_near(table_address+2) * (unsigned char)(step_rate & 0x0007))>>3);
-        }
+    if(step_rate >= 2048) {// higher step rate
+        unsigned short table_address = (unsigned short)&speed_lookuptable_fast[(unsigned char)(step_rate>>8)][0];
+        unsigned char tmp_step_rate = (step_rate & 0x00ff);
+        unsigned short gain = (unsigned short)pgm_read_word_near(table_address+2);
+        MultiU16X8toH16(timer, tmp_step_rate, gain);
+        timer = (unsigned short)pgm_read_word_near(table_address) - timer;
+    }
+    else { // lower step rates
+        unsigned short table_address = (unsigned short)&speed_lookuptable_slow[0][0];
+        table_address += ((step_rate)>>1) & 0xfffc;
+        timer = (unsigned short)pgm_read_word_near(table_address);
+        timer -= (((unsigned short)pgm_read_word_near(table_address+2) * (unsigned char)(step_rate & 0x0007))>>3);
+    }
     if(timer < 100) { timer = 100; }//(20kHz this should never happen)
     return timer;
 }
 
 // Initializes the trapezoid generator from the current block. Called whenever a new 
 // block begins.
-void trapezoid_generator_reset()
-{
+void trapezoid_generator_reset() {
     deceleration_time = 0;
     
     // step_rate to timer interval
@@ -329,13 +318,10 @@ void trapezoid_generator_reset()
 
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.  
 // It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately. 
-ISR(TIMER1_COMPA_vect)
-{
+ISR(TIMER1_COMPA_vect) {
 #if (DEBUG > -1)
-    uint32_t isr_start_micros;
-		
-    isr_start_micros = micros();
-	
+    uint32_t isr_start_micros;		
+    isr_start_micros = micros();	
     PreemptionFlag |= 0x0001;
 #endif
 	
@@ -351,61 +337,28 @@ ISR(TIMER1_COMPA_vect)
             counter_e = counter_x;
             step_events_completed = 0;
         } 
-        else {
-            OCR1A=2000; // 1kHz.
-        }    
+        else OCR1A=2000; // 1kHz.
     } 
 
     if (current_block != NULL) {
         // Disable Motors If Not Used
 	// Reduces power dissipation in stepper motors
-	if (DISABLE_X)
-            {
-		if (current_block->steps_x > 0)
-                    {
-			enable_x();
-                    }
-		else
-                    {
-			disable_x();
-                    }
-            }
-	
-	if (DISABLE_Y)
-            {
-		if (current_block->steps_y > 0)
-                    {
-			enable_y();
-                    }
-		else
-                    {
-			disable_y();
-                    }
-            }
-	
-	if (DISABLE_Z)
-            {
-		if (current_block->steps_z > 0)
-                    {
-			enable_z();
-                    }
-		else
-                    {
-			disable_z();
-                    }
-            }
-	
-	if (DISABLE_E)
-            {
-		if (current_block->steps_e > 0)
-                    {
-			enable_e();
-                    }
-		else
-                    {
-			disable_e();
-                    }
-            }
+	if (DISABLE_X) {
+            if (current_block->steps_x > 0)	enable_x();
+            else disable_x();
+        }
+        if (DISABLE_Y) {
+            if (current_block->steps_y > 0) enable_y();
+            else disable_y();
+        }
+        if (DISABLE_Z) {
+            if (current_block->steps_z > 0)	enable_z();
+            else disable_z();
+        }
+        if (DISABLE_E) {
+            if (current_block->steps_e > 0) enable_e();
+            else disable_e();
+        }
     
 	// Set directions TO DO This should be done once during init of trapezoid. Endstops -> interrupt
         out_bits = current_block->direction_bits;
@@ -413,260 +366,164 @@ ISR(TIMER1_COMPA_vect)
         // Set direction and check limit switches
         if ((out_bits & (1<<X_AXIS)) != 0) {   // -direction
             WRITE(X_DIR_PIN, INVERT_X_DIR);
-            CHECK_ENDSTOPS
-                {
+            CHECK_ENDSTOPS {
 #if X_MIN_PIN > -1
-                    uint8_t x_min_endstop=(READ(X_MIN_PIN) != X_ENDSTOP_INVERT);
-                    if(x_min_endstop && old_x_min_endstop && (current_block->steps_x > 0)) {
-                        if(!is_homing)
-                            endstop_x_hit=1;
-                        else  
-                            step_events_completed = current_block->step_event_count;
-                    }
-                    else
-                        {
-                            endstop_x_hit=0;
-                        }
-                    old_x_min_endstop = x_min_endstop;
-#else
-                    endstop_x_hit=0;
-#endif
+                uint8_t x_min_endstop=(READ(X_MIN_PIN) != X_ENDSTOP_INVERT);
+                if(x_min_endstop && old_x_min_endstop && (current_block->steps_x > 0)) {
+                    if(!is_homing)  endstop_x_hit=1;
+                    else step_events_completed = current_block->step_event_count;
                 }
+                else endstop_x_hit=0;
+                old_x_min_endstop = x_min_endstop;
+#else
+                endstop_x_hit=0;
+#endif
+            }
         }
         else { // +direction 
             WRITE(X_DIR_PIN,!INVERT_X_DIR);
-            CHECK_ENDSTOPS 
-                {
+            CHECK_ENDSTOPS {
 #if X_MAX_PIN > -1
-                    uint8_t x_max_endstop=(READ(X_MAX_PIN) != X_ENDSTOP_INVERT);
-                    if(x_max_endstop && old_x_max_endstop && (current_block->steps_x > 0)){
-                        if(!is_homing)
-                            endstop_x_hit=1;
-                        else    
-                            step_events_completed = current_block->step_event_count;
-                    }
-                    else
-                        {
-                            endstop_x_hit=0;
-                        }
-                    old_x_max_endstop = x_max_endstop;
-#else
-                    endstop_x_hit=0;
-#endif
+                uint8_t x_max_endstop=(READ(X_MAX_PIN) != X_ENDSTOP_INVERT);
+                if(x_max_endstop && old_x_max_endstop && (current_block->steps_x > 0)){
+                    if(!is_homing) endstop_x_hit=1;
+                    else step_events_completed = current_block->step_event_count;
                 }
+                else endstop_x_hit=0;
+                       
+                old_x_max_endstop = x_max_endstop;
+#else
+                endstop_x_hit=0;
+#endif
+            }
         }
 
         if ((out_bits & (1<<Y_AXIS)) != 0) {   // -direction
             WRITE(Y_DIR_PIN,INVERT_Y_DIR);
-            CHECK_ENDSTOPS
-                {
+            CHECK_ENDSTOPS {
 #if Y_MIN_PIN > -1
-                    SET_INPUT(Y_MIN_PIN);
-                    uint8_t y_min_endstop=(READ(Y_MIN_PIN) != Y_ENDSTOP_INVERT);
-                    if(y_min_endstop && old_y_min_endstop && (current_block->steps_y > 0)) {
-                        if(!is_homing)
-                            endstop_y_hit=1;
-                        else
-                            step_events_completed = current_block->step_event_count;
-                    }
-                    else
-                        {
-                            endstop_y_hit=0;
-                        }
-                    old_y_min_endstop = y_min_endstop;
-#else
-                    endstop_y_hit=0;  
-#endif
+                SET_INPUT(Y_MIN_PIN);
+                uint8_t y_min_endstop=(READ(Y_MIN_PIN) != Y_ENDSTOP_INVERT);
+                if(y_min_endstop && old_y_min_endstop && (current_block->steps_y > 0)) {
+                    if(!is_homing) endstop_y_hit=1;
+                    else step_events_completed = current_block->step_event_count;
                 }
+                else endstop_y_hit=0;
+                old_y_min_endstop = y_min_endstop;
+#else
+                endstop_y_hit=0;  
+#endif
+            }
         }
         else { // +direction
             WRITE(Y_DIR_PIN,!INVERT_Y_DIR);
-            CHECK_ENDSTOPS
-                {
+            CHECK_ENDSTOPS {
 #if Y_MAX_PIN > -1
-                    SET_INPUT(Y_MAX_PIN);
-                    uint8_t y_max_endstop=(READ(Y_MAX_PIN) != Y_ENDSTOP_INVERT);
-                    if(y_max_endstop && old_y_max_endstop && (current_block->steps_y > 0)){
-                        if(!is_homing)
-                            endstop_y_hit=1;
-                        else  
-                            step_events_completed = current_block->step_event_count;
-                    }
-                    else
-                        {
-                            endstop_y_hit=0;
-                        }
-                    old_y_max_endstop = y_max_endstop;
-#else
-                    endstop_y_hit=0;  
-#endif
+                SET_INPUT(Y_MAX_PIN);
+                uint8_t y_max_endstop=(READ(Y_MAX_PIN) != Y_ENDSTOP_INVERT);
+                if(y_max_endstop && old_y_max_endstop && (current_block->steps_y > 0)){
+                    if(!is_homing) endstop_y_hit=1;
+                    else step_events_completed = current_block->step_event_count;
                 }
+                else endstop_y_hit=0;
+                old_y_max_endstop = y_max_endstop;
+#else
+                endstop_y_hit=0;  
+#endif
+            }
         }
 
         if ((out_bits & (1<<Z_AXIS)) != 0) {   // -direction
             WRITE(Z_DIR_PIN,INVERT_Z_DIR);
-            CHECK_ENDSTOPS
-                {
+            CHECK_ENDSTOPS {
 #if Z_MIN_PIN > -1
-                    uint8_t z_min_endstop=(READ(Z_MIN_PIN) != Z_ENDSTOP_INVERT);
-                    if(z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {
-                        if(!is_homing)  
-                            endstop_z_hit=1;
-                        else  
-                            step_events_completed = current_block->step_event_count;
-                    }
-                    else
-                        {
-                            endstop_z_hit=0;
-                        }
-                    old_z_min_endstop = z_min_endstop;
-#else
-                    endstop_z_hit=0;  
-#endif
+                uint8_t z_min_endstop=(READ(Z_MIN_PIN) != Z_ENDSTOP_INVERT);
+                if(z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {
+                    if(!is_homing) endstop_z_hit=1;
+                    else step_events_completed = current_block->step_event_count;
                 }
+                else endstop_z_hit=0;
+                old_z_min_endstop = z_min_endstop;
+#else
+                endstop_z_hit=0;  
+#endif
+            }
         }
         else { // +direction
             WRITE(Z_DIR_PIN,!INVERT_Z_DIR);
-            CHECK_ENDSTOPS
-                {
+            CHECK_ENDSTOPS {
 #if Z_MAX_PIN > -1
-                    uint8_t z_max_endstop=(READ(Z_MAX_PIN) != Z_ENDSTOP_INVERT);
-                    if(z_max_endstop && old_z_max_endstop && (current_block->steps_z > 0)) {
-                        if(!is_homing)
-                            endstop_z_hit=1;
-                        else  
-                            step_events_completed = current_block->step_event_count;
-                    }
-                    else
-                        {
-                            endstop_z_hit=0;
-                        }
-                    old_z_max_endstop = z_max_endstop;
-#else
-                    endstop_z_hit=0;  
-#endif
+                uint8_t z_max_endstop=(READ(Z_MAX_PIN) != Z_ENDSTOP_INVERT);
+                if(z_max_endstop && old_z_max_endstop && (current_block->steps_z > 0)) {
+                    if(!is_homing) endstop_z_hit=1;
+                    else step_events_completed = current_block->step_event_count;
                 }
+                else endstop_z_hit=0;
+                old_z_max_endstop = z_max_endstop;
+#else
+                endstop_z_hit=0;  
+#endif
+            }
         }
 
-        if ((out_bits & (1<<E_AXIS)) != 0) {  // -direction
-            WRITE(E_DIR_PIN,INVERT_E_DIR);
-        }
-        else { // +direction
-            WRITE(E_DIR_PIN,!INVERT_E_DIR);
-        }
+        if ((out_bits & (1<<E_AXIS)) != 0) WRITE(E_DIR_PIN,INVERT_E_DIR); // -direction
+        else WRITE(E_DIR_PIN,!INVERT_E_DIR); // +direction
     
         for(int8_t i=0; i < step_loops; i++) { // Take multiple steps per interrupt (For high speed moves) 
-      
             counter_x += current_block->steps_x;
             if (counter_x > 0) {
-                if(!endstop_x_hit)
-                    {
-                        if(virtual_steps_x)
-                            {
-                                virtual_steps_x--;
-                            }
-                        else
-                            {
-                                WRITE(X_STEP_PIN, HIGH);
-			
-                                // Keeping track of stepper positions
-                                if (current_block->direction_bits & (1 << X_AXIS))
-                                    {
-                                        //actual_steps_x ? actual_steps_x-- : 0;
-                                        actual_steps_x--;
-                                    }
-                                else
-                                    {
-                                        actual_steps_x++;
-                                    }
-                            }
+                if(!endstop_x_hit) {
+                    if(virtual_steps_x) virtual_steps_x--;
+                    else {
+                        WRITE(X_STEP_PIN, HIGH);
+                        // Keeping track of stepper positions
+                        if (current_block->direction_bits & (1 << X_AXIS)) actual_steps_x--;
+                        //actual_steps_x ? actual_steps_x-- : 0;
+                        else actual_steps_x++;
                     }
-                else
-                    {
-                        virtual_steps_x++;
-                    }
-          
+                }
+                else virtual_steps_x++;
                 counter_x -= current_block->step_event_count;
             }
 
             counter_y += current_block->steps_y;
             if (counter_y > 0) {
-                if(!endstop_y_hit)
-                    {
-                        if(virtual_steps_y)
-                            {
-                                virtual_steps_y--;
-                            }
-                        else
-                            {
-                                WRITE(Y_STEP_PIN, HIGH);
-			
-                                // Keeping track of stepper positions
-                                if (current_block->direction_bits & (1 << Y_AXIS))
-                                    {
-                                        //actual_steps_y ? actual_steps_y-- : 0;
-                                        actual_steps_y--;
-                                    }
-                                else
-                                    {
-                                        actual_steps_y++;
-                                    }
-                            }
+                if(!endstop_y_hit) {
+                    if(virtual_steps_y) virtual_steps_y--;
+                    else {
+                        WRITE(Y_STEP_PIN, HIGH);
+                        // Keeping track of stepper positions
+                        if (current_block->direction_bits & (1 << Y_AXIS)) actual_steps_y--;
+                        //actual_steps_y ? actual_steps_y-- : 0;
+                        else actual_steps_y++;
                     }
-                else
-                    {
-                        virtual_steps_y++;
-                    }
-            
+                }
+                else virtual_steps_y++;
                 counter_y -= current_block->step_event_count;
             }
 
             counter_z += current_block->steps_z;
             if (counter_z > 0) {
-                if(!endstop_z_hit)
-                    {
-                        if(virtual_steps_z)
-                            {
-                                virtual_steps_z--;
-                            }
-                        else
-                            {
-                                WRITE(Z_STEP_PIN, HIGH);
-			
-                                // Keeping track of stepper positions
-                                if (current_block->direction_bits & (1 << Z_AXIS))
-                                    {
-                                        //actual_steps_z ? actual_steps_z-- : 0;
-                                        actual_steps_z--;
-                                    }
-                                else
-                                    {
-                                        actual_steps_z++;
-                                    }
-                            }
+                if(!endstop_z_hit) {
+                    if(virtual_steps_z) virtual_steps_z--;
+                    else {
+                        WRITE(Z_STEP_PIN, HIGH);
+                        // Keeping track of stepper positions
+                        if (current_block->direction_bits & (1 << Z_AXIS)) actual_steps_z--;
+                        //actual_steps_z ? actual_steps_z-- : 0;
+                        else actual_steps_z++;
                     }
-                else
-                    {
-                        virtual_steps_z++;
-                    }
-          
+                }
+                else virtual_steps_z++;
                 counter_z -= current_block->step_event_count;        
             }
 
             counter_e += current_block->steps_e;
             if (counter_e > 0) {
-		WRITE(E_STEP_PIN, HIGH);
-		
+		WRITE(E_STEP_PIN, HIGH);		
 		// Keeping track of stepper positions
-		if (current_block->direction_bits & (1 << E_AXIS))
-                    {
-			actual_steps_e--;
-                    }
-		else
-                    {
-			actual_steps_e++;
-                    }
-		
+		if (current_block->direction_bits & (1 << E_AXIS)) actual_steps_e--;
+		else actual_steps_e++;
                 counter_e -= current_block->step_event_count;
             }
 	  
@@ -727,8 +584,7 @@ ISR(TIMER1_COMPA_vect)
             acc_step_rate += current_block->initial_rate;
       
             // upper limit
-            if(acc_step_rate > current_block->nominal_rate)
-                acc_step_rate = current_block->nominal_rate;
+            if(acc_step_rate > current_block->nominal_rate) acc_step_rate = current_block->nominal_rate;
 
             // step_rate to timer interval
             timer = calc_timer(acc_step_rate);
@@ -737,74 +593,55 @@ ISR(TIMER1_COMPA_vect)
         } 
         else if (step_events_completed > (unsigned long int)current_block->decelerate_after) {   
             MultiU24X24toH16(step_rate, deceleration_time, current_block->acceleration_rate);
-      
-            if(step_rate > acc_step_rate) { // Check step_rate stays positive
-                step_rate = current_block->final_rate;
-            }
-            else {
-                step_rate = acc_step_rate - step_rate; // Decelerate from aceleration end point.
-            }
+
+            // Check step_rate stays positive
+            if(step_rate > acc_step_rate) step_rate = current_block->final_rate;
+            else step_rate = acc_step_rate - step_rate; // Decelerate from aceleration end point.
 
             // lower limit
-            if(step_rate < current_block->final_rate)
-                step_rate = current_block->final_rate;
+            if(step_rate < current_block->final_rate) step_rate = current_block->final_rate;
 
             // step_rate to timer interval
             timer = calc_timer(step_rate);
             OCR1A = timer;
             deceleration_time += timer;
         }
-        else {
-            OCR1A = OCR1A_nominal;
-        }
+        else OCR1A = OCR1A_nominal;
 
         // If current block is finished, reset pointer 
         if (step_events_completed >= current_block->step_event_count) {
             current_block = NULL;
             plan_discard_current_block();
 	  
-            if (pause_print_req)
-                {	
-                    get_current_printer_state();
-		
-                    set_print_paused_buffer();
-		
-                    // Clear the plan buffer
-                    clear_plan_buffer();
-		
-                    // de-assert 'pause_print_req' flag
-                    pause_print_req = 0;
-                }
+            if (pause_print_req) {	
+                get_current_printer_state();
+                set_print_paused_buffer();
+                // Clear the plan buffer
+                clear_plan_buffer();
+                // de-assert 'pause_print_req' flag
+                pause_print_req = 0;
+            }
         }   
     }
-    else
-        {
-            if (pause_print_req)
-                {	
-                    get_current_printer_state();
-		
-                    set_print_paused_buffer();
-		
-                    // Clear the plan buffer
-                    clear_plan_buffer();
-		
-                    // de-assert 'pause_print_req' flag
-                    pause_print_req = 0;
-                }
+    else {
+        if (pause_print_req) {	
+            get_current_printer_state();
+            set_print_paused_buffer();
+            // Clear the plan buffer
+            clear_plan_buffer();
+            // de-assert 'pause_print_req' flag
+            pause_print_req = 0;
         }
+    }
   
 #if (DEBUG > -1)
     timer1_compa_isr_exe_micros = (micros() - isr_start_micros);
-	
+    
     if (timer1_compa_isr_exe_micros > timer1_compa_isr_exe_micros_max)
-	{
-            timer1_compa_isr_exe_micros_max = timer1_compa_isr_exe_micros;
-	}
-		
+        timer1_compa_isr_exe_micros_max = timer1_compa_isr_exe_micros;
+    
     if (timer1_compa_isr_exe_micros < timer1_compa_isr_exe_micros_min)
-	{
-            timer1_compa_isr_exe_micros_min = timer1_compa_isr_exe_micros;
-	}
+        timer1_compa_isr_exe_micros_min = timer1_compa_isr_exe_micros;
 #endif
 }
 
@@ -852,8 +689,7 @@ void st_init()
 }
 
 
-void st_set_current_position(st_position_t new_position)
-{
+void st_set_current_position(st_position_t new_position) {
     actual_steps_x = new_position.x;
     actual_steps_y = new_position.y;
     actual_steps_z = new_position.z;
@@ -861,8 +697,7 @@ void st_set_current_position(st_position_t new_position)
 }
 
 
-st_position_t st_get_current_position(void)
-{
+st_position_t st_get_current_position(void) {
     st_position_t pos;
 
     CRITICAL_SECTION_START;
@@ -876,8 +711,7 @@ st_position_t st_get_current_position(void)
 }
 
 
-void get_current_printer_state(void)
-{
+void get_current_printer_state(void) {
     // Get current positions and target temperatures
     paused_data.paused_pos_x = actual_steps_x / (float)(axis_steps_per_unit[X_AXIS]);
     paused_data.paused_pos_y = actual_steps_y / (float)(axis_steps_per_unit[Y_AXIS]);
@@ -890,9 +724,7 @@ void get_current_printer_state(void)
 	
     // Copy first 8 buffer contents
     for (int i = 0; i < PRINT_PAUSED_BLOCK_BUF_SIZE; i++)
-	{
-            resume_buffer[i] = block_buffer[i];
-	}
+        resume_buffer[i] = block_buffer[i];
 
     // Copy current block_buffer_head and block_buffer_tail
     paused_data.block_buffer_head = block_buffer_head; 
@@ -900,8 +732,7 @@ void get_current_printer_state(void)
 }
 
 
-void set_print_paused_buffer(void)
-{
+void set_print_paused_buffer(void) {
     CRITICAL_SECTION_START;
 	
     block_buffer_size = PRINT_PAUSED_BLOCK_BUF_SIZE;
@@ -914,8 +745,7 @@ void set_print_paused_buffer(void)
 }
 
 
-void clear_plan_buffer(void)
-{
+void clear_plan_buffer(void) {
     st_position_t pos;
     float current_pos_in_mm[NUM_AXIS];
 	
@@ -934,8 +764,7 @@ void clear_plan_buffer(void)
 }
 
 
-void resume_normal_print_buffer(void)
-{
+void resume_normal_print_buffer(void) {
     CRITICAL_SECTION_START;
 	
     block_buffer_size = CFG_BLOCK_BUFFER_SIZE;
@@ -943,9 +772,7 @@ void resume_normal_print_buffer(void)
 	
     // Copy first 8 buffer contents from saved data
     for (int i = 0; i < PRINT_PAUSED_BLOCK_BUF_SIZE; i++)
-	{
-            block_buffer[i] = resume_buffer[i];
-	}
+        block_buffer[i] = resume_buffer[i];
 	
     // Copy block_buffer_head and block_buffer_tail from saved data
     block_buffer_head = paused_data.block_buffer_head; 
@@ -955,8 +782,7 @@ void resume_normal_print_buffer(void)
 }
 
 
-void resume_normal_buf_discard_all_buf_moves(void)
-{
+void resume_normal_buf_discard_all_buf_moves(void) {
     CRITICAL_SECTION_START;
 	
     block_buffer_size = CFG_BLOCK_BUFFER_SIZE;
@@ -983,41 +809,38 @@ void st_synchronize()
 
 // Set the current limit for Allegro A4982 stepper driver IC using the MCP4451  
 // digi-pot device.
-void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps)
-{
+void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps) {
     unsigned long WaitForI2CSendTimer = 0;
 	
-    switch (Axis)
-	{
-        case X_AXIS:
-            I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER0_ADDR, MilliAmps);
-            max_x_motor_current = MilliAmps;
-            break;
+    switch (Axis) {
+    case X_AXIS:
+        I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER0_ADDR, MilliAmps);
+        max_x_motor_current = MilliAmps;
+        break;
 		
-        case Y_AXIS:
-            I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER1_ADDR, MilliAmps);
-            max_y_motor_current = MilliAmps;
-            break;
+    case Y_AXIS:
+        I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER1_ADDR, MilliAmps);
+        max_y_motor_current = MilliAmps;
+        break;
 		
-        case Z_AXIS:
-            I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER2_ADDR, MilliAmps);
-            max_z_motor_current = MilliAmps;
-            break;
+    case Z_AXIS:
+        I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER2_ADDR, MilliAmps);
+        max_z_motor_current = MilliAmps;
+        break;
 		
-        case E_AXIS:
-            I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER3_ADDR, MilliAmps);
-            max_e_motor_current = MilliAmps;
-            break;
+    case E_AXIS:
+        I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER3_ADDR, MilliAmps);
+        max_e_motor_current = MilliAmps;
+        break;
 		
-        default:
-            break;
-	}
+    default:
+        break;
+    }
 	
     WaitForI2CSendTimer = millis();
 	
     while ( I2C_Locked 
-            && ( millis() - WaitForI2CSendTimer < I2C_TRANSCEIVER_BUSY_TIMEOUT ) )
-	{
-            Service_I2C_Master();	// Send I2C message to device
-	}
+            && ( millis() - WaitForI2CSendTimer < I2C_TRANSCEIVER_BUSY_TIMEOUT ) ){
+        Service_I2C_Master();	// Send I2C message to device
+    }
 }

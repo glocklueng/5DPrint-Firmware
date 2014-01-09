@@ -1,22 +1,22 @@
 /*
- Makibox A6 Firmware
- ---
- Copyright (c) 2012-2013 by Makible Limited.
+  Makibox A6 Firmware
+  ---
+  Copyright (c) 2012-2013 by Makible Limited.
  
- This file is part of the Makibox A6 Firmware.
+  This file is part of the Makibox A6 Firmware.
  
- Makibox A6 Firmware is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  Makibox A6 Firmware is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
  
- The Makibox A6 Firmware is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  The Makibox A6 Firmware is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
  
- You should have received a copy of the GNU General Public License
- along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <avr/io.h>
@@ -53,155 +53,155 @@ unsigned char currentToWiperValue(unsigned short current);
 
 unsigned char TWI_Act_On_Failure_In_Last_Transmission ( unsigned char TWIerrorMsg )
 {
-	// A failure has occurred, use TWIerrorMsg to determine the nature of the failure
-	// and take appropriate actions.
-	// See header file for a list of possible failures messages.
+    // A failure has occurred, use TWIerrorMsg to determine the nature of the failure
+    // and take appropriate actions.
+    // See header file for a list of possible failures messages.
 	
-	// Here is a simple sample, where if received a NACK on the slave address,
-	// then a retransmission will be initiated.
+    // Here is a simple sample, where if received a NACK on the slave address,
+    // then a retransmission will be initiated.
 	
-  if ( (TWIerrorMsg == TWI_MTX_ADR_NACK) | (TWIerrorMsg == TWI_MRX_ADR_NACK) )
-    TWI_Start_Transceiver();
+    if ( (TWIerrorMsg == TWI_MTX_ADR_NACK) | (TWIerrorMsg == TWI_MRX_ADR_NACK) )
+        TWI_Start_Transceiver();
     
-  return TWIerrorMsg; 
+    return TWIerrorMsg; 
 }
 
 
 void init_I2C_Master(void)
 {
-	I2C_Locked = 1;
+    I2C_Locked = 1;
 	
-	// Init pins to output with open-drain
-	DDRD |= (1 << PIND0) | (1 << PIND1);
-	PORTD |= ( (1 << PIND0) | (1 << PIND1) );
+    // Init pins to output with open-drain
+    DDRD |= (1 << PIND0) | (1 << PIND1);
+    PORTD |= ( (1 << PIND0) | (1 << PIND1) );
 	
-	TWI_Master_Initialise();
+    TWI_Master_Initialise();
 	
-	// Perform SW I2C reset to ensure all devices are in a known I2C state
-	I2C_SW_Reset();
-        delay(1);
+    // Perform SW I2C reset to ensure all devices are in a known I2C state
+    I2C_SW_Reset();
+    delay(1);
 	
-	I2C_Send_Msg_Size = 0;
-	I2C_Read_Request = 0;
-	Send_I2C_Msg = 0;
-	I2C_Locked = 0;
+    I2C_Send_Msg_Size = 0;
+    I2C_Read_Request = 0;
+    Send_I2C_Msg = 0;
+    I2C_Locked = 0;
 }
 
 
 void Service_I2C_Master(void)
 {
-	unsigned long I2C_Transceiver_Busy_Time = 0;
+    unsigned long I2C_Transceiver_Busy_Time = 0;
 	
-	if (millis() - previous_millis_service_i2c >= SERVICE_I2C_INTERVAL)
+    if (millis() - previous_millis_service_i2c >= SERVICE_I2C_INTERVAL)
 	{
-		if (Send_I2C_Msg)
+            if (Send_I2C_Msg)
 		{	
-			if ( ! TWI_Transceiver_Busy() )
+                    if ( ! TWI_Transceiver_Busy() )
 			{
-				TWI_Start_Transceiver_With_Data( I2C_messageBuf, I2C_Send_Msg_Size);
+                            TWI_Start_Transceiver_With_Data( I2C_messageBuf, I2C_Send_Msg_Size);
 				
-				I2C_Send_Msg_Size = 0;
-				Send_I2C_Msg = 0;
-				I2C_Locked = 0;
+                            I2C_Send_Msg_Size = 0;
+                            Send_I2C_Msg = 0;
+                            I2C_Locked = 0;
 			}
 		}
 		
 		
-		if ( (I2C_Read_Request) && (!Send_I2C_Msg) )
+            if ( (I2C_Read_Request) && (!Send_I2C_Msg) )
 		{
-			if ( ! TWI_Transceiver_Busy() )
+                    if ( ! TWI_Transceiver_Busy() )
 			{
-				TWI_Start_Transceiver_With_Data( I2C_ReadmessageBuf, I2C_Read_Req_Size);
+                            TWI_Start_Transceiver_With_Data( I2C_ReadmessageBuf, I2C_Read_Req_Size);
 				
-				TWI_operation = REQUEST_DATA;
+                            TWI_operation = REQUEST_DATA;
 				
-				I2C_Read_Req_Size = 0;
-				I2C_Read_Request = 0;
+                            I2C_Read_Req_Size = 0;
+                            I2C_Read_Request = 0;
 			}
 		}
 		
-		I2C_Transceiver_Busy_Time = millis();
+            I2C_Transceiver_Busy_Time = millis();
 		
-		while ( TWI_Transceiver_Busy() 
-				&& ( millis() - I2C_Transceiver_Busy_Time < I2C_TRANSCEIVER_BUSY_TIMEOUT ) );
+            while ( TWI_Transceiver_Busy() 
+                    && ( millis() - I2C_Transceiver_Busy_Time < I2C_TRANSCEIVER_BUSY_TIMEOUT ) );
 		
-		if ( ! TWI_Transceiver_Busy() )
+            if ( ! TWI_Transceiver_Busy() )
 		{
-			// Check if the last operation was successful
-			if ( TWI_statusReg.lastTransOK )
+                    // Check if the last operation was successful
+                    if ( TWI_statusReg.lastTransOK )
 			{
-				if ( TWI_operation ) // Section for follow-up operations.
+                            if ( TWI_operation ) // Section for follow-up operations.
 				{
-				// Determine what action to take now
-				  if (TWI_operation == REQUEST_DATA)
-				  { // Request/collect the data from the Slave
-					I2C_ReadmessageBuf[0] = (TWI_targetSlaveAddress) | (TRUE<<TWI_READ_BIT); // The first byte must always consist of General Call code or the TWI slave address.
-					TWI_Start_Transceiver_With_Data( I2C_ReadmessageBuf, TWI_BUFFER_SIZE );       
-					TWI_operation = READ_DATA_FROM_BUFFER; // Set next operation        
-				  }
+                                    // Determine what action to take now
+                                    if (TWI_operation == REQUEST_DATA)
+                                        { // Request/collect the data from the Slave
+                                            I2C_ReadmessageBuf[0] = (TWI_targetSlaveAddress) | (TRUE<<TWI_READ_BIT); // The first byte must always consist of General Call code or the TWI slave address.
+                                            TWI_Start_Transceiver_With_Data( I2C_ReadmessageBuf, TWI_BUFFER_SIZE );       
+                                            TWI_operation = READ_DATA_FROM_BUFFER; // Set next operation        
+                                        }
 				  
-				  I2C_Transceiver_Busy_Time = millis();
+                                    I2C_Transceiver_Busy_Time = millis();
 				  
-				  while ( TWI_Transceiver_Busy() 
-							&& ( millis() - I2C_Transceiver_Busy_Time < I2C_TRANSCEIVER_BUSY_TIMEOUT ) );
+                                    while ( TWI_Transceiver_Busy() 
+                                            && ( millis() - I2C_Transceiver_Busy_Time < I2C_TRANSCEIVER_BUSY_TIMEOUT ) );
 				  
-				  if (TWI_operation == READ_DATA_FROM_BUFFER)
-				  { // Get the received data from the transceiver buffer
-					if ( TWI_Get_Data_From_Transceiver( I2C_ReadmessageBuf, I2C_Read_Msg_Size ) )
-					{
-						Process_I2C_Message(I2C_ReadmessageBuf);
-					}
-					else
-					{
-						//serial_send("// I2C Debug: Get data from transceiver failed\r\n");
-					}
+                                    if (TWI_operation == READ_DATA_FROM_BUFFER)
+                                        { // Get the received data from the transceiver buffer
+                                            if ( TWI_Get_Data_From_Transceiver( I2C_ReadmessageBuf, I2C_Read_Msg_Size ) )
+                                                {
+                                                    Process_I2C_Message(I2C_ReadmessageBuf);
+                                                }
+                                            else
+                                                {
+                                                    //serial_send("// I2C Debug: Get data from transceiver failed\r\n");
+                                                }
 					
-					TWI_operation = FALSE;        // Set next operation
-					I2C_Locked = 0;
-				  }
+                                            TWI_operation = FALSE;        // Set next operation
+                                            I2C_Locked = 0;
+                                        }
 				}
 			}
-			else // Got an error during the last transmission
+                    else // Got an error during the last transmission
 			{
-				// Use TWI status information to detemine cause of failure and take appropriate actions. 
-				TWI_Act_On_Failure_In_Last_Transmission( TWI_Get_State_Info( ) );
+                            // Use TWI status information to detemine cause of failure and take appropriate actions. 
+                            TWI_Act_On_Failure_In_Last_Transmission( TWI_Get_State_Info( ) );
 			}
 		}
 		
-		previous_millis_service_i2c = millis();
+            previous_millis_service_i2c = millis();
 	}
 }
 
 
 void Process_I2C_Message(unsigned char I2C_ReadmessageBuf[TWI_BUFFER_SIZE])
 {
-	I2C_Read_Msg_Size = 0;
+    I2C_Read_Msg_Size = 0;
 }
 
 
 void I2C_SW_Reset(void)
 {
-	TWCR =	(1<<TWEN)|                         		// TWI Interface enabled.
-            (1<<TWIE)|(1<<TWINT)|                  	// Enable TWI Interupt and clear the flag.
-            (0<<TWEA)|(1<<TWSTA)|(0<<TWSTO)|       	// Initiate a START condition.
-			(0<<TWWC);     
+    TWCR =	(1<<TWEN)|                         		// TWI Interface enabled.
+        (1<<TWIE)|(1<<TWINT)|                  	// Enable TWI Interupt and clear the flag.
+        (0<<TWEA)|(1<<TWSTA)|(0<<TWSTO)|       	// Initiate a START condition.
+        (0<<TWWC);     
 
-	TWDR =	0xFF;
+    TWDR =	0xFF;
 	
-	TWCR =	(1<<TWEN)|                                 // TWI Interface enabled
-            (1<<TWIE)|(1<<TWINT)|                      // Enable TWI Interupt and clear the flag to send byte
-            (0<<TWEA)|(0<<TWSTA)|(0<<TWSTO)|           //
-            (0<<TWWC);   
+    TWCR =	(1<<TWEN)|                                 // TWI Interface enabled
+        (1<<TWIE)|(1<<TWINT)|                      // Enable TWI Interupt and clear the flag to send byte
+        (0<<TWEA)|(0<<TWSTA)|(0<<TWSTO)|           //
+        (0<<TWWC);   
 	
-	TWCR =	(1<<TWEN)|                              // TWI Interface enabled
-            (0<<TWIE)|(1<<TWINT)|                   // Disable TWI Interrupt and clear the flag
-            (0<<TWEA)|(1<<TWSTA)|(0<<TWSTO)|        // Initiate a START condition.
-            (0<<TWWC); 
+    TWCR =	(1<<TWEN)|                              // TWI Interface enabled
+        (0<<TWIE)|(1<<TWINT)|                   // Disable TWI Interrupt and clear the flag
+        (0<<TWEA)|(1<<TWSTA)|(0<<TWSTO)|        // Initiate a START condition.
+        (0<<TWWC); 
 			
-	TWCR =	(1<<TWEN)|                              // TWI Interface enabled
-            (0<<TWIE)|(1<<TWINT)|                   // Disable TWI Interrupt and clear the flag
-            (0<<TWEA)|(0<<TWSTA)|(1<<TWSTO)|        // Initiate a STOP condition.
-            (0<<TWWC);                                 
+    TWCR =	(1<<TWEN)|                              // TWI Interface enabled
+        (0<<TWIE)|(1<<TWINT)|                   // Disable TWI Interrupt and clear the flag
+        (0<<TWEA)|(0<<TWSTA)|(1<<TWSTO)|        // Initiate a STOP condition.
+        (0<<TWWC);                                 
 }
 
 unsigned char currentToWiperValue (unsigned short current)
@@ -214,34 +214,34 @@ unsigned char currentToWiperValue (unsigned short current)
 
 void I2C_digipots_set_defaults(void)
 {
-	if (!I2C_Locked)
+    if (!I2C_Locked)
 	{
-		I2C_Locked = 1;
+            I2C_Locked = 1;
 		
-		TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
+            TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
 		
-		I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
+            I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
 		
-		I2C_messageBuf[1] = I2C_DIGIPOT_VOL_WIPER0_ADDR | I2C_DIGIPOT_WRITE;
-        I2C_messageBuf[2] = currentToWiperValue (max_x_motor_current);
+            I2C_messageBuf[1] = I2C_DIGIPOT_VOL_WIPER0_ADDR | I2C_DIGIPOT_WRITE;
+            I2C_messageBuf[2] = currentToWiperValue (max_x_motor_current);
 				
-		I2C_messageBuf[3] = I2C_DIGIPOT_VOL_WIPER1_ADDR | I2C_DIGIPOT_WRITE;
-        I2C_messageBuf[4] = currentToWiperValue (max_y_motor_current);
+            I2C_messageBuf[3] = I2C_DIGIPOT_VOL_WIPER1_ADDR | I2C_DIGIPOT_WRITE;
+            I2C_messageBuf[4] = currentToWiperValue (max_y_motor_current);
 				
-		I2C_messageBuf[5] = I2C_DIGIPOT_VOL_WIPER2_ADDR | I2C_DIGIPOT_WRITE;
-        I2C_messageBuf[6] = currentToWiperValue (max_z_motor_current);
+            I2C_messageBuf[5] = I2C_DIGIPOT_VOL_WIPER2_ADDR | I2C_DIGIPOT_WRITE;
+            I2C_messageBuf[6] = currentToWiperValue (max_z_motor_current);
 				
-		I2C_messageBuf[7] = I2C_DIGIPOT_VOL_WIPER3_ADDR | I2C_DIGIPOT_WRITE;
-        I2C_messageBuf[8] = currentToWiperValue (max_e_motor_current);
+            I2C_messageBuf[7] = I2C_DIGIPOT_VOL_WIPER3_ADDR | I2C_DIGIPOT_WRITE;
+            I2C_messageBuf[8] = currentToWiperValue (max_e_motor_current);
 				
-		I2C_messageBuf[9] = I2C_DIGIPOT_VOL_TCON0_ADDR | I2C_DIGIPOT_WRITE | 0x01;
-		I2C_messageBuf[10] = 0xFF; 
+            I2C_messageBuf[9] = I2C_DIGIPOT_VOL_TCON0_ADDR | I2C_DIGIPOT_WRITE | 0x01;
+            I2C_messageBuf[10] = 0xFF; 
 		
-		I2C_messageBuf[11] = I2C_DIGIPOT_VOL_TCON1_ADDR | I2C_DIGIPOT_WRITE | 0x01;
-		I2C_messageBuf[12] = 0xFF;
+            I2C_messageBuf[11] = I2C_DIGIPOT_VOL_TCON1_ADDR | I2C_DIGIPOT_WRITE | 0x01;
+            I2C_messageBuf[12] = 0xFF;
 		
-		I2C_Send_Msg_Size = 13;
-		Send_I2C_Msg = 1;
+            I2C_Send_Msg_Size = 13;
+            Send_I2C_Msg = 1;
 	}
 }
 
@@ -251,28 +251,28 @@ void I2C_digipots_set_all_wipers(unsigned short MilliAmps0,
                                  unsigned short MilliAmps2,
                                  unsigned short MilliAmps3)
 {
-	if (!I2C_Locked)
+    if (!I2C_Locked)
 	{
-		I2C_Locked = 1;
+            I2C_Locked = 1;
 		
-		TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
+            TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
 		
-		I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
+            I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
 		
-		I2C_messageBuf[1] = I2C_DIGIPOT_VOL_WIPER0_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[2] = currentToWiperValue(MilliAmps0);
+            I2C_messageBuf[1] = I2C_DIGIPOT_VOL_WIPER0_ADDR | I2C_DIGIPOT_WRITE;
+            I2C_messageBuf[2] = currentToWiperValue(MilliAmps0);
 		
-		I2C_messageBuf[3] = I2C_DIGIPOT_VOL_WIPER1_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[4] = currentToWiperValue(MilliAmps1);
+            I2C_messageBuf[3] = I2C_DIGIPOT_VOL_WIPER1_ADDR | I2C_DIGIPOT_WRITE;
+            I2C_messageBuf[4] = currentToWiperValue(MilliAmps1);
 		
-		I2C_messageBuf[5] = I2C_DIGIPOT_VOL_WIPER2_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[6] = currentToWiperValue(MilliAmps2);
+            I2C_messageBuf[5] = I2C_DIGIPOT_VOL_WIPER2_ADDR | I2C_DIGIPOT_WRITE;
+            I2C_messageBuf[6] = currentToWiperValue(MilliAmps2);
 		
-		I2C_messageBuf[7] = I2C_DIGIPOT_VOL_WIPER3_ADDR | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[8] = currentToWiperValue(MilliAmps2);
+            I2C_messageBuf[7] = I2C_DIGIPOT_VOL_WIPER3_ADDR | I2C_DIGIPOT_WRITE;
+            I2C_messageBuf[8] = currentToWiperValue(MilliAmps2);
 		
-		I2C_Send_Msg_Size = 9;
-		Send_I2C_Msg = 1;
+            I2C_Send_Msg_Size = 9;
+            Send_I2C_Msg = 1;
 	}
 }
 
@@ -280,62 +280,62 @@ void I2C_digipots_set_all_wipers(unsigned short MilliAmps0,
 void I2C_digipots_set_wiper(unsigned char WiperAddr, 
                             unsigned short MilliAmps)
 {
-	if (!I2C_Locked)
+    if (!I2C_Locked)
 	{
-		I2C_Locked = 1;
+            I2C_Locked = 1;
 		
-		TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
+            TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
 		
-		I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
+            I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
 		
-		I2C_messageBuf[1] = WiperAddr | I2C_DIGIPOT_WRITE;
-		I2C_messageBuf[2] = currentToWiperValue(MilliAmps);
+            I2C_messageBuf[1] = WiperAddr | I2C_DIGIPOT_WRITE;
+            I2C_messageBuf[2] = currentToWiperValue(MilliAmps);
 		
-		I2C_Send_Msg_Size = 3;
-		Send_I2C_Msg = 1;
+            I2C_Send_Msg_Size = 3;
+            Send_I2C_Msg = 1;
 	}
 }
 
 
 unsigned short I2C_digipots_read(unsigned char DeviceMemAddress)
 {
-	unsigned long WaitForDigipotRead_Millis = 0;
+    unsigned long WaitForDigipotRead_Millis = 0;
 	
-	if (!I2C_Locked)
+    if (!I2C_Locked)
 	{
-		I2C_Locked = 1;
+            I2C_Locked = 1;
 		
-		TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
+            TWI_targetSlaveAddress = I2C_DIGIPOT_ADDRESS;
 		
-		I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
+            I2C_messageBuf[0] = (TWI_targetSlaveAddress) | (FALSE<<TWI_READ_BIT);	// Slave Address | Write bit = 0
 		
-		I2C_messageBuf[1] = DeviceMemAddress | I2C_DIGIPOT_READ;
+            I2C_messageBuf[1] = DeviceMemAddress | I2C_DIGIPOT_READ;
 		
-		I2C_Read_Req_Size = 2;
-		I2C_Read_Msg_Size = 2;
-		I2C_Read_Request = 1;
+            I2C_Read_Req_Size = 2;
+            I2C_Read_Msg_Size = 2;
+            I2C_Read_Request = 1;
 		
-		WaitForDigipotRead_Millis = millis();
+            WaitForDigipotRead_Millis = millis();
 		
-		// Wait for read result
-		while ( ( millis() - WaitForDigipotRead_Millis < DIGIPOT_READ_RESULT_WAIT_TIMEOUT)
-				&& (I2C_Read_Msg_Size) )
+            // Wait for read result
+            while ( ( millis() - WaitForDigipotRead_Millis < DIGIPOT_READ_RESULT_WAIT_TIMEOUT)
+                    && (I2C_Read_Msg_Size) )
 		{
-			Service_I2C_Master();
+                    Service_I2C_Master();
 		}
 		
-		if (I2C_Read_Msg_Size)
+            if (I2C_Read_Msg_Size)
 		{
-			return (0xFFFF);
+                    return (0xFFFF);
 		}
-		else
+            else
 		{
-			return ( (I2C_ReadmessageBuf[0] << 8) | I2C_ReadmessageBuf[1] ) ;
+                    return ( (I2C_ReadmessageBuf[0] << 8) | I2C_ReadmessageBuf[1] ) ;
 		}
 	}
-	else
+    else
 	{
-		return (0xFFFF);
+            return (0xFFFF);
 	}
 }
 

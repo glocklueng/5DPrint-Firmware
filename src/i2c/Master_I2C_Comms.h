@@ -1,22 +1,22 @@
 /*
- Makibox A6 Firmware
- ---
- Copyright (c) 2012-2013 by Makible Limited.
+  Makibox A6 Firmware
+  ---
+  Copyright (c) 2012-2013 by Makible Limited.
  
- This file is part of the Makibox A6 Firmware.
+  This file is part of the Makibox A6 Firmware.
  
- Makibox A6 Firmware is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  Makibox A6 Firmware is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
  
- The Makibox A6 Firmware is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  The Makibox A6 Firmware is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
  
- You should have received a copy of the GNU General Public License
- along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef MASTER_I2C_H
@@ -25,24 +25,24 @@
 #define I2C_DIGIPOT_ADDRESS			0x58 // TO BE CONFIMED!!! - Note the HVC/A0 pin
 
 /***************************************
-* I2C Message Formatting:
-* -----------------------
-* Byte 0	Gen Call / Slave Address + Read/Write Bit
-* Byte 1	Bits[7:4] = Mem Addr; Bits[3:2] = Cmd; Bit[1] = X; Bit[0] = D8
-* Byte 2	Data
-* Byte 3	Bits[7:4] = Mem Addr; Bits[3:2] = Cmd; Bit[1] = X; Bit[0] = D8
-* Byte 4	Data
-* Byte 5	Bits[7:4] = Mem Addr; Bits[3:2] = Cmd; Bit[1] = X; Bit[0] = D8
-* Byte 6	Data
-* Byte 7	Bits[7:4] = Mem Addr; Bits[3:2] = Cmd; Bit[1] = X; Bit[0] = D8
-* Byte 8	Data
-***************************************/
+ * I2C Message Formatting:
+ * -----------------------
+ * Byte 0	Gen Call / Slave Address + Read/Write Bit
+ * Byte 1	Bits[7:4] = Mem Addr; Bits[3:2] = Cmd; Bit[1] = X; Bit[0] = D8
+ * Byte 2	Data
+ * Byte 3	Bits[7:4] = Mem Addr; Bits[3:2] = Cmd; Bit[1] = X; Bit[0] = D8
+ * Byte 4	Data
+ * Byte 5	Bits[7:4] = Mem Addr; Bits[3:2] = Cmd; Bit[1] = X; Bit[0] = D8
+ * Byte 6	Data
+ * Byte 7	Bits[7:4] = Mem Addr; Bits[3:2] = Cmd; Bit[1] = X; Bit[0] = D8
+ * Byte 8	Data
+ ***************************************/
 
 #define I2C_MSG_HEADER_SIZE			0
 
 // MCP4451 DIGI-POT COMMANDS
-	// COMMAND BYTE FORMAT:		BIT		7	6	5	4	3	2	1	0
-	//									AD3	AD2	AD1	AD0	C1	C0	D9	D8
+// COMMAND BYTE FORMAT:		BIT		7	6	5	4	3	2	1	0
+//									AD3	AD2	AD1	AD0	C1	C0	D9	D8
 #define I2C_DIGIPOT_WRITE				0x00
 #define I2C_DIGIPOT_READ				0x0C
 #define I2C_DIGIPOT_INC					0x04

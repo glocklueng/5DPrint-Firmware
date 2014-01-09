@@ -353,10 +353,10 @@
 #define BUZZER_SUPPORT      1
 
 // Note that accuracy is limited by resolution of the digi-pot.
-#define XAXIS_DEFAULT_MAX_CURRENT		1700	// mA
-#define YAXIS_DEFAULT_MAX_CURRENT		1700	// mA
-#define ZAXIS_DEFAULT_MAX_CURRENT		1700	// mA
-#define EAXIS_DEFAULT_MAX_CURRENT		1700	// mA
+#define XAXIS_DEFAULT_MAX_CURRENT		1600	// mA
+#define YAXIS_DEFAULT_MAX_CURRENT		1600	// mA
+#define ZAXIS_DEFAULT_MAX_CURRENT		1600	// mA
+#define EAXIS_DEFAULT_MAX_CURRENT		1600	// mA
 
 
 // Inactivity Timeouts

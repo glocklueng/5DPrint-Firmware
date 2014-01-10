@@ -338,6 +338,7 @@ void trapezoid_generator_reset() {
     OCR1A = acceleration_time;
     OCR1A_nominal = calc_timer(current_block->nominal_rate);
 
+#if SET_MICROSTEP > 0
     // Set microstep resolution
 #if X_MS1_PIN > -1
     WRITE(X_MS1_PIN, microstep_x[0]);
@@ -362,6 +363,7 @@ void trapezoid_generator_reset() {
 #endif
 #if E_MS2_PIN > -1
     WRITE(E_MS2_PIN, microstep_e[1]);
+#endif
 #endif
 }
 
@@ -853,7 +855,7 @@ void st_synchronize()
     }
 }
 
-
+#if DIGIPOTS > 0 
 // Set the current limit for Allegro A4982 stepper driver IC using the MCP4451  
 // digi-pot device.
 void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps) {
@@ -891,3 +893,4 @@ void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps
         Service_I2C_Master();	// Send I2C message to device
     }
 }
+#endif

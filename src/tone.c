@@ -31,6 +31,7 @@
 #include "pins_teensy.h"
 #include "tone.h"
 
+#if BUZZER_SUPPORT > 0
 //------------------------------------------------------------------------
 // Variable Declarations
 // For varaibles used outside this module.
@@ -51,6 +52,7 @@ unsigned char buzzer_status = 0;
 // For functions used within this module only.
 //------------------------------------------------------------------------
 void setBuzzerPWMDuty(void);
+
 
 /***************************************************
  * buzzer_init(void)
@@ -143,3 +145,5 @@ ISR(TIMER2_COMPA_vect){
         }
     }
 }
+
+#endif

@@ -171,8 +171,10 @@ static uint8_t sd_raw_send_command(uint8_t command, uint32_t arg);
  */
 uint8_t sd_raw_init()
 {
+#ifdef Printrboard_revB
     /* Disable slave select (SS) pin  */
     configure_ss_pin_as_output();
+#endif
 	
     /* enable inputs for reading card status */
     configure_pin_available();

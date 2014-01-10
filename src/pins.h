@@ -88,4 +88,15 @@
 #define DIGIPOT_A1		   -1
 //#define DIGIPOT_RESET		    2
 
+// GPIO pins
+#define GPIO_3 40 // PINF2
+#define GPIO_4 41 // PINF3
+#define GPIO_5 42 // PINF4 (JTAG)
+#define GPIO_6 43 // PINF5 (JTAG)
+#define GPIO_7 27 // PINB7 
+#define GPIO_8 44 // PINF6 (JTAG)
+#define GPIO_9 45 // PINF7 (JTAG)
+#define GPIO_10 2 // PIND2
+#define GPIO_11 3 // PIND3
+
 #endif // PINS_H

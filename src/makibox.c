@@ -308,6 +308,11 @@ int FreeRam1(void)
 //------------------------------------------------
 void setup()
 { 
+    // Disable JTAG
+    // Has to be called twice
+    MCUCR |= (1 << JTD);
+    MCUCR |= (1 << JTD);
+
     usb_serial_begin(); 
     serial_send(TXT_MAKIBOX_VER_STARTED_CRLF, VERSION_TEXT);
   

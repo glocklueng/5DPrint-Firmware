@@ -503,8 +503,10 @@ void usb_init(void)
     UDIEN = (1<<EORSTE)|(1<<SOFE)|(1<<SUSPE);
 
     // USB_LED
+#ifdef USB_LED_PIN
     SET_OUTPUT(USB_LED_PIN);
     WRITE(USB_LED_PIN, LOW);
+#endif    
 }
 
 
@@ -516,7 +518,9 @@ void usb_shutdown(void)
     PLLCSR = 0;	// shut off PLL
     usb_configuration = 0;
     usb_suspended = 1;
+#ifdef USBLED_PIN
     WRITE(USB_LED_PIN, LOW);
+#endif
 }
 
 void usb_serial_begin(void)
@@ -848,6 +852,7 @@ uint8_t usb_serial_rts(void)
  *
  **************************************************************************/
 
+#ifdef USB_LED_PIN
 void toggle_usb_led(void){
     if (millis() - previous_millis_usb_led > USB_LED_FLASH_INTERVAL){
         previous_millis_usb_led = millis();
@@ -855,6 +860,7 @@ void toggle_usb_led(void){
         WRITE(USB_LED_PIN, usb_led_status);
     }
 }
+#endif
 
 // USB Device Interrupt - handle all device-level events
 // the transmit buffer flushing is triggered by the start of frame
@@ -877,8 +883,10 @@ ISR(USB_GEN_vect)
         UEIENX = (1<<RXSTPE);
         usb_configuration = 0;
         cdc_line_rtsdtr = 0;
+#ifdef USB_LED_PIN
         if (USBSTA & (1<<VBUS)) WRITE(USB_LED_PIN, HIGH);
         else WRITE(USB_LED_PIN, LOW);
+#endif
     }
     if (intbits & (1<<SOFI)) {
         // Start Of Frame
@@ -915,7 +923,9 @@ ISR(USB_GEN_vect)
         // reduce to less than 2.5 mA, which means using
         // powerdown mode, but that breaks the Arduino
         // user's paradigm....
+#ifdef USB_LED_PIN
         WRITE(USB_LED_PIN, LOW);
+#endif
     }
     // USB active
     if (usb_suspended && (intbits & (1<<WAKEUPI))) {
@@ -927,7 +937,9 @@ ISR(USB_GEN_vect)
 #endif
         UDIEN = (1<<EORSTE)|(1<<SOFE)|(1<<SUSPE);
         usb_suspended = 0;
+#ifdef USB_LED_PIN
         WRITE(USB_LED_PIN, HIGH);
+#endif
         return;
     }
 }

@@ -21,16 +21,14 @@
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PINS_H
-#define PINS_H
-#define ALARM_PIN          -1
-
+#ifdef MAKIBOX_5DPD8
 
 /****************************************************************************************
- * Printrboard Rev. B pin assingments (ATMEGA90USB1286)
- * Requires the Teensyduino software with Teensy2.0++ selected in arduino IDE!
- * See http://reprap.org/wiki/Printrboard for more info
+ * Makibox 5DPD8 v0.12 pin assingments (ATMEGA90USB1286)
+ * See http://5Dprint.com/ for more info
  ****************************************************************************************/
+
+#define ALARM_PIN          -1
 
 #define X_STEP_PIN         28 // PINA0
 #define X_DIR_PIN          29 // PINA1
@@ -88,4 +86,63 @@
 #define DIGIPOT_A1		   -1
 //#define DIGIPOT_RESET		    2
 
-#endif // PINS_H
+#endif // MAKIBOX_5DPD8
+
+
+/****************************************************************************************
+* Printrboard Rev. B pin assingments (ATMEGA90USB1286)
+* Requires the Teensyduino software with Teensy2.0++ selected in arduino IDE!
+* See http://reprap.org/wiki/Printrboard for more info
+****************************************************************************************/
+
+#ifdef PRINTRBOARD_REVB
+
+#define ALARM_PIN          -1
+#define X_STEP_PIN         28
+#define X_DIR_PIN          29
+#define X_ENABLE_PIN       19
+#define X_MIN_PIN          47
+#define X_MAX_PIN          -1
+
+#define Y_STEP_PIN         30
+#define Y_DIR_PIN          31
+#define Y_ENABLE_PIN       18
+
+// config.h must be included before this file
+// Hopefully, should be able to remove this if-else once either new hardware is 
+// release or we instruct users to use the E-STOP headers on the PrintRBoard 
+// for the Y-STOP / limit switch.
+#if SDSUPPORT > 0
+	#define Y_MIN_PIN          37
+#else
+	#define Y_MIN_PIN          20
+#endif
+
+#define Y_MAX_PIN          -1
+
+#define Z_STEP_PIN         32
+#define Z_DIR_PIN          33
+#define Z_ENABLE_PIN       17
+#define Z_MIN_PIN          36
+#define Z_MAX_PIN          -1
+
+#define E_STEP_PIN         34
+#define E_DIR_PIN          35
+#define E_ENABLE_PIN       13
+
+#define HEATER_0_PIN       15  // Extruder
+#define HEATER_1_PIN       14  // Bed
+#define FAN_PIN            16  // Fan
+
+#define TEMP_0_PIN          1  // Extruder
+#define TEMP_1_PIN          0  // Bed
+
+#define LED_PIN            -1
+#define PS_ON_PIN          -1
+#define KILL_PIN           -1
+
+#define SCK_PIN            21 
+#define MISO_PIN           22
+#define MOSI_PIN           23
+
+#endif // PRINTRBOARD_REVB

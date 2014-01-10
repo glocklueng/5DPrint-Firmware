@@ -212,6 +212,7 @@ unsigned char currentToWiperValue (unsigned short current)
     return wiperValue;
 }
 
+#if DIGIPOTS > 0
 void I2C_digipots_set_defaults(void)
 {
     if (!I2C_Locked)
@@ -244,7 +245,7 @@ void I2C_digipots_set_defaults(void)
             Send_I2C_Msg = 1;
 	}
 }
-
+#endif
 
 void I2C_digipots_set_all_wipers(unsigned short MilliAmps0,
                                  unsigned short MilliAmps1,

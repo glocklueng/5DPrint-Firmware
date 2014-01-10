@@ -331,7 +331,13 @@
 
 // Set to 0 to disable SD Card support
 // Set to 1 to enable SD Card support
+#ifdef PRINTRBOARD_REVB
+#define SDSUPPORT			0
+#endif
+#ifdef MAKIBOX_5DPD8
 #define SDSUPPORT			1
+#endif
+
 
 #if SDSUPPORT < 1
 #undef 	CFG_BLOCK_BUFFER_SIZE
@@ -340,6 +346,22 @@
 #define CFG_BLOCK_BUFFER_MASK 		0x3F
 #endif // SDSUPPORT
 
+#ifdef PRINTRBOARD_REVB
+// Set to 0 to disable Digi-Pot support
+// Set to 1 to enable Digi-Pot support
+#define DIGIPOTS			0
+
+// Set to 0 to disable microstep select support
+// Set to 1 to enable microstep select support
+#define SET_MICROSTEP 0
+
+// Set to 0 to disable Buzzer support
+// Set to 1 to enable Buzzer support
+#define BUZZER_SUPPORT      0
+#endif
+
+
+#ifdef MAKIBOX_5DPD8
 // Set to 0 to disable Digi-Pot support
 // Set to 1 to enable Digi-Pot support
 #define DIGIPOTS			1
@@ -351,6 +373,7 @@
 // Set to 0 to disable Buzzer support
 // Set to 1 to enable Buzzer support
 #define BUZZER_SUPPORT      1
+#endif
 
 // Note that accuracy is limited by resolution of the digi-pot.
 #define XAXIS_DEFAULT_MAX_CURRENT		1600	// mA
@@ -358,11 +381,9 @@
 #define ZAXIS_DEFAULT_MAX_CURRENT		1600	// mA
 #define EAXIS_DEFAULT_MAX_CURRENT		1600	// mA
 
-
 // Inactivity Timeouts
 #define INACTIVITY_STEPPERS_TIMEOUT		1200000			// ms (1,200,000 ms = 20 mins)
 #define INACTIVITY_HEATERS_TIMEOUT 		3600000			// ms (3,600,000 ms = 1 hour)
-
 
 // Prevents dangerous Extruder moves, i.e. if the temperature is under the limit
 #define PREVENT_DANGEROUS_EXTRUDE	1

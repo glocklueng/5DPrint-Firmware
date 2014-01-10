@@ -343,7 +343,7 @@ void setup()
     if(!E_ENABLE_ON) WRITE(E_ENABLE_PIN,HIGH);
 #endif
   
-  
+#if SET_MICROSTEP > 0
     //Initialize Microstep Pins - steppers default to 16 Step
 #if (X_MS1_PIN > -1)
     SET_OUTPUT(X_MS1_PIN);
@@ -376,6 +376,7 @@ void setup()
 #if (E_MS2_PIN > -1)
     SET_OUTPUT(E_MS2_PIN);
     WRITE(E_MS2_PIN, HIGH);
+#endif
 #endif
 
     //endstops and pullups

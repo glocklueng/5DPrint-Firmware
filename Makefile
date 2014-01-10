@@ -34,15 +34,22 @@ MAKIBOX_OBJS   = arc_func.o heater.o main.o makibox.o pins_teensy.o \
 CC=avr-gcc
 OBJCOPY=avr-objcopy
 
+# push this defination to all files
+# Firmware is compatible with the following hardware
+# 1. 5DPD8 from Makibox
+# 2. Printrboard Rev. B
+# HARDWARE = MAKIBOX_5DPD8
+HARDWARE = PRINTRBOARD_REVB
 
 CPPFLAGS       = -mmcu=$(MCU) -DF_CPU=$(F_CPU)L -Os \
                  -ffunction-sections -fdata-sections -g \
-                 -Wall -Wformat=2 -Werror
+                 -Wall -Wformat=2 -Werror \
+		 -D$(HARDWARE)
 CFLAGS         = -std=gnu99
 LDFLAGS        = -mmcu=$(MCU) -Wl,-Map=makibox.map,--gc-sections -Os
 
 
-%.o: %.c
+%.o: %.c $(DEPS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 

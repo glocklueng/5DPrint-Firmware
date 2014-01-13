@@ -185,10 +185,10 @@ unsigned short max_e_motor_current = EAXIS_DEFAULT_MAX_CURRENT;	// mA
 
 #if SET_MICROSTEP > 0
 // Default microstep resolution = 16th step
-unsigned short microstep_x[2]={HIGH, HIGH};
-unsigned short microstep_y[2]={HIGH, HIGH};
-unsigned short microstep_z[2]={HIGH, HIGH};
-unsigned short microstep_e[2]={HIGH, HIGH};
+unsigned short microstep_x[2] = XAXIS_DEFAULT_MICROSTEP;
+unsigned short microstep_y[2] = YAXIS_DEFAULT_MICROSTEP;
+unsigned short microstep_z[2] = ZAXIS_DEFAULT_MICROSTEP;
+unsigned short microstep_e[2] = EAXIS_DEFAULT_MICROSTEP;
 #endif
 
 

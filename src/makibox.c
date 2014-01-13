@@ -2583,10 +2583,12 @@ void wait_extruder_target_temp(void)
 
     void execute_m907(struct command *cmd)
     {
+#if DEBUG > -1
         if (cmd->has_X) num2MS(cmd->X, microstep_x);
         if (cmd->has_Y) num2MS(cmd->Y, microstep_y);
         if (cmd->has_Z) num2MS(cmd->Z, microstep_z);
         if (cmd->has_E) num2MS(cmd->E, microstep_e);
+#endif
         serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M907_X_Y_Z_E_CRLF, 
                     MS2num(microstep_x), MS2num(microstep_y),
                     MS2num(microstep_z), MS2num(microstep_e)

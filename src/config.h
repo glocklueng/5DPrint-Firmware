@@ -381,6 +381,12 @@
 #define ZAXIS_DEFAULT_MAX_CURRENT		1600	// mA
 #define EAXIS_DEFAULT_MAX_CURRENT		1600	// mA
 
+// Default microstep resolution.
+#define XAXIS_DEFAULT_MICROSTEP	                {HIGH, HIGH} // Sixteenth step
+#define YAXIS_DEFAULT_MICROSTEP	                {HIGH, HIGH} // Sixteenth step
+#define ZAXIS_DEFAULT_MICROSTEP	                {HIGH, HIGH} // Sixteenth step
+#define EAXIS_DEFAULT_MICROSTEP	                {HIGH, HIGH} // Sixteenth step
+
 // Inactivity Timeouts
 #define INACTIVITY_STEPPERS_TIMEOUT		1200000			// ms (1,200,000 ms = 20 mins)
 #define INACTIVITY_HEATERS_TIMEOUT 		3600000			// ms (3,600,000 ms = 1 hour)

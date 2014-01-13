@@ -49,7 +49,7 @@ CFLAGS         = -std=gnu99
 LDFLAGS        = -mmcu=$(MCU) -Wl,-Map=makibox.map,--gc-sections -Os
 
 
-%.o: %.c $(DEPS)
+%.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 

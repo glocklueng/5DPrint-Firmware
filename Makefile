@@ -38,8 +38,8 @@ OBJCOPY=avr-objcopy
 # Firmware is compatible with the following hardware
 # 1. 5DPD8 from Makibox
 # 2. Printrboard Rev. B
-# HARDWARE = MAKIBOX_5DPD8
-HARDWARE = PRINTRBOARD_REVB
+HARDWARE = MAKIBOX_5DPD8
+# HARDWARE = PRINTRBOARD_REVB
 
 CPPFLAGS       = -mmcu=$(MCU) -DF_CPU=$(F_CPU)L -Os \
                  -ffunction-sections -fdata-sections -g \

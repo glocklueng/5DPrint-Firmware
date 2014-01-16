@@ -79,6 +79,9 @@ void board_init(void)
     reset_flags = MCUSR;
     MCUSR = 0;
 	
+    // Enable pull-up for all input pins
+    MCUCR &= ~(1 << PUD);
+
     // Disable the watchdog timer
     wdt_disable();
 	

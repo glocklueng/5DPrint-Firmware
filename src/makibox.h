@@ -55,5 +55,9 @@ void disable_y();
 void disable_z();
 void disable_e();
 
+#if AUTOPRINT > 0
+void process_command(const char *cmdstr);
+extern unsigned char sdcard_print;
+#endif
 
 #endif // _MAKIBOX_H_

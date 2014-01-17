@@ -346,6 +346,12 @@
 #define CFG_BLOCK_BUFFER_MASK 		0x3F
 #endif // SDSUPPORT
 
+// Set to 0 to disable AUTOPRINT support
+// Set to 1 to enable AUTOPRINT support
+// If AUTOPRINT is enabled, 
+// then, SDSUPPORT must also be enabled
+#define AUTOPRINT 0
+
 #ifdef PRINTRBOARD_REVB
 // Set to 0 to disable Digi-Pot support
 // Set to 1 to enable Digi-Pot support

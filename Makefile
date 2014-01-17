@@ -28,7 +28,7 @@ MAKIBOX_OBJS   = arc_func.o heater.o main.o makibox.o pins_teensy.o \
 				 sdcard/byteordering.o sdcard/fat.o sdcard/partition.o \
 				 sdcard/sd_raw.o sdcard/makibox_sdcard.o \
 				 i2c/TWI_Master.o i2c/Master_I2C_Comms.o \
-				 tone.o
+				 tone.o autoprint.o
 
 
 CC=avr-gcc

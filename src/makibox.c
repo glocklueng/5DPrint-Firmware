@@ -42,6 +42,7 @@
 #include "sdcard/makibox_sdcard.h"
 #include "language.h"
 #include "tone.h"
+#include "autoprint.h"
 
 #if DIGIPOTS > 0
 #include "i2c/Master_I2C_Comms.h"
@@ -268,7 +269,7 @@ unsigned char manage_monitor = 255;
 // SD Card Variables
 struct fat_fs_struct* sdcard_fs = 0;
 char sdard_filename[92];
-static unsigned char sdcard_print = 0;
+unsigned char sdcard_print = 0;
 static unsigned char sdcard_print_pause = 0;
 static char sdcard_cmdbuf[MAX_CMD_SIZE + 1];
 static unsigned char sdcard_bufpos = 0;
@@ -482,6 +483,16 @@ void setup()
   
     DDRB |= (1 << PINB0);		// SS Pins set as output
     PORTB |= (1 << PINB0);	// SS Pin set high
+
+#ifdef PRINTRBOARD_REVB
+    DDRB &= ~(1 << DDB7);         // Configure card detect pin
+    PORTB |= (1 << PINB7);        // Enable pull-up resistor
+#endif
+#ifdef MAKIBOX_5DPD8
+    DDRE &= ~(1 << DDE3);         // Configure card detect pin
+    PORTE |= (1 << PINE3);        // Enable pull-up resistor
+#endif   
+
 #endif
   
     // Initialise Timer 3 / PWM for Extruder Heater, Hotbed Heater, and Fan
@@ -538,6 +549,10 @@ void setup()
 //------------------------------------------------
 void loop()
 {
+
+#if AUTOPRINT > 0
+  autoprint();
+#endif
 
 #if DIGIPOTS > 0
     Service_I2C_Master();

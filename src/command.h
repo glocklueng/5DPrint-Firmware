@@ -20,6 +20,11 @@
    You should have received a copy of the GNU General Public License
    along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file command.h
+   \brief Command struct
+   
+ */
 
 #ifndef COMMAND_H
 #define COMMAND_H

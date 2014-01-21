@@ -27,6 +27,13 @@
  
 */
 
+/**
+   \file heater.h
+   \brief Header file for heater.c
+   
+ */
+
+
 #ifndef HEATER_H
 #define HEATER_H
 

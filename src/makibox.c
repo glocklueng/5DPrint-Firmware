@@ -20,7 +20,11 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+/**
+   \file makibox.c
+   \brief Handles all the commands, setup routine and main loop
+   
+ */
 
 #include <avr/interrupt.h>
 #include "pgmspace.h"

@@ -20,7 +20,11 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+/**
+   \file store_eeprom.h
+   \brief Header file for store_eeprom.c
+   
+ */
 
 #ifndef __EEPROMH
 #define __EEPROMH

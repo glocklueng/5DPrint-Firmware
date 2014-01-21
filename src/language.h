@@ -18,6 +18,12 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file language.h
+   \brief Return strings for serial communication
+   
+   Currently, only English is available
+ */
 
 #ifndef _LANGUAGE_H_
 #define _LANGUAGE_H_

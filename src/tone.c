@@ -20,6 +20,11 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file tone.c
+   \brief Generates tone with a square wave, using Timer 2A
+   
+ */
 
 #include <avr/interrupt.h>
 

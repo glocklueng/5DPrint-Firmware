@@ -20,8 +20,11 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-
+/**
+   \file heater.c
+   \brief Heater control, using PWM 
+  
+ */
 
 #include <avr/interrupt.h>
 #include <math.h>

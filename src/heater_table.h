@@ -20,6 +20,11 @@
  You should have received a copy of the GNU General Public License
  along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file heater_table.h
+   \brief Heater temperature lookup table
+   
+ */
  
 #ifndef HEATER_TABLE_H
 #define HEATER_TABLE_H

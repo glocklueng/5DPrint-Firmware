@@ -23,6 +23,11 @@
   This code contibuted by Triffid_Hunter and modified by Kliment
   why double up on these macros? see http://gcc.gnu.org/onlinedocs/cpp/Stringification.html
 */
+/**
+   \file board_io.h
+   \brief Pin mapping from pins.h to Atmel pins
+   
+ */
 
 #ifndef BOARD_IO_H
 #define BOARD_IO_H

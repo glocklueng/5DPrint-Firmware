@@ -18,7 +18,11 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+/**
+   \file Master_I2C_Comms.h
+   \brief Header file for Master_I2C_Comms.c
+   
+ */
 #ifndef MASTER_I2C_H
 #define MASTER_I2C_H
 

@@ -20,6 +20,12 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file pins_teensy.h
+   \brief Header file for pins_teensy.c
+   
+ */
+
 #ifndef _core_pins_h_
 #define _core_pins_h_
 

@@ -20,7 +20,11 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+/**
+   \file stepper.c
+   \brief Handles the movement of stepper motors with ISR
+   
+ */
 #include <avr/interrupt.h>
 #include <stdlib.h>
 

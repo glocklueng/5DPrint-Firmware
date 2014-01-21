@@ -59,7 +59,11 @@
  *
  * \asf_license_stop
  */
-
+/**
+   \file TWI_Master.h
+   \brief Header file for TWI_Master.c
+   
+ */
 /****************************************************************************
   TWI Status/Control register definitions
 ****************************************************************************/

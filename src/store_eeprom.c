@@ -21,6 +21,12 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>. 
 */
+/**
+   \file store_eeprom.c
+   \brief Store settings in EEPROM for future use
+   
+ */
+
 
 #include <avr/eeprom.h>
 #include "pgmspace.h"

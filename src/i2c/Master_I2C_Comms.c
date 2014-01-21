@@ -18,7 +18,11 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+/**
+   \file Master_I2C_Comms.c
+   \brief Handles I2C communication for the Digipot
+   
+ */
 #include <avr/io.h>
 
 #include "../i2c/TWI_Master.h"

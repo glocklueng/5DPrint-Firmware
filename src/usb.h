@@ -20,7 +20,11 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+/**
+   \file usb.h
+   \brief Header file for usb.c
+   
+ */
 #ifndef USB_H
 #define USB_H
 

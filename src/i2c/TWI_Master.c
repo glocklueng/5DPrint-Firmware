@@ -61,7 +61,11 @@
  *
  * \asf_license_stop
  */
- 
+ /**
+   \file TWI_Master.c
+   \brief Atmel's Two wire library
+   
+ */
 #include <avr/interrupt.h>
 #include <util/twi.h>
 #include "../i2c/TWI_Master.h"

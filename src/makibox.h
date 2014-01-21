@@ -20,7 +20,11 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+/**
+   \file makibox.h
+   \brief Header file for makibox.c
+   
+ */
 #ifndef _MAKIBOX_H_
 #define _MAKIBOX_H_
 

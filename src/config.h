@@ -20,6 +20,12 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file config.h
+   \brief Configuration for printer settings before compilcation
+   
+ */
+
 
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H

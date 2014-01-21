@@ -20,6 +20,11 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file pins.h
+   \brief Pin configuration for 5DPD8 or Printrboard Rev. B
+   
+ */
 
 #ifdef MAKIBOX_5DPD8
 

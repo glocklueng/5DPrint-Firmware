@@ -20,12 +20,11 @@
   You should have received a copy of the GNU General Public License
   along with the Makibox A6 Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-/*
-  This softwarepart for Heatercontrol is based on Sprinter
-  big thanks to kliment (https://github.com/kliment/Sprinter)
- 
-*/
+/**
+   \file tone.h
+   \brief Header file for tone.c
+   
+ */
 
 #ifndef TONE_H
 #define TONE_H

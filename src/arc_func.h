@@ -39,6 +39,11 @@
   You should have received a copy of the GNU General Public License
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file arc_func.h
+   \brief Header file for arc_func.c
+   
+ */
 
 #ifndef arc_func_h
 #define arc_func_h

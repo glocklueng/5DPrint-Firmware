@@ -42,7 +42,11 @@
    * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
    * THE SOFTWARE.
    */
-
+/**
+   \file pins_teensy.c
+   \brief Old file inherited from arduino ancestors
+   
+ */
 
 #include <avr/io.h>
 #include <avr/interrupt.h>

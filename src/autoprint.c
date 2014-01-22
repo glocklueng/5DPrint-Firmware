@@ -23,9 +23,7 @@
 /**
    \file autoprint.c
    \brief Autoprinting when SD card is plugged in
-
-   
- */
+*/
 
 #include "config.h"
 #include "sdcard/makibox_sdcard.h"
@@ -60,21 +58,21 @@ uint8_t autoPrintFileNameCheck(const char *long_name);
 
 // Extern function
 
+/**
+   \fn void autoprint()
+   \brief Main autoprint function routine to perform SD print automatically
+   Manages the SDAutoPrintStatus based on following criteria
+   - SD card availability
+   - SD Printing status
 
-/***************************************************
- * autoprint()
- *
- * Main autoprint function routine to perform SD print automatically
- * Manages the SDAutoPrintStatus based on following criteria
- * - SD card availability
- * - SD Printing status
- ****************************************************/
+   SDAutoPrintStatus:
+   - 0: Not printed, 
+   - 1: Prinitng, 
+   - 2:  Finish Print, 
+   - 3: Print finished and waiting for new SD print,
+       Error reported, waiting for new SD card
+   */
 void autoprint(){
-    // 0: Not printed, 
-    // 1: Prinitng, 
-    // 2: Finish Print, 
-    // 3: Print finished and waiting for new SD print
-    //    Error reported, waiting for new SD card
     static unsigned char SDAutoPrintStatus = 0;
     //serial_send ("%d", SDAutoPrintStatus);
     switch (SDAutoPrintStatus){
@@ -128,23 +126,22 @@ void autoprint(){
 
 // Local functions
 
+/**
+   \fn void startSDprint()
+   \brief Reset file position and start print
 
-/***************************************************
- * startSDprint()
- *
- * Reset file position and start print
- ****************************************************/
+*/
 void startSDprint(){
     sdcard_fd->pos = 0;   // Reset file position
     process_command("M24");  // Start print
 }
 
 
-/***************************************************
- * finishSDprint()
- *
- * Release SD card and reset the printer
- ****************************************************/
+/**
+   \fn void finishSDprint()
+   \brief Release SD card and reset the printer
+
+*/
 void finishSDprint(){
     process_command("G91");
     process_command("G1 Z10"); // Lower Z to make it easier to remove the print
@@ -157,11 +154,11 @@ void finishSDprint(){
 }
 
 
-/***************************************************
- * autoPrintSuccess()
- *
- * Success card read notification using stepper motors
- ****************************************************/
+/**
+   \fn void autoPrintSuccess()
+   \brief Success card read notification using stepper motors
+
+*/
 void autoPrintSuccess(){
     process_command("G91");
     process_command("G1 F200");
@@ -174,11 +171,11 @@ void autoPrintSuccess(){
 }
 
 
-/***************************************************
- * autoPrintError()
- *
- * Error in card read notification using stepper motors
- ****************************************************/
+/**
+   \fn void autoPrintError()
+   \brief Error in card read notification using stepper motors
+
+*/
 void autoPrintError(){
     process_command("G91");
     process_command("G1 F1000");
@@ -191,12 +188,11 @@ void autoPrintError(){
 }
 
 
-/***************************************************
- * autoPrintFileCheck()
- *
- * Attempts to open the autoprint file
- * and checks for G28 for validation of file
- ****************************************************/
+/**
+   \fn uint8_t autoPrintFileCheck()
+   \brief Attempts to open the autoprint file and checks for G28 for validation of file
+
+*/
 uint8_t autoPrintFileCheck(){
     if (!sdcard_openFile(autoprint_filename)) {
         serial_send(TXT_STR, "Failed to open the right file for autoprint\n");
@@ -236,11 +232,11 @@ uint8_t autoPrintFileCheck(){
     return 0;
 }
 
-/***************************************************
- * autoPrintCommandCheck(const char *cmdstr)
- *
- * Checkes whether cmdstr is G28
- ****************************************************/
+/**
+   \fn uint8_t autoPrintCommandCheck(const char *cmdstr)
+   \brief Checkes whether cmdstr is G28
+
+*/
 uint8_t autoPrintCommandCheck(const char *cmdstr){
     char ch;
     int16_t pos = -1;
@@ -255,12 +251,11 @@ uint8_t autoPrintCommandCheck(const char *cmdstr){
     return 0;
 }
 
-/***************************************************
- * autoPrintFindFile()
- *
- * List direcotries and find any files that satisfies
- * criteria in autoPrintFileNameCheck()
- ****************************************************/
+/**
+   \fn uint8_t autoPrintFindFile()
+   \brief List direcotries and find any files that satisfies specific criterias
+
+*/
 uint8_t autoPrintFindFile(){
     struct fat_dir_entry_struct dir_entry;
     struct fat_dir_entry_struct directory;
@@ -288,16 +283,16 @@ uint8_t autoPrintFindFile(){
 }
 
 
-/***************************************************
- * autoPrintFileNameCheck()
- *
- * Checks whether long_name satisfies the fielanem criteria
- * File name needs extension .g or .gcode
- * File name is case insensitive as long it is autoprint
- * Example file names: 
- * autoprint.g
- * AuToPrInT.GcOdE
- ****************************************************/
+/**
+   \fn uint8_t autoPrintFileNameCheck(const char *long_name)
+   \brief Checks whether long_name satisfies the fielanem criteria
+
+   File name needs extension .g or .gcode
+   File name is case insensitive as long it is autoprint
+   Example file names: 
+   autoprint.g
+   AuToPrInT.GcOdE
+*/
 uint8_t autoPrintFileNameCheck(const char *long_name){
     char ch;
     int16_t pos = -1;

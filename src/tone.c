@@ -23,20 +23,17 @@
 /**
    \file tone.c
    \brief Generates tone with a square wave, using Timer 2A
-   
- */
+*/
 
 #include <avr/interrupt.h>
-
-#include "config.h"
 #include <stdlib.h>
 
+#include "config.h"
 #include "board_io.h"
 #include "pins.h"
 #include "pins_teensy.h"
 #include "tone.h"
 
-#if BUZZER_SUPPORT > 0
 //------------------------------------------------------------------------
 // Variable Declarations
 // For varaibles used outside this module.
@@ -50,59 +47,47 @@ unsigned char  BUZZER_ON = 0;
 // For variables used within this module only.
 //------------------------------------------------------------------------
 unsigned long previous_millis_buzzer = 0;
-unsigned char buzzer_status = 0;
 
 //------------------------------------------------------------------------
 // Function Prototypes
 // For functions used within this module only.
 //------------------------------------------------------------------------
-void setBuzzerPWMDuty(void);
+void setBuzzerFrequency(void);
 
-
-/***************************************************
- * buzzer_init(void)
- *
- * Initial set up for buzzer
- ****************************************************/
+#if BUZZER_SUPPORT > 0
+/**
+   \fn void buzzer_init(void)
+   \brief Buzzer initialization code
+ */
 void buzzer_init(void){
     SET_OUTPUT(BUZZER_PIN);
     WRITE(BUZZER_PIN, LOW);
-    
-    // waveform generation = 111 = Fast PWM
-    TCCR2B |= (1<<WGM22);
-    TCCR2A |= (1<<WGM21); 
-    TCCR2A |= (1<<WGM20);
+
+	TIFR2 = (1 << TOV2);       // clear interrupt flag
+	
+	// Timer (ck/1024 prescalar) => 16MHz / 1024 = 15.625kHz
+	TCCR2B = (1 << CS22) | (1 << CS21) | (1 << CS20);
+	
+	TCCR2A = (1 << WGM21);		// CTC Mode: Compare match counter is cleared
+								// on compare.
+  
+	OCR2A = 0;					// 0 = Max Frequency
+								// Freq = ck / 2 * prescaler * (1 + OCR2A)
+	TIMSK2 &= ~(1 << OCIE2A);   // disable timer2 output compare match interrupt
 
     // output mode = 00 (disconnected)
     TCCR2A &= ~(3<<COM2A0); 
     TCCR2A &= ~(3<<COM2B0); 
 
-    // Set the timer pre-scaler
-    // Divider of 256 is used, resulting in a 62.5 kHz timer
-    // frequency on a 16MHz MCU. 
-    TCCR2B = (TCCR2B & ~(0x07<<CS20)) | (3<<CS20); // 62.5 kHz timer
-
-    // Timer 1A -> Enabled
-    OCR2A = 0x04; // Initial interrupt frequency = 15.625 kHz
-    TCNT2 = 0;
-    
-    // Timer 1B -> Disabled
-    OCR2B = 0xFF;
-    TIMSK2 &= ~(1 << OCIE2B);
-    
     sei();
 }
 
-/***************************************************
- * tone(unsigned short frequency, unit32_t period)
- *
- * frequency:    Value Between 0 and 20 kHz
- * period:       Value Between 0 and 5s
-
- * Function to start a tone
- ****************************************************/
+/**
+   \fn void buzzer_tone(void)
+   \brief Starts a tone when M300 command is received
+ */
 void buzzer_tone(void){
-    setBuzzerPWMDuty();
+    setBuzzerFrequency();
     
     if (BUZZER_P > MAX_BUZZER_PERIOD) BUZZER_P = MAX_BUZZER_PERIOD;
     else if (BUZZER_P < MIN_BUZZER_PERIOD) BUZZER_P = MIN_BUZZER_PERIOD;
@@ -112,36 +97,23 @@ void buzzer_tone(void){
     ENABLE_BUZZER();
 }
 
-/***************************************************
- * setBuzzerPWMDuty(void)
- *
- * FREQUENCY: 	VALUE BETWEEN 0 AND 4 KHZ
- *
- * SETS THE PWM DUTY OF THE BUZZER.
- ****************************************************/
-void setBuzzerPWMDuty(void){
-    if (BUZZER_F > MAX_BUZZER_FREQUENCY) BUZZER_F = MAX_BUZZER_FREQUENCY;
-    else if (BUZZER_F < MIN_BUZZER_FREQUENCY) BUZZER_F = MIN_BUZZER_FREQUENCY;
-    
-    int val;
-    val = (int) TIMER2A_CLOCK_FREQ * 255.0 / BUZZER_F;
-    
+/**
+   \fn void setBuzzerFrequency(void)
+   \brief Sets the OCR2A value based on the input frequency
+ */
+void setBuzzerFrequency(void){
+    unsigned char val;
+    val = (char) TIMER2A_CLOCK_FREQ / BUZZER_F - 1;
+    if (val > 255) val = 255;
+    else if (val < 0) val = 0;
     OCR2A = val;
 }
 
-/***************************************************
- * Interrupt Service Routine for buzzer
- ****************************************************/
 ISR(TIMER2_COMPA_vect){
     if (BUZZER_ON > 0){
         if (millis() - previous_millis_buzzer <= BUZZER_P &&
             millis() - previous_millis_buzzer <= BUZZER_TIMEOUT_PERIOD){
-                        
-            // TODO: Generate a waveform closer to sinewave to reduce the distortion in sound
-
-            // Toggle buzzer to generate square wave
-            WRITE(BUZZER_PIN, buzzer_status);
-            buzzer_status = ~buzzer_status;
+            TOGGLE(BUZZER_PIN);
         }
         else{
             BUZZER_ON = 0;

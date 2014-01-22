@@ -29,9 +29,7 @@
 #ifndef TONE_H
 #define TONE_H
 
-#define MAX_BUZZER_FREQUENCY      4000         // Hz
-#define MIN_BUZZER_FREQUENCY      250.0        // Hz
-#define TIMER2A_CLOCK_FREQ        62500        // Hz
+#define TIMER2A_CLOCK_FREQ        7812.5       // Hz
 
 #define MAX_BUZZER_PERIOD         5000         // ms
 #define MIN_BUZZER_PERIOD         0            // ms

@@ -201,7 +201,7 @@ void execute_m907(struct command *cmd);
 // M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
 // M907 - Set microstep settings for stepper motors. e.g. M906 X16 Y16 Z16 E16
 
-static const char VERSION_TEXT[] = "2.20.00 / 14.1.2014";
+static const char VERSION_TEXT[] = "2.20.10 / 22.1.2014";
 
 #ifdef PIDTEMP
 unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;

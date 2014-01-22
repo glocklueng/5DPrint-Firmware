@@ -4,9 +4,22 @@ Makibox A6 Firmware - History / Change Log
 
 Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
+--------------------------
+DATE: 	22 January 2014
+AUTHOR:	CJM LAI
+	Makible Limited	
+	www.makibox.com
+--------------------------
+Version 2.20.10
+
+Version shipped with first batch of 5DPD8 boards
+- Autoprint from SD card feature added, but disabled by default
+- Start of Doxygen documentation
+- Bug fixing for tone generation with buzzer
+  (Tone created still has pulses due to the ISRs messing the timing)
 
 --------------------------
-DATE: 	14 January 2013
+DATE: 	14 January 2014
 AUTHOR:	CJM LAI
 	Makible Limited	
 	www.makibox.com

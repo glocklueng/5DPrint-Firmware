@@ -65,8 +65,9 @@ void buzzer_init(void){
 
 	TIFR2 = (1 << TOV2);       // clear interrupt flag
 	
-	// Timer (ck/1024 prescalar) => 16MHz / 1024 = 15.625kHz
-	TCCR2B = (1 << CS22) | (1 << CS21) | (1 << CS20);
+	// Timer (ck/1024 prescalar) => 16MHz / 256 = 62.5kHz
+	TCCR2B = (1 << CS22) | (1 << CS21);
+    TCCR2B &= ~(1 << CS20);
 	
 	TCCR2A = (1 << WGM21);		// CTC Mode: Compare match counter is cleared
 								// on compare.
@@ -102,10 +103,15 @@ void buzzer_tone(void){
    \brief Sets the OCR2A value based on the input frequency
  */
 void setBuzzerFrequency(void){
-    unsigned char val;
-    val = (char) TIMER2A_CLOCK_FREQ / BUZZER_F - 1;
-    if (val > 255) val = 255;
-    else if (val < 0) val = 0;
+    int val;
+
+    if (BUZZER_F > TIMER2A_CLOCK_FREQ) BUZZER_F = TIMER2A_CLOCK_FREQ;
+    else if (BUZZER_F < 0) BUZZER_F = 0;
+    
+    val = (int) (BUZZER_F / TIMER2A_CLOCK_FREQ * 255);
+    //serial_send ("buzzer val: %i \n", val);
+    val = 255 - val;
+    //serial_send ("final buzzer val: %i \n", val);
     OCR2A = val;
 }
 

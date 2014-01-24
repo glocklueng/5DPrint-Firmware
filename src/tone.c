@@ -33,14 +33,14 @@
 #include "pins.h"
 #include "pins_teensy.h"
 #include "tone.h"
+#include "usb.h" 
 
 //------------------------------------------------------------------------
 // Variable Declarations
 // For varaibles used outside this module.
 //------------------------------------------------------------------------
-unsigned short BUZZER_F = 0;
-unsigned short BUZZER_P = 0; 
-unsigned char  BUZZER_ON = 0;
+short int BUZZER_F = 0;
+short int BUZZER_P = 0; 
 
 //------------------------------------------------------------------------
 // Variable Declarations
@@ -65,12 +65,13 @@ void buzzer_init(void){
 
 	TIFR2 = (1 << TOV2);       // clear interrupt flag
 	
-	// Timer (ck/1024 prescalar) => 16MHz / 256 = 62.5kHz
+	// Timer (ck/256 prescalar) => 16MHz / 256 = 62.5kHz
 	TCCR2B = (1 << CS22) | (1 << CS21);
     TCCR2B &= ~(1 << CS20);
 	
 	TCCR2A = (1 << WGM21);		// CTC Mode: Compare match counter is cleared
-								// on compare.
+    TCCR2A &= ~(1 << WGM22);    // on compare.
+    TCCR2A &= ~(1 << WGM20); 
   
 	OCR2A = 0;					// 0 = Max Frequency
 								// Freq = ck / 2 * prescaler * (1 + OCR2A)
@@ -88,13 +89,13 @@ void buzzer_init(void){
    \brief Starts a tone when M300 command is received
  */
 void buzzer_tone(void){
-    setBuzzerFrequency();
-    
     if (BUZZER_P > MAX_BUZZER_PERIOD) BUZZER_P = MAX_BUZZER_PERIOD;
-    else if (BUZZER_P < MIN_BUZZER_PERIOD) BUZZER_P = MIN_BUZZER_PERIOD;
+    else if (BUZZER_P <= MIN_BUZZER_PERIOD) return;
+
+    setBuzzerFrequency(); // Set top value
+    TCNT2 = 0; // Reset counter
     
     previous_millis_buzzer = millis();
-    BUZZER_ON = 1;
     ENABLE_BUZZER();
 }
 
@@ -103,29 +104,16 @@ void buzzer_tone(void){
    \brief Sets the OCR2A value based on the input frequency
  */
 void setBuzzerFrequency(void){
-    int val;
-
-    if (BUZZER_F > TIMER2A_CLOCK_FREQ) BUZZER_F = TIMER2A_CLOCK_FREQ;
-    else if (BUZZER_F < 0) BUZZER_F = 0;
-    
-    val = (int) (BUZZER_F / TIMER2A_CLOCK_FREQ * 255);
-    //serial_send ("buzzer val: %i \n", val);
-    val = 255 - val;
-    //serial_send ("final buzzer val: %i \n", val);
-    OCR2A = val;
+    if (BUZZER_F > MAX_BUZZER_FREQUENCY) BUZZER_F = MAX_BUZZER_FREQUENCY;
+    else if (BUZZER_F < MIN_BUZZER_FREQUENCY) BUZZER_F = MIN_BUZZER_FREQUENCY;
+    OCR2A = (int) (TIMER2A_CLOCK_FREQ / BUZZER_F) - 1;
 }
 
 ISR(TIMER2_COMPA_vect){
-    if (BUZZER_ON > 0){
-        if (millis() - previous_millis_buzzer <= BUZZER_P &&
-            millis() - previous_millis_buzzer <= BUZZER_TIMEOUT_PERIOD){
-            TOGGLE(BUZZER_PIN);
-        }
-        else{
-            BUZZER_ON = 0;
-            WRITE(BUZZER_PIN, LOW);
-            DISABLE_BUZZER();
-        }
+    if (millis() - previous_millis_buzzer <= BUZZER_P) TOGGLE(BUZZER_PIN);
+    else{
+        WRITE(BUZZER_PIN, LOW);
+        DISABLE_BUZZER();
     }
 }
 

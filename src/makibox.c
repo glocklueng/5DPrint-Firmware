@@ -23,8 +23,105 @@
 /**
    \file makibox.c
    \brief Handles all the commands, setup routine and main loop
+*/
+
+// look here for descriptions of gcodes: http://linuxcnc.org/handbook/gcode/g-code.html
+//   http://objects.reprap.org/wiki/Mendel_User_Manual:_RepRapGCodes
+
+/**
+   \fn void execute_gcode(struct command *cmd)
+   \brief Executes the gcode command
    
- */
+   - G0  -> G1
+   - G1  - Coordinated Movement X Y Z E
+   - G2  - CW ARC
+   - G3  - CCW ARC
+   - G4  - Dwell S<seconds> or P<milliseconds>
+   - G28 - Home all Axis
+   - G90 - Use Absolute Coordinates
+   - G91 - Use Relative Coordinates
+   - G92 - Set current position to cordinates given
+*/
+/**
+   \fn void execute_mcode(struct command *cmd)
+   \brief Executes the mcode command
+
+   RepRap M Codes
+   - M104 - Set extruder target temp
+   - M140 - Set bed target temp
+   - M105 - Read current temp
+   - M106 - Fan on
+   - M107 - Fan off
+   - M109 - Wait for extruder current temp to reach target temp.
+   - M190 - Wait for bed current temp to reach target temp.
+   - M112 - Emergency Stop
+   - M114 - Display current position
+
+   Custom M Codes
+   - M18	- Disable steppers until next move. Same as M84.
+   - M20  - List SD card - F value passed via the F are the flags for displaying 
+   directories and file sizes.	Bit 0x01 = display file size;
+   Bit 0x02 = display directories;
+   - M21  - Init SD card
+   - M22  - Release SD card
+   - M23  - Select SD file (M23 filename.g)
+   - M24  - Start/resume SD print
+   - M25  - Pause SD print
+   - M27  - Report SD print status
+   - M28  - Start SD write (M28 filename.g)
+   - M29  - Stop SD write- 	
+   - M30  - Delete file from SD (M30 filename.g)
+   - M80  - Turn on Power Supply
+   - M81  - Turn off Power Supply
+   - M82  - Set E codes absolute (default)
+   - M83  - Set E codes relative while in Absolute Coordinates (G90) mode
+   - M84  - Disable steppers until next move,-  
+   or use S<seconds> to specify an inactivity timeout, after which the steppers will be disabled.  S0 to disable the timeout.
+   - M85  - Use S<seconds> to specify an inactivity timeout, after which the steppers and heaters will be disabled.  S0 to disable the timeout.
+   - M92  - Set axis_steps_per_unit - same syntax as G92
+   - M93  - Show axis_steps_per_unit
+   - M115	- Capabilities string
+   - M119 - Show Endstopper State 
+   - M201 - Set maximum acceleration in units/s^2 for print moves (M201 X1000 Y1000)
+   - M202 - Set maximum feedrate that your machine can sustain (M203 X200 Y200 Z300 E10000) in mm/sec
+   - M203 - Set temperture monitor to Sx; Px sets regular temperature reporting to every x seconds.
+   - M204 - Set default acceleration: S normal moves T filament only moves (M204 S3000 T7000) in mm/sec^2
+   - M205 - advanced settings:  minimum travel speed S=while printing T=travel only,  X=maximum xy jerk, Z=maximum Z jerk
+   - M206 - set additional homing offset
+
+   - M220 - set speed factor override percentage S=factor in percent 
+   - M221 - set extruder multiply factor S100 --> original Extrude Speed 
+
+   - M226 - M226 / M226 P1 = Pause print  <br>
+   M226 P0 = resume print <br>
+   M226 P-255 = discard plan buffer contents and resume normal operation
+
+   - M300 - Starts the buzzer with freqeuncy f and period p
+   - M301 - Set PID parameters P I and D
+   - M302 - Enable / Disable Cold Extrudes P1 = allow cold extrudes; P0 = Do not allow cold extrudes
+   - M303 - PID relay autotune S<temperature> sets the target temperature. (default target temperature = 150C)
+
+   - M400 - Finish all moves
+
+   - M500 - stores paramters in EEPROM
+   - M501 - reads parameters from EEPROM (if you need to reset them after you changed them temporarily).
+   - M502 - reverts to the default "factory settings".
+   - M503 - Print settings
+
+   Debug feature
+   - M603 - Show Free Ram
+   - M604 - Show Timer 1 COMPA ISR Execution Time Debug Info
+   - M605 - Reset Timer 1 COMPA ISR Execution Time Min / Max Values
+   - M606 - Show CPU loading information
+   - M607 - Reset Peak and Average CPU load values
+   - M608 - Show Firmware Version Info
+   - M609 - Show last reset flags
+   - M610 - Set Extruder Heater Max Current P = 0 - 100%.
+
+   - M852 - Enter Boot Loader Command (Requires correct F pass code)
+   - M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
+   - M907 - Set microstep settings for stepper motors. e.g. M906 X16 Y16 Z16 E16
+*/
 
 #include <avr/interrupt.h>
 #include "pgmspace.h"
@@ -111,95 +208,6 @@ void execute_m907(struct command *cmd);
 #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli()
 #define CRITICAL_SECTION_END    SREG = _sreg
 #endif //CRITICAL_SECTION_START
-
-// look here for descriptions of gcodes: http://linuxcnc.org/handbook/gcode/g-code.html
-// http://objects.reprap.org/wiki/Mendel_User_Manual:_RepRapGCodes
-
-//Implemented Codes
-//-------------------
-// G0  -> G1
-// G1  - Coordinated Movement X Y Z E
-// G2  - CW ARC
-// G3  - CCW ARC
-// G4  - Dwell S<seconds> or P<milliseconds>
-// G28 - Home all Axis
-// G90 - Use Absolute Coordinates
-// G91 - Use Relative Coordinates
-// G92 - Set current position to cordinates given
-
-//RepRap M Codes
-// M104 - Set extruder target temp
-// M140 - Set bed target temp
-// M105 - Read current temp
-// M106 - Fan on
-// M107 - Fan off
-// M109 - Wait for extruder current temp to reach target temp.
-// M190 - Wait for bed current temp to reach target temp.
-// M112 - Emergency Stop
-// M114 - Display current position
-
-//Custom M Codes
-// M18	- Disable steppers until next move. Same as M84.
-// M20  - List SD card - F value passed via the F are the flags for displaying 
-//			directories and file sizes.	Bit 0x01 = display file size;
-//										Bit 0x02 = display directories;
-// M21  - Init SD card
-// M22  - Release SD card
-// M23  - Select SD file (M23 filename.g)
-// M24  - Start/resume SD print
-// M25  - Pause SD print
-// M27  - Report SD print status
-// M28  - Start SD write (M28 filename.g)
-// M29  - Stop SD write	
-// M30  - Delete file from SD (M30 filename.g)
-// M80  - Turn on Power Supply
-// M81  - Turn off Power Supply
-// M82  - Set E codes absolute (default)
-// M83  - Set E codes relative while in Absolute Coordinates (G90) mode
-// M84  - Disable steppers until next move, 
-//        or use S<seconds> to specify an inactivity timeout, after which the steppers will be disabled.  S0 to disable the timeout.
-// M85  - Use S<seconds> to specify an inactivity timeout, after which the steppers and heaters will be disabled.  S0 to disable the timeout.
-// M92  - Set axis_steps_per_unit - same syntax as G92
-// M93  - Show axis_steps_per_unit
-// M115	- Capabilities string
-// M119 - Show Endstopper State 
-// M201 - Set maximum acceleration in units/s^2 for print moves (M201 X1000 Y1000)
-// M202 - Set maximum feedrate that your machine can sustain (M203 X200 Y200 Z300 E10000) in mm/sec
-// M203 - Set temperture monitor to Sx; Px sets regular temperature reporting to every x seconds.
-// M204 - Set default acceleration: S normal moves T filament only moves (M204 S3000 T7000) in mm/sec^2
-// M205 - advanced settings:  minimum travel speed S=while printing T=travel only,  X=maximum xy jerk, Z=maximum Z jerk
-// M206 - set additional homing offset
-
-// M220 - set speed factor override percentage S=factor in percent 
-// M221 - set extruder multiply factor S100 --> original Extrude Speed 
-
-// M226 - M226 / M226 P1 = Pause print  M226 P0 = resume print M226 P-255 = discard plan buffer contents and resume normal operation
-
-// M300 - Starts the buzzer with freqeuncy f and period p
-// M301 - Set PID parameters P I and D
-// M302 - Enable / Disable Cold Extrudes P1 = allow cold extrudes; P0 = Do not allow cold extrudes
-// M303 - PID relay autotune S<temperature> sets the target temperature. (default target temperature = 150C)
-
-// M400 - Finish all moves
-
-// M500 - stores paramters in EEPROM
-// M501 - reads parameters from EEPROM (if you need to reset them after you changed them temporarily).
-// M502 - reverts to the default "factory settings".
-// M503 - Print settings
-
-// Debug feature
-// M603 - Show Free Ram
-// M604 - Show Timer 1 COMPA ISR Execution Time Debug Info
-// M605 - Reset Timer 1 COMPA ISR Execution Time Min / Max Values
-// M606 - Show CPU loading information
-// M607 - Reset Peak and Average CPU load values
-// M608 - Show Firmware Version Info
-// M609 - Show last reset flags
-// M610 - Set Extruder Heater Max Current P = 0 - 100%.
-
-// M852 - Enter Boot Loader Command (Requires correct F pass code)
-// M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
-// M907 - Set microstep settings for stepper motors. e.g. M906 X16 Y16 Z16 E16
 
 static const char VERSION_TEXT[] = "2.20.10 / 22.1.2014";
 

@@ -189,7 +189,7 @@
 #define TXT_ADAVNCED_VARIABLES_S_T_XY_Z_E_JERK_CRLF				"Advanced variables (mm/s): S=Min feedrate, T=Min travel feedrate, XY=max xY jerk,  Z=max Z jerk, E=max E jerk\r\n"
 #define TXT_M205_S_T_XY_Z_E_CRLF								"  M205 S%s T%s XY%s Z%s E%s\r\n"
 #define TXT_PID_SETTINGS_CRLF_M301_P_I_D_CRLF					"PID settings:\r\n  M301 P%d I%d D%d\r\n"
-#define TXT_MAX_BED_HEATER_DUTY_SETTINGS_CRLF_M305_CRLF		    "Max Bed Heater Duty Cycle settings (M305):\r\n before full power: %u \r\n after full power: %u \r\n"
+#define TXT_MAX_BED_HEATER_DUTY_SETTINGS_CRLF_M305_CRLF		    "Max Bed Heater Duty Cycle settings (M305):\r\n before full power: %u%% \r\n after full power: %u%% \r\n"
 #define TXT_PRINTING_OF_EEPROM_SETTINGS_DISABLED_CRLF			"(printing of EEPROM settings disabled)\r\n"
 #define TXT_STORED_EEPROM_CHECKSUM_HEX_CRLF						"Stored EEPROM Checksum: 0x%X\r\n"
 #define TXT_EXPECTED_EEPROM_CHECKSUM_HEX_CRLF					"Expected EEPROM Checksum: 0x%X\r\n"

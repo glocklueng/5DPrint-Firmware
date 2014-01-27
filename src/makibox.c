@@ -100,8 +100,9 @@
    - M301 - Set PID parameters P I and D
    - M302 - Enable / Disable Cold Extrudes P1 = allow cold extrudes; P0 = Do not allow cold extrudes
    - M303 - PID relay autotune S<temperature> sets the target temperature. (default target temperature = 150C)
-   - M305 - set hot bed max duty cycle. M305 T<before or after 70C> D<duty cycle> <br>
-   before 70C: 0, after 70C: 1
+   - M305 - set hot bed max duty cycle. M305 S<before or after 70C> D<duty cycle> <br>
+   before 70C: 0, after 70C: 1 <br>
+   duty cycle is from 0% to 100%   
    - M400 - Finish all moves
 
    - M500 - stores paramters in EEPROM
@@ -1785,20 +1786,22 @@ void execute_mcode(struct command *cmd) {
             PID_autotune((int)(cmd->S));
         break;
 #endif
+#ifdef BED_PIDTEMP
     case 305: // M305 set hot bed max duty cycle
-        if (cmd->has_T && cmd->has_D){
+        if (cmd->has_S && cmd->has_D){
             short val = (short) ((cmd->D/100.0)*BED_HEATER_CURRENT);
             if (val > BED_HEATER_CURRENT) val=BED_HEATER_CURRENT;
             else if (val < 0 ) val=0;
-            // Set max duty cycle before 70C
-            if (cmd->T == 0) user_max_bed_heater_duty_before_full_pwr = (unsigned short)val;
-            // Set max duty cycle after 70C
-            else if (cmd->T == 1) user_max_bed_heater_duty = (unsigned short) val;
+            // Stage 1 (before 70C): Set max duty cycle
+            if (cmd->S == 1) user_max_bed_heater_duty_before_full_pwr = (unsigned short)val;
+            // Stage 2 (after 70C): Set max duty cycle
+            else if (cmd->S == 2) user_max_bed_heater_duty = (unsigned short) val;
         }
         serial_send(TXT_MAX_BED_HEATER_DUTY_SETTINGS_CRLF_M305_CRLF,
-                    user_max_bed_heater_duty_before_full_pwr*100/BED_HEATER_CURRENT      ,
+                    user_max_bed_heater_duty_before_full_pwr*100/BED_HEATER_CURRENT,
                     user_max_bed_heater_duty*100/BED_HEATER_CURRENT);     
         break;
+#endif
     case 400: // M400 - finish all moves
       	st_synchronize();	
         break;

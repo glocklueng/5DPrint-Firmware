@@ -45,9 +45,12 @@
 extern const short temptable[NUMTEMPS][2];
 extern const short bedtemptable[BNUMTEMPS][2];
 
-// Bed temperature must be greater than this value for hotend heater to be allowed
+// Bed temperature must be greater than this value for hot end heater to be allowed
 // to draw 100% power. Only 1/3 of power will be allowed otherwise.
 #define MIN_BED_TEMP_FOR_HOTEND_FULL_PWR 	50		// degC
+
+// Bed temperature must be greater than this value for hot bed to be allowed
+// to draw 100% power. Only BED_HEATER_CURRENT_BEFORE_FULL_PWR of power will allowed otherwise.
 #define MIN_BED_TEMP_FOR_HOTBED_FULL_PWR 	70		// degC
 
 #if defined HEATER_USES_THERMISTOR
@@ -99,7 +102,8 @@ extern int bed_iTerm;
 extern int bed_dTerm;
 extern int bed_error;
 extern int bed_heater_duty;
-extern int user_max_bed_heater_duty;
+extern unsigned short user_max_bed_heater_duty;
+extern unsigned short user_max_bed_heater_duty_before_full_pwr;
 extern unsigned int bed_PID_Kp, bed_PID_Ki, bed_PID_Kd;
 #endif
 

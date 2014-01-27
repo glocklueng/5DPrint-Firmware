@@ -29,6 +29,7 @@
 #include <avr/interrupt.h>
 #include <math.h>
 #include <stdlib.h>
+#include "config.h"
 #include "heater_table.h"
 #include "heater.h"
 #include "board_io.h"
@@ -77,7 +78,9 @@ int bed_iTerm;
 int bed_dTerm;
 int bed_error;
 int bed_heater_duty = 0;
-int max_bed_heater_duty = BED_HEATER_CURRENT, user_max_bed_heater_duty = BED_HEATER_CURRENT;
+unsigned short max_bed_heater_duty = BED_HEATER_CURRENT_BEFORE_FULL_PWR;
+unsigned short user_max_bed_heater_duty = BED_HEATER_CURRENT;
+unsigned short user_max_bed_heater_duty_before_full_pwr = BED_HEATER_CURRENT_BEFORE_FULL_PWR;
 int temp_bed_iState_min = (int)( 256L * -BED_PID_INTEGRAL_DRIVE_MAX / (float)(BED_PID_IGAIN) );
 int temp_bed_iState_max = (int)( 256L * BED_PID_INTEGRAL_DRIVE_MAX / (float)(BED_PID_IGAIN) );
 #endif
@@ -511,32 +514,21 @@ void manage_heater()
 #endif // #ifdef BED_USES_THERMISTOR
 	  
             // PID Control for HOT BED
-            if (BED_PIDTEMP > -1)
-                {
+            if (BED_PIDTEMP > -1){
                     // Only allow bed heater to be run at full power if its temperature is 
                     // greater than MIN_BED_TEMP_FOR_HOTBED_FULL_PWR. This is to limit the 
                     // max current drawn by the bed
                     if ( ( analog2tempBed(current_bed_raw) > MIN_BED_TEMP_FOR_HOTBED_FULL_PWR )
                          && ( analog2tempBed(target_bed_raw) > BEDMINTEMP ) )
-                        {
                             max_bed_heater_duty = user_max_bed_heater_duty;
-                        }
                     else if ( analog2tempBed(target_bed_raw) < BEDMINTEMP )
-                        {
-                            max_bed_heater_duty = user_max_bed_heater_duty;
-                        }
-                    else
-                        {
-                            max_bed_heater_duty = user_max_bed_heater_duty * 0.8;
-                        }
+                            max_bed_heater_duty = user_max_bed_heater_duty_before_full_pwr;
+                    else max_bed_heater_duty = user_max_bed_heater_duty_before_full_pwr;
 		
                     service_BedHeaterPIDControl(analog2tempBed(current_bed_raw), 
                                                 analog2tempBed(target_bed_raw));
-                } 
-            else // #if not (BED_PIDTEMP > -1)
-                {
-                    service_BedHeaterSimpleControl(current_bed_raw, target_bed_raw);
-                } 	// #ifdef BED_PIDTEMP
+            } 
+            else service_BedHeaterSimpleControl(current_bed_raw, target_bed_raw);
         }		//end if (TEMP_1_PIN == -1)
   
   

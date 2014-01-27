@@ -1787,17 +1787,17 @@ void execute_mcode(struct command *cmd) {
 #endif
     case 305: // M305 set hot bed max duty cycle
         if (cmd->has_T && cmd->has_D){
-            // Set max duty cycle before 70C
-            unsigned short val = (unsigned short) cmd->D;
-            if (val > 255) val=255;
+            short val = (short) ((cmd->D/100.0)*BED_HEATER_CURRENT);
+            if (val > BED_HEATER_CURRENT) val=BED_HEATER_CURRENT;
             else if (val < 0 ) val=0;
-            if (cmd->T == 0) user_max_bed_heater_duty_before_full_pwr = val;
+            // Set max duty cycle before 70C
+            if (cmd->T == 0) user_max_bed_heater_duty_before_full_pwr = (unsigned short)val;
             // Set max duty cycle after 70C
-            else if (cmd->T == 1) user_max_bed_heater_duty = val;
+            else if (cmd->T == 1) user_max_bed_heater_duty = (unsigned short) val;
         }
         serial_send(TXT_MAX_BED_HEATER_DUTY_SETTINGS_CRLF_M305_CRLF,
-                    user_max_bed_heater_duty_before_full_pwr,
-                    user_max_bed_heater_duty);     
+                    user_max_bed_heater_duty_before_full_pwr*100/BED_HEATER_CURRENT      ,
+                    user_max_bed_heater_duty*100/BED_HEATER_CURRENT);     
         break;
     case 400: // M400 - finish all moves
       	st_synchronize();	

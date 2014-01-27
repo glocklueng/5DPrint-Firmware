@@ -207,8 +207,8 @@ void EEPROM_printSettings()
 #endif
 
     serial_send(TXT_MAX_BED_HEATER_DUTY_SETTINGS_CRLF_M305_CRLF,
-                user_max_bed_heater_duty_before_full_pwr,
-                user_max_bed_heater_duty);     
+                user_max_bed_heater_duty_before_full_pwr*100/BED_HEATER_CURRENT,
+                user_max_bed_heater_duty*100/BED_HEATER_CURRENT);     
 	
 #if DIGIPOTS > 0
     serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF, max_x_motor_current, 
@@ -314,7 +314,7 @@ void EEPROM_RetrieveSettings(int def, int printout)
 #endif
 
             user_max_bed_heater_duty_before_full_pwr = BED_HEATER_CURRENT_BEFORE_FULL_PWR;
-            user_max_bed_heater_duty = BED_HEATER_CURRENT;              
+            user_max_bed_heater_duty = BED_HEATER_CURRENT_FULL_PWR;              
 	  
 #if DIGIPOTS > 0
             max_x_motor_current = XAXIS_DEFAULT_MAX_CURRENT;

@@ -278,7 +278,8 @@
 #define BED_PID_DGAIN 				0		//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate
 
 // Change this value (range 30-250) to limit the current to the HOT BED
-#define BED_HEATER_CURRENT 212 // 85% duty cycle
+#define BED_HEATER_CURRENT 250 // 100% duty cycle
+#define BED_HEATER_CURRENT_FULL_PWR 212 // 85% duty cycle, upper limit after MIN_BED_TEMP_FOR_HOTBED_FULL_PWR (70C)
 #define BED_HEATER_CURRENT_BEFORE_FULL_PWR 175 // 70% duty cycle before MIN_BED_TEMP_FOR_HOTBED_FULL_PWR (70C)
 
 #define BED_HEATUP_TIMEOUT 3600000			// ms (3600000ms = 1 hour)

@@ -79,7 +79,7 @@ int bed_dTerm;
 int bed_error;
 int bed_heater_duty = 0;
 unsigned short max_bed_heater_duty = BED_HEATER_CURRENT_BEFORE_FULL_PWR;
-unsigned short user_max_bed_heater_duty = BED_HEATER_CURRENT;
+unsigned short user_max_bed_heater_duty = BED_HEATER_CURRENT_FULL_PWR;
 unsigned short user_max_bed_heater_duty_before_full_pwr = BED_HEATER_CURRENT_BEFORE_FULL_PWR;
 int temp_bed_iState_min = (int)( 256L * -BED_PID_INTEGRAL_DRIVE_MAX / (float)(BED_PID_IGAIN) );
 int temp_bed_iState_max = (int)( 256L * BED_PID_INTEGRAL_DRIVE_MAX / (float)(BED_PID_IGAIN) );

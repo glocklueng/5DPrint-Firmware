@@ -211,7 +211,7 @@ void execute_m907(struct command *cmd);
 #define CRITICAL_SECTION_END    SREG = _sreg
 #endif //CRITICAL_SECTION_START
 
-static const char VERSION_TEXT[] = "2.20.10 / 22.1.2014";
+static const char VERSION_TEXT[] = "2.20.20 / 27.1.2014";
 
 #ifdef PIDTEMP
 unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;

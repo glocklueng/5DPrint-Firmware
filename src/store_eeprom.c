@@ -40,6 +40,7 @@
 #include "heater.h"
 #include "language.h"
 #include "stepper.h"
+#include "heater.h"
 
 #ifdef PIDTEMP
 //extern unsigned int PID_Kp, PID_Ki, PID_Kd;
@@ -130,6 +131,13 @@ void EEPROM_StoreSettings()
     EEPROM_write_setting(Ki_address, &ki, sizeof(ki));     //Ki
     EEPROM_write_setting(Kd_address, &kd, sizeof(kd));     //Kd
 #endif
+
+    EEPROM_write_setting(user_max_bed_heater_duty_before_full_pwr_address, 
+                         &user_max_bed_heater_duty_before_full_pwr, 
+                         sizeof(user_max_bed_heater_duty_before_full_pwr));
+    EEPROM_write_setting(user_max_bed_heater_duty_address,
+                         &user_max_bed_heater_duty, 
+                         sizeof(user_max_bed_heater_duty_address));
   
 #if DIGIPOTS > 0
     EEPROM_write_setting(max_x_motor_current_address, &max_x_motor_current, sizeof(max_x_motor_current));
@@ -197,6 +205,10 @@ void EEPROM_printSettings()
 #ifdef PIDTEMP
     serial_send(TXT_PID_SETTINGS_CRLF_M301_P_I_D_CRLF, PID_Kp, PID_Ki, PID_Kd); 
 #endif
+
+    serial_send(TXT_MAX_BED_HEATER_DUTY_SETTINGS_CRLF_M305_CRLF,
+                user_max_bed_heater_duty_before_full_pwr,
+                user_max_bed_heater_duty);     
 	
 #if DIGIPOTS > 0
     serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF, max_x_motor_current, 
@@ -259,6 +271,13 @@ void EEPROM_RetrieveSettings(int def, int printout)
             EEPROM_read_setting(Ki_address, &PID_Ki, sizeof(PID_Ki));
             EEPROM_read_setting(Kd_address, &PID_Kd, sizeof(PID_Kd));
 #endif
+
+            EEPROM_read_setting(user_max_bed_heater_duty_address, 
+                                &user_max_bed_heater_duty, 
+                                sizeof(user_max_bed_heater_duty));
+            EEPROM_read_setting(user_max_bed_heater_duty_before_full_pwr_address, 
+                                &user_max_bed_heater_duty_before_full_pwr, 
+                                sizeof(user_max_bed_heater_duty_before_full_pwr));
 	  
 #if DIGIPOTS > 0
             EEPROM_read_setting(max_x_motor_current_address, &max_x_motor_current, sizeof(max_x_motor_current));
@@ -293,6 +312,9 @@ void EEPROM_RetrieveSettings(int def, int printout)
             PID_Ki = PID_IGAIN;
             PID_Kd = PID_DGAIN;
 #endif
+
+            user_max_bed_heater_duty_before_full_pwr = BED_HEATER_CURRENT_BEFORE_FULL_PWR;
+            user_max_bed_heater_duty = BED_HEATER_CURRENT;              
 	  
 #if DIGIPOTS > 0
             max_x_motor_current = XAXIS_DEFAULT_MAX_CURRENT;

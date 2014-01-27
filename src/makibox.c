@@ -100,7 +100,8 @@
    - M301 - Set PID parameters P I and D
    - M302 - Enable / Disable Cold Extrudes P1 = allow cold extrudes; P0 = Do not allow cold extrudes
    - M303 - PID relay autotune S<temperature> sets the target temperature. (default target temperature = 150C)
-
+   - M305 - set hot bed max duty cycle. M305 T<before or after 70C> D<duty cycle> <br>
+   before 70C: 0, after 70C: 1
    - M400 - Finish all moves
 
    - M500 - stores paramters in EEPROM
@@ -1784,6 +1785,20 @@ void execute_mcode(struct command *cmd) {
             PID_autotune((int)(cmd->S));
         break;
 #endif
+    case 305: // M305 set hot bed max duty cycle
+        if (cmd->has_T && cmd->has_D){
+            // Set max duty cycle before 70C
+            unsigned short val = (unsigned short) cmd->D;
+            if (val > 255) val=255;
+            else if (val < 0 ) val=0;
+            if (cmd->T == 0) user_max_bed_heater_duty_before_full_pwr = val;
+            // Set max duty cycle after 70C
+            else if (cmd->T == 1) user_max_bed_heater_duty = val;
+        }
+        serial_send(TXT_MAX_BED_HEATER_DUTY_SETTINGS_CRLF_M305_CRLF,
+                    user_max_bed_heater_duty_before_full_pwr,
+                    user_max_bed_heater_duty);     
+        break;
     case 400: // M400 - finish all moves
       	st_synchronize();	
         break;

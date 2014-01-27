@@ -53,26 +53,28 @@ extern unsigned long minsegmenttime;
 
 // EEPROM addresses for the various configuration values stored.
 // Take extra care when changing or modifying these.
-#define axis_steps_per_unit_address 					(EEPROM_OFFSET + 4*sizeof(char))
-#define max_feedrate_address 							(axis_steps_per_unit_address + 4*sizeof(float))
-#define max_acceleration_units_per_sq_second_address	(max_feedrate_address + 4*sizeof(float))
-#define move_acceleration_address 						(max_acceleration_units_per_sq_second_address + 4*sizeof(long))
-#define retract_acceleration_address 					(move_acceleration_address + sizeof(float))
-#define mintravelfeedrate_address 						(retract_acceleration_address + sizeof(float))
-#define minimumfeedrate_address 						(mintravelfeedrate_address + sizeof(float))
-#define max_xy_jerk_address 							(minimumfeedrate_address + sizeof(float))
-#define max_z_jerk_address 								(max_xy_jerk_address + sizeof(float))
-#define max_e_jerk_address 								(max_z_jerk_address + sizeof(float))
-#define Kp_address 										(max_e_jerk_address + sizeof(unsigned long))
-#define Ki_address 										(Kp_address + sizeof(unsigned int))
-#define Kd_address 										(Ki_address + sizeof(unsigned int))
-#define max_x_motor_current_address						(Kd_address + sizeof(unsigned int))
-#define max_y_motor_current_address						(max_x_motor_current_address + sizeof(unsigned short))
-#define max_z_motor_current_address						(max_y_motor_current_address + sizeof(unsigned short))
-#define max_e_motor_current_address						(max_z_motor_current_address + sizeof(unsigned short))
+#define axis_steps_per_unit_address 					  (EEPROM_OFFSET + 4*sizeof(char))
+#define max_feedrate_address 							  (axis_steps_per_unit_address + 4*sizeof(float))
+#define max_acceleration_units_per_sq_second_address	  (max_feedrate_address + 4*sizeof(float))
+#define move_acceleration_address 						  (max_acceleration_units_per_sq_second_address + 4*sizeof(long))
+#define retract_acceleration_address 					  (move_acceleration_address + sizeof(float))
+#define mintravelfeedrate_address 						  (retract_acceleration_address + sizeof(float))
+#define minimumfeedrate_address 						  (mintravelfeedrate_address + sizeof(float))
+#define max_xy_jerk_address 							  (minimumfeedrate_address + sizeof(float))
+#define max_z_jerk_address 								  (max_xy_jerk_address + sizeof(float))
+#define max_e_jerk_address 								  (max_z_jerk_address + sizeof(float))
+#define Kp_address 										  (max_e_jerk_address + sizeof(unsigned long))
+#define Ki_address 										  (Kp_address + sizeof(unsigned int))
+#define Kd_address 										  (Ki_address + sizeof(unsigned int))
+#define max_x_motor_current_address						  (Kd_address + sizeof(unsigned int))
+#define max_y_motor_current_address						  (max_x_motor_current_address + sizeof(unsigned short))
+#define max_z_motor_current_address						  (max_y_motor_current_address + sizeof(unsigned short))
+#define max_e_motor_current_address						  (max_z_motor_current_address + sizeof(unsigned short))
+#define user_max_bed_heater_duty_before_full_pwr_address  (max_e_motor_current_address + sizeof(unsigned short))
+#define user_max_bed_heater_duty_address                  (user_max_bed_heater_duty_before_full_pwr_address + sizeof(unsigned short))
 
 #define EEPROM_START_ADDR		EEPROM_OFFSET
-#define EEPROM_END_ADDR			(max_e_motor_current_address + sizeof(unsigned short))
+#define EEPROM_END_ADDR			(user_max_bed_heater_duty_address + sizeof(unsigned short))
 #define EEPROM_CHECKSUM_ADDR	EEPROM_END_ADDR
 
 extern void EEPROM_RetrieveSettings(int def, int printout);

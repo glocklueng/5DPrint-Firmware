@@ -2669,6 +2669,6 @@ void wait_extruder_target_temp(void)
 	PORTA = 0; PORTB = 0; PORTC = 0; PORTD = 0; PORTE = 0; PORTF = 0;
 	
 	// Jump to Bootloader start address
-	asm volatile("jmp 0x1E000");
+	asm volatile("jmp 0x1F000");
 	while (1) ;
     }

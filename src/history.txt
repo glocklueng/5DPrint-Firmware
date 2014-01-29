@@ -11,6 +11,18 @@ AUTHOR:	CJM LAI
 	Makible Limited	
 	www.makibox.com
 --------------------------
+Version 2.20.21
+
+- Update bootloader jump address according to Atmel datasheet
+  Changed from 0x1E000 to 0x 1F000 (byte address)
+- Bootloader size is 2048 words, word address is 0xF800 - 0xFFFF
+
+--------------------------
+DATE: 	27 January 2014
+AUTHOR:	CJM LAI
+	Makible Limited	
+	www.makibox.com
+--------------------------
 Version 2.20.20
 
 - Furhter bug fixing for tone.c and tone.h

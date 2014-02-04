@@ -38,6 +38,9 @@
 // Definitions
 #define MAX_CMD_SIZE 95
 
+// External variables
+uint8_t autoprint_enabled = AUTOPRINT_DEFAULT_ENABLED;
+
 // Local variables
 const char autoprint_filename1[] = "autoprint.g";
 const char autoprint_filename2[] = "autoprint.gcode";
@@ -59,6 +62,22 @@ uint8_t autoPrintFileNameCheck(const char *long_name);
 // Extern function
 
 /**
+   \fn void enable_autoprint()
+   \brief Enable autoprint from SD card
+*/
+void enable_autoprint(){
+    autoprint_enabled = 1;
+}
+
+/**
+   \fn void disable_autoprint()
+   \brief Disable autoprint from SD card
+*/
+void disable_autoprint(){
+    autoprint_enabled = 0;
+}
+
+/**
    \fn void autoprint()
    \brief Main autoprint function routine to perform SD print automatically
    Manages the SDAutoPrintStatus based on following criteria
@@ -71,7 +90,8 @@ uint8_t autoPrintFileNameCheck(const char *long_name);
    - 2:  Finish Print, 
    - 3: Print finished and waiting for new SD print,
        Error reported, waiting for new SD card
-   */
+
+*/
 void autoprint(){
     static unsigned char SDAutoPrintStatus = 0;
     //serial_send ("%d", SDAutoPrintStatus);

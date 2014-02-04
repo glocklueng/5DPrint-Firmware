@@ -26,4 +26,8 @@
    
  */
 
+extern uint8_t autoprint_enabled;
+
+void enable_autoprint();
+void disable_autoprint();
 void autoprint();

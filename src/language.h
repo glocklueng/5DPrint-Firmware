@@ -210,6 +210,10 @@
 
 // Additional lines for microstepping setting
 #define TXT_MAX_MOTOR_CURRENTS_CRLF_M907_X_Y_Z_E_CRLF			"-- Microstep resolution:\r\n-- M907 X=%d Y=%d Z=%d E=%d\r\n"
+
+// Additional lines for autoprint
+#define TXT_M31_AUTOPRINT_ENABLED_CRLF                          "Autoprint from SD card is enabled!\n"
+#define TXT_M31_AUTOPRINT_DISABLED_CRLF                         "Autoprint from SD card is disabled!\n"
 // End of (LANGUAGE == 0), ENGLISH
 
 #else

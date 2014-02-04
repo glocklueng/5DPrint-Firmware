@@ -71,6 +71,7 @@
    - M28  - Start SD write (M28 filename.g)
    - M29  - Stop SD write- 	
    - M30  - Delete file from SD (M30 filename.g)
+   - M31  - Enable (M31 E1) / Disable (M31 E0) autoprint from SD card
    - M80  - Turn on Power Supply
    - M81  - Turn off Power Supply
    - M82  - Set E codes absolute (default)
@@ -565,7 +566,7 @@ void loop()
 {
 
 #if AUTOPRINT > 0
-  autoprint();
+    if (autoprint_enabled) autoprint();
 #endif
 
 #if DIGIPOTS > 0
@@ -1407,7 +1408,15 @@ void execute_mcode(struct command *cmd) {
             }
         break;
 #endif //SDSUPPORT
-	
+#if AUTOPRINT > 0
+    case 31: // M31 - Enable / Disable autoprint from SD card
+        if (cmd->has_E) {
+            if (cmd->E == 1) enable_autoprint();
+            else if (cmd->E == 0) disable_autoprint();    
+        }
+        if (autoprint_enabled) serial_send(TXT_M31_AUTOPRINT_ENABLED_CRLF);
+        else serial_send(TXT_M31_AUTOPRINT_DISABLED_CRLF);
+#endif //AUTOPRINT	
     case 104: // M104 - Set Extruder Temperature
 #ifdef CHAIN_OF_COMMAND
         st_synchronize(); // wait for all movements to finish

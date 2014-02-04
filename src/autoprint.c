@@ -160,6 +160,10 @@ void finishSDprint(){
 
 */
 void autoPrintSuccess(){
+#ifdef MAKIBOX_5DPD8
+    process_command("M300 F100 P1000");
+#endif
+#ifdef PRINTRBOARD_REVB
     process_command("G91");
     process_command("G1 F200");
     process_command("G1 X0.4");
@@ -168,6 +172,7 @@ void autoPrintSuccess(){
         process_command("G1 X-0.1");
     }
     process_command("G90");
+#endif
 }
 
 
@@ -177,6 +182,10 @@ void autoPrintSuccess(){
 
 */
 void autoPrintError(){
+#ifdef MAKIBOX_5DPD8
+    process_command("M300 F4000 P1000");
+#endif
+#ifdef PRINTRBOARD_REVB
     process_command("G91");
     process_command("G1 F1000");
     process_command("G1 X0.4");
@@ -185,6 +194,7 @@ void autoPrintError(){
         process_command("G1 X-0.1");
     }
     process_command("G90");
+#endif
 }
 
 

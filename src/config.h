@@ -358,7 +358,8 @@
 // Set to 1 to enable AUTOPRINT support
 // If AUTOPRINT is enabled, 
 // then, SDSUPPORT must also be enabled
-#define AUTOPRINT 0
+// #define AUTOPRINT 1 
+#define AUTOPRINT_DEFAULT_ENABLED 0
 
 #ifdef PRINTRBOARD_REVB
 // Set to 0 to disable Digi-Pot support
@@ -372,6 +373,10 @@
 // Set to 0 to disable Buzzer support
 // Set to 1 to enable Buzzer support
 #define BUZZER_SUPPORT      0
+
+// Set to 0 to disable AUTOPRINT support
+// Set to 1 to enable AUTOPRINT support
+#define AUTOPRINT 0
 #endif
 
 
@@ -387,6 +392,10 @@
 // Set to 0 to disable Buzzer support
 // Set to 1 to enable Buzzer support
 #define BUZZER_SUPPORT      1
+
+// Set to 0 to disable AUTOPRINT support
+// Set to 1 to enable AUTOPRINT support
+#define AUTOPRINT 1
 #endif
 
 // Note that accuracy is limited by resolution of the digi-pot.

@@ -605,53 +605,42 @@ void read_command()
     uint8_t i;
 #endif
 
-    while (usb_serial_available() > 0)
-        {
+    while (usb_serial_available() > 0){
 #if (DEBUG > -1)
-            PreemptionFlag |= 0x0002;
+        PreemptionFlag |= 0x0002;
 #endif
-	
-            ch = usb_serial_read();
-	
-            if (ch == ';')
-                {
-                    ignore_comments = 1;
+        
+        ch = usb_serial_read();	
+        if (ch == ';') ignore_comments = 1;	
+        if ( !(ch < 0 || ch > 255) ){	
+            if ((ch == '\n' || ch == '\r') || 
+                (ch == ',' && !ignore_comments)){
+                // Newline or comma marks end of this command;  
+                // terminate string and process it.
+                // Comma is not effective in a comment
+                cmdbuf[bufpos] = '\0';
+                serial_send("cmdbuf: %s \n", cmdbuf);
+                if (bufpos > 0) process_command(cmdbuf);
+                ignore_comments = 0;
+                bufpos = 0;
+                cmdbuf[bufpos] = '\0';
+                // Flush any output which may not have been sent 
+                // at the end of command execution.
+                usb_serial_flush();
+                break;
+            }
+                
+            if (ignore_comments < 1){
+                cmdbuf[bufpos++] = (uint8_t)ch;
+                if (bufpos > MAX_CMD_SIZE - 1){
+                    // TODO:  can we do something more intelligent than
+                    // just silently truncating the command?
+                    bufpos--;
                 }
-	
-            if ( !(ch < 0 || ch > 255) )
-                {	
-                    if (ch == '\n' || ch == '\r')
-                        {
-                            // Newline marks end of this command;  terminate
-                            // string and process it.
-                            cmdbuf[bufpos] = '\0';
-                            if (bufpos > 0)
-                                {
-                                    process_command(cmdbuf);
-                                }
-                            ignore_comments = 0;
-                            bufpos = 0;
-                            cmdbuf[bufpos] = '\0';
-                            // Flush any output which may not have been sent 
-                            // at the end of command execution.
-                            usb_serial_flush();
-                            break;
-                        }
-		
-                    if (ignore_comments < 1)
-                        {
-                            cmdbuf[bufpos++] = (uint8_t)ch;
-
-                            if (bufpos > MAX_CMD_SIZE - 1)
-                                {
-                                    // TODO:  can we do something more intelligent than
-                                    // just silently truncating the command?
-                                    bufpos--;
-                                }
-                        }
-                }
+            }
         }
-
+    }
+    
 #if SDSUPPORT > 0
     // Printing from SD Card file
     if ( (sdcard_print) && (!sdcard_print_pause) )

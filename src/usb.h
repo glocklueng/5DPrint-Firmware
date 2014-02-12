@@ -56,7 +56,8 @@ uint8_t usb_serial_rts();
 // attribute to the declaration so that we get helpful compiler warnings when
 // the format string doesn't match the parameters.
 void usb_serial_printf(const char *fmt, ...) 
-    __attribute__(( format(gnu_printf, 1, 2) ));
+//__attribute__(( format(gnu_printf, 1, 2) ));
+    __attribute__(( format(printf, 1, 2) ));
 void usb_serial_printf_P(PGM_P fmt, ...);
 
 
@@ -65,7 +66,8 @@ void usb_serial_printf_P(PGM_P fmt, ...);
 // without also placing the format string into RAM.  The __dummy_printf() inline
 // function seems to do the trick.
 inline void __dummy_usb_serial_printf(const char *fmt, ...)
-    __attribute__(( format(gnu_printf, 1, 2) ));
+//__attribute__(( format(gnu_printf, 1, 2) ));
+    __attribute__(( format(printf, 1, 2) ));
 inline void __dummy_usb_serial_printf(const char *fmt, ...) { return; }
 
 

@@ -6,6 +6,20 @@ Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
 --------------------------
+DATE: 	12 February 2014
+AUTHOR:	CJM LAI
+	Makible Limited	
+	www.makibox.com
+--------------------------
+Version 2.20.22
+
+- In usb.c, change gnu_printf to printf for serial print out
+- Enable autoprint by default
+- New command M31 to turn enable / disable autoprint from SD card.
+  The setting can be saved to EEPROM with the M500 command.
+- Multiple commands on the same line implemented with comma as the separation character
+
+--------------------------
 DATE: 	27 January 2014
 AUTHOR:	CJM LAI
 	Makible Limited	

@@ -359,7 +359,7 @@
 // If AUTOPRINT is enabled, 
 // then, SDSUPPORT must also be enabled
 // #define AUTOPRINT 1 
-#define AUTOPRINT_DEFAULT_ENABLED 0
+#define AUTOPRINT_DEFAULT_ENABLED 1
 
 #ifdef PRINTRBOARD_REVB
 // Set to 0 to disable Digi-Pot support

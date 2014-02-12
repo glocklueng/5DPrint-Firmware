@@ -619,7 +619,6 @@ void read_command()
                 // terminate string and process it.
                 // Comma is not effective in a comment
                 cmdbuf[bufpos] = '\0';
-                serial_send("cmdbuf: %s \n", cmdbuf);
                 if (bufpos > 0) process_command(cmdbuf);
                 ignore_comments = 0;
                 bufpos = 0;

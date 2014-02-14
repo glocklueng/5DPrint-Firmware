@@ -134,17 +134,23 @@ void service_BedHeaterSimpleControl(int current_bed_raw, int target_bed_raw);
 // Setup Timers and PWM for Heater and FAN
 //------------------------------------------------------------------------
 
+/**
+   \fn ISR(TIMER1_COMPC_vect)
+   \brief 
+ */
 ISR(TIMER1_COMPC_vect)
 {
     manage_heater();
 }
 
-
+/**
+   \fn void init_Timer3_HW_pwm(void)
+   \brief
+   This is hardware PWM with 500 Hz for Extruder Heating and Fan
+   We want to have at least 500Hz - equivalent to previous SOFT_PWM
+ */
 void init_Timer3_HW_pwm(void)
 {
-    // This is hardware PWM with 500 Hz for Extruder Heating and Fan
-    // We want to have at least 500Hz - equivalent to previous SOFT_PWM
-	
     // For phase correct PWM mode:
     // PWM Freq = Fclk / (2 * prescaler * TOP)
 
@@ -174,12 +180,15 @@ void init_Timer3_HW_pwm(void)
 //--------------------END Timer and PWM Setup---------------------------
 
 //-------------------- START PID AUTOTUNE ---------------------------
-// Based on PID relay test 
-// Thanks to Erik van der Zalm for this idea to use it for Marlin
-// Some information see:
-// http://brettbeauregard.com/blog/2012/01/arduino-pid-autotune-library/
-//------------------------------------------------------------------
 #ifdef PID_AUTOTUNE
+/**
+   \fn void PID_autotune(int PIDAT_test_temp)
+   \brief 
+   Based on PID relay test 
+   Thanks to Erik van der Zalm for this idea to use it for Marlin
+   Some information see:
+   http://brettbeauregard.com/blog/2012/01/arduino-pid-autotune-library/
+ */
 void PID_autotune(int PIDAT_test_temp)
 {
     float PIDAT_input = 0;
@@ -363,6 +372,10 @@ void PID_autotune(int PIDAT_test_temp)
 #endif  
 //---------------- END AUTOTUNE PID ------------------------------
 
+/**
+   \fn void updatePID()
+   \brief 
+ */
 void updatePID()
 {
     if (PIDTEMP)
@@ -377,7 +390,10 @@ void updatePID()
             temp_bed_iState_max = (int)( (256L * BED_PID_INTEGRAL_DRIVE_MAX) / (float)(bed_PID_Ki) );
 	}
 }
- 
+/**
+   \fn void manage_heater()
+   \brief Called in the interrupt service routine
+ */
 void manage_heater()
 {
     int current_temp = 0;
@@ -549,6 +565,10 @@ void manage_heater()
 
 
 #if defined (HEATER_USES_THERMISTOR) || defined (BED_USES_THERMISTOR)
+/**
+   \fn int temp2analog_thermistor(int celsius, const short table[][2], int numtemps) 
+   \brief 
+ */
 int temp2analog_thermistor(int celsius, const short table[][2], int numtemps) 
 {
     int raw = 0;
@@ -575,6 +595,10 @@ int temp2analog_thermistor(int celsius, const short table[][2], int numtemps)
 #endif
 
 #if defined (HEATER_USES_THERMISTOR) || defined (BED_USES_THERMISTOR)
+/**
+   \fn int analog2temp_thermistor(int raw,const short table[][2], int numtemps) {
+   \brief 
+ */
 int analog2temp_thermistor(int raw,const short table[][2], int numtemps) {
     int celsius = 0;
     unsigned char i;
@@ -601,7 +625,10 @@ int analog2temp_thermistor(int raw,const short table[][2], int numtemps) {
 }
 #endif
 
-
+/**
+   \fn void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
+   \brief 
+ */
 void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 {
     error = target_temp - current_temp;
@@ -657,7 +684,10 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 	}
 }
 
-
+/**
+   \fn void service_ExtruderHeaterSimpleControl(int current_raw, int target_raw)
+   \brief 
+ */
 void service_ExtruderHeaterSimpleControl(int current_raw, int target_raw)
 {
     if(current_raw >= target_raw)
@@ -680,7 +710,10 @@ void service_ExtruderHeaterSimpleControl(int current_raw, int target_raw)
         }
 }
 
-
+/**
+   \fn void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
+   \brief 
+ */
 void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 {
     bed_error = target_bed_temp - current_bed_temp;
@@ -737,7 +770,10 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 	}
 }
 
-
+/**
+   \fn void service_BedHeaterSimpleControl(int current_bed_raw, int target_bed_raw)
+   \brief 
+ */
 void service_BedHeaterSimpleControl(int current_bed_raw, int target_bed_raw)
 {
 #ifdef MINTEMP
@@ -756,7 +792,10 @@ void service_BedHeaterSimpleControl(int current_bed_raw, int target_bed_raw)
             }
 }
 
-
+/**
+   \fn void service_TemperatureMonitor(void)
+   \brief 
+ */
 void service_TemperatureMonitor(void)
 {
     int hotendtC = 0, bedtempC = 0;
@@ -850,15 +889,12 @@ void service_TemperatureMonitor(void)
 }
 
 
-/***************************************************
- * setHeaterPWMDuty(uint8_t pin, int val)
- *
- * pin: 	Heater pin to set PWM duty for
- * val: 	Value Between 0 and ICR3 (250 at present)
- *		val = 125 -> 50% duty
- *
- * Sets the PWM duty of selected heater
- ****************************************************/
+/**
+ \fn void setHeaterPWMDuty(uint8_t pin, int val)
+ \brief  Sets the PWM duty of selected heater
+ \param pin Heater pin to set PWM duty for
+ \param val Value Between 0 and ICR3 (250 at present), val = 125 -> 50% duty
+ */
 void setHeaterPWMDuty(uint8_t pin, int val)
 {
     if (val < 0)
@@ -894,15 +930,11 @@ void setHeaterPWMDuty(uint8_t pin, int val)
 	}
 }
 
-
-/***************************************************
- * setFanPWMDuty(int val)
- *
- * val: 	Value Between 0 and ICR3 (250 at present)
- *		val = 125 -> 50% duty
- *
- * Sets the PWM duty of the fan.
- ****************************************************/
+/**
+   \fn void setFanPWMDuty(int val)
+   \brief Sets the PWM duty of the fan.
+   \param  val Value Between 0 and ICR3 (250 at present), val = 125 -> 50% duty
+*/
 void setFanPWMDuty(int val)
 {
     if (val < 0)

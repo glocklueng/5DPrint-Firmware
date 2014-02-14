@@ -233,67 +233,101 @@ static uint8_t old_z_max_endstop=0;
 //  step_events_completed reaches block->decelerate_after after which it decelerates until the trapezoid generator is reset.
 //  The slope of acceleration is calculated with the leib ramp alghorithm.
 
-
+/**
+   \fn void enable_x()
+   \brief
+*/
 void enable_x() {
 #if X_ENABLE_PIN > -1
     WRITE(X_ENABLE_PIN, X_ENABLE_ON);
 #endif
 }
-
+/**
+   \fn void disable_x()
+   \brief
+*/
 void disable_x() {
 #if X_ENABLE_PIN > -1
     WRITE(X_ENABLE_PIN,!X_ENABLE_ON);
 #endif
 }
-
+/**
+   \fn void enable_y()
+   \brief
+*/
 void enable_y() {
 #if Y_ENABLE_PIN > -1
     WRITE(Y_ENABLE_PIN, Y_ENABLE_ON);
 #endif
 }
-
+/**
+    \fn void disable_y()
+    \brief
+ */
 void disable_y() {
 #if Y_ENABLE_PIN > -1
     WRITE(Y_ENABLE_PIN,!Y_ENABLE_ON);
 #endif
 }
-
+/**
+   \fn void enable_z()
+   \brief
+*/
 void enable_z() {
 #if Z_ENABLE_PIN > -1
     WRITE(Z_ENABLE_PIN, Z_ENABLE_ON);
 #endif
 }
-
+/**
+    \fn void disable_z()
+    \brief
+ */
 void disable_z() {
 #if Z_ENABLE_PIN > -1
     WRITE(Z_ENABLE_PIN,!Z_ENABLE_ON);
 #endif
 }
-
+/**
+    \fn void enable_e()
+    \brief
+ */
 void enable_e() {
 #if E_ENABLE_PIN > -1
     WRITE(E_ENABLE_PIN, E_ENABLE_ON);
 #endif
 }
-
+/**
+   \fn void disable_e()
+   \brief
+*/
 void disable_e() {
 #if E_ENABLE_PIN > -1
     WRITE(E_ENABLE_PIN,!E_ENABLE_ON);
 #endif
 }
 
+/**
+    \fn void st_wake_up()
+    \brief
+ */
 void st_wake_up() {
     //  TCNT1 = 0;
     if(!busy) ENABLE_STEPPER_DRIVER_INTERRUPT();  
 }
 
-
+/**
+   \fn void st_sleep()
+   \brief
+*/
 void st_sleep() {
     //  TCNT1 = 0;
     if(!busy) DISABLE_STEPPER_DRIVER_INTERRUPT();  
 }
 
-
+/**
+   \fn unsigned short calc_timer(unsigned short step_rate)
+   \brief
+*/
 unsigned short calc_timer(unsigned short step_rate) {
     unsigned short timer;
     unsigned long fcpu_div_500k = (F_CPU/500000L);
@@ -331,8 +365,13 @@ unsigned short calc_timer(unsigned short step_rate) {
     return timer;
 }
 
-// Initializes the trapezoid generator from the current block. Called whenever a new 
-// block begins.
+
+/**
+   \fn void trapezoid_generator_reset()
+   \brief
+   Initializes the trapezoid generator from the current block. Called whenever a new 
+   block begins.
+*/
 void trapezoid_generator_reset() {
     deceleration_time = 0;
     
@@ -371,8 +410,13 @@ void trapezoid_generator_reset() {
 #endif
 }
 
-// "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.  
-// It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately. 
+
+/**
+   \fn ISR(TIMER1_COMPA_vect)
+   \brief Interrupt Service Routine serving stepper motors
+   The Stepper Driver Interrupt" - This timer interrupt is the workhorse.  
+   It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately. 
+*/
 ISR(TIMER1_COMPA_vect) {
 #if (DEBUG > -1)
     uint32_t isr_start_micros;		
@@ -698,7 +742,13 @@ ISR(TIMER1_COMPA_vect) {
 #endif
 }
 
-
+/**
+   \fn void st_init()
+   \brief Setup stepper drives
+   Waveform => CTC <br>
+   Software PWM <br>
+   enable_endstops <br>
+*/
 void st_init()
 {
     // waveform generation = 0100 = CTC
@@ -741,7 +791,10 @@ void st_init()
     sei();
 }
 
-
+/**
+   \fn void st_set_current_position(st_position_t new_position)
+   \brief
+*/
 void st_set_current_position(st_position_t new_position) {
     actual_steps_x = new_position.x;
     actual_steps_y = new_position.y;
@@ -749,7 +802,10 @@ void st_set_current_position(st_position_t new_position) {
     actual_steps_e = new_position.e;
 }
 
-
+/**
+   \fn st_position_t st_get_currentPosition(void)
+   \brief
+ */
 st_position_t st_get_current_position(void) {
     st_position_t pos;
 
@@ -763,7 +819,10 @@ st_position_t st_get_current_position(void) {
     return pos;
 }
 
-
+/**
+   \fn void get_current_printer_state(void)
+   \brief return position in mm for makibox.c
+ */
 void get_current_printer_state(void) {
     // Get current positions and target temperatures
     paused_data.paused_pos_x = actual_steps_x / (float)(axis_steps_per_unit[X_AXIS]);
@@ -784,7 +843,10 @@ void get_current_printer_state(void) {
     paused_data.block_buffer_tail = block_buffer_tail;
 }
 
-
+/**
+   \fn void set_print_paused_buffer(void)
+   \brief
+*/
 void set_print_paused_buffer(void) {
     CRITICAL_SECTION_START;
 	
@@ -797,7 +859,10 @@ void set_print_paused_buffer(void) {
     CRITICAL_SECTION_END;
 }
 
-
+/**
+   \fn void clear_plan_buffer(void)
+   \brief Clear plan buffer and get current position
+*/
 void clear_plan_buffer(void) {
     st_position_t pos;
     float current_pos_in_mm[NUM_AXIS];
@@ -816,7 +881,10 @@ void clear_plan_buffer(void) {
                       current_pos_in_mm[Z_AXIS], current_pos_in_mm[E_AXIS]);
 }
 
-
+/**
+   \fn void resume_normal_print_buffer(void)
+   \brief Resume from pause
+*/
 void resume_normal_print_buffer(void) {
     CRITICAL_SECTION_START;
 	
@@ -834,7 +902,10 @@ void resume_normal_print_buffer(void) {
     CRITICAL_SECTION_END;
 }
 
-
+/**
+   \fn void resume_normal_buf_discard_all_buf_moves(void)
+   \brief Resume from pause and discard buffer moves
+*/
 void resume_normal_buf_discard_all_buf_moves(void) {
     CRITICAL_SECTION_START;
 	
@@ -848,7 +919,10 @@ void resume_normal_buf_discard_all_buf_moves(void) {
 }
 
 
-// Block until all buffered steps are executed
+/**
+   \fn void st_synchronize()
+   \brief Block until all buffered steps are executed
+*/
 void st_synchronize()
 {
     while(blocks_queued()) {
@@ -860,8 +934,10 @@ void st_synchronize()
 }
 
 #if DIGIPOTS > 0 
-// Set the current limit for Allegro A4982 stepper driver IC using the MCP4451  
-// digi-pot device.
+/**
+   \fn void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps)
+   \brief Set the current limit for Allegro A4982 stepper driver IC using the MCP4451 digi-pot device.
+*/
 void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps) {
     unsigned long WaitForI2CSendTimer = 0;
 	

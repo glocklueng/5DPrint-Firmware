@@ -147,6 +147,7 @@ void EEPROM_StoreSettings()
     EEPROM_write_setting(max_y_motor_current_address, &max_y_motor_current, sizeof(max_y_motor_current));
     EEPROM_write_setting(max_z_motor_current_address, &max_z_motor_current, sizeof(max_z_motor_current));
     EEPROM_write_setting(max_e_motor_current_address, &max_e_motor_current, sizeof(max_e_motor_current));
+    EEPROM_write_setting(stepper_sense_resistance_address, &stepper_sense_resistance, sizeof(stepper_sense_resistance));
 #endif
   
 #if AUTOPRINT > 0
@@ -223,7 +224,8 @@ void EEPROM_printSettings()
     serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF, max_x_motor_current, 
                 max_y_motor_current,
                 max_z_motor_current,
-                max_e_motor_current);
+                max_e_motor_current, 
+                stepper_sense_resistance);
 #endif
 
 #if AUTOPRINT > 0
@@ -299,6 +301,7 @@ void EEPROM_RetrieveSettings(int def, int printout)
             EEPROM_read_setting(max_y_motor_current_address, &max_y_motor_current, sizeof(max_y_motor_current));
             EEPROM_read_setting(max_z_motor_current_address, &max_z_motor_current, sizeof(max_z_motor_current));
             EEPROM_read_setting(max_e_motor_current_address, &max_e_motor_current, sizeof(max_e_motor_current));
+            EEPROM_read_setting(stepper_sense_resistance_address, &stepper_sense_resistance, sizeof(stepper_sense_resistance));
 #endif
 
 #if AUTOPRINT > 0
@@ -342,6 +345,7 @@ void EEPROM_RetrieveSettings(int def, int printout)
             max_y_motor_current = YAXIS_DEFAULT_MAX_CURRENT;
             max_z_motor_current = ZAXIS_DEFAULT_MAX_CURRENT;
             max_e_motor_current = EAXIS_DEFAULT_MAX_CURRENT;
+            stepper_sense_resistance = ALLEGRO_A4982_RS;
 #endif
 
 #if AUTOPRINT > 0

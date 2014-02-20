@@ -70,7 +70,8 @@ extern unsigned long minsegmenttime;
 #define max_y_motor_current_address						  (max_x_motor_current_address + sizeof(unsigned short))
 #define max_z_motor_current_address						  (max_y_motor_current_address + sizeof(unsigned short))
 #define max_e_motor_current_address						  (max_z_motor_current_address + sizeof(unsigned short))
-#define user_max_bed_heater_duty_before_full_pwr_address  (max_e_motor_current_address + sizeof(unsigned short))
+#define stepper_sense_resistance_address			      (max_e_motor_current_address + sizeof(unsigned short))
+#define user_max_bed_heater_duty_before_full_pwr_address  (stepper_sense_resistance_address + sizeof(unsigned char))
 #define user_max_bed_heater_duty_address                  (user_max_bed_heater_duty_before_full_pwr_address + sizeof(unsigned short))
 #define autoprint_enabled_address                         (user_max_bed_heater_duty_address + sizeof(unsigned short))
 

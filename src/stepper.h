@@ -32,7 +32,7 @@
 #define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
 #define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
 
-#define ALLEGRO_A4982_RS				0.12  		// Ohms
+#define ALLEGRO_A4982_RS				0.10  		// Ohms
 // Voltage step = 5 * 2.5 / (2.5 + 4.7) / 256 = 0.0067817
 #define DIGIPOT_VOLTS_PER_STEP			0.0067817	// V/step
 

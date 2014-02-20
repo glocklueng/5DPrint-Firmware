@@ -211,7 +211,8 @@ void I2C_SW_Reset(void)
 unsigned char currentToWiperValue (unsigned short current)
 {
     unsigned char wiperValue;
-    wiperValue = (unsigned char) (( (current/1000.0) * 8 * ALLEGRO_A4982_RS ) / DIGIPOT_VOLTS_PER_STEP);
+    wiperValue = (unsigned char) (( (current/1000.0) * 8 * (stepper_sense_resistance/1000.0) ) 
+                                  / DIGIPOT_VOLTS_PER_STEP);
     if (wiperValue > 0xFF) wiperValue  = 0xFF;
     return wiperValue;
 }

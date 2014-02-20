@@ -122,7 +122,8 @@
    - M610 - Set Extruder Heater Max Current P = 0 - 100%.
 
    - M852 - Enter Boot Loader Command (Requires correct F pass code)
-   - M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
+   - M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700 S100
+   S is the current sense resistance
    - M907 - Set microstep settings for stepper motors. e.g. M906 X16 Y16 Z16 E16
 */
 
@@ -2530,55 +2531,39 @@ void wait_extruder_target_temp(void)
 
 #if DIGIPOTS > 0
     // M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
-    void execute_m906(struct command *cmd)
-    {
-	if (cmd->has_X)
-            {
-		if (cmd->X > 0)
-                    {
-			set_stepper_motors_max_current(X_AXIS, (unsigned short)cmd->X);
-                    }
-		else
-                    {
-			set_stepper_motors_max_current(X_AXIS, 0);
-                    }
-            }
-	
-	if (cmd->has_Y)
-            {
-		if (cmd->Y > 0)
-                    {
-			set_stepper_motors_max_current(Y_AXIS, (unsigned short)cmd->Y);
-                    }
-		else
-                    {
-			set_stepper_motors_max_current(Y_AXIS, 0);
-                    }
-            }
-	
-	if (cmd->has_Z)
-            {
-		if (cmd->Z > 0)
-                    {
-			set_stepper_motors_max_current(Z_AXIS, (unsigned short)cmd->Z);
-                    }
-		else
-                    {
-			set_stepper_motors_max_current(Z_AXIS, 0);
-                    }
-            }
-	
-	if (cmd->has_E)
-            {
-		if (cmd->E > 0)
-                    {
-			set_stepper_motors_max_current(E_AXIS, (unsigned short)cmd->E);
-                    }
-		else
-                    {
-			set_stepper_motors_max_current(E_AXIS, 0);
-                    }
-            }
+    void execute_m906(struct command *cmd){
+    if (cmd->has_S){
+		if (cmd->S == 100 || cmd->S == 120) set_stepper_motors_sense_resistance((unsigned char)cmd->S);
+        else set_stepper_motors_sense_resistance(ALLEGRO_A4982_RS);      
+    }
+	if (cmd->has_X){
+		if (cmd->X > 0) set_stepper_motors_max_current(X_AXIS, (unsigned short)cmd->X);
+		else set_stepper_motors_max_current(X_AXIS, 0);
+    }
+    else{
+        set_stepper_motors_max_current(X_AXIS, max_x_motor_current);
+    }
+	if (cmd->has_Y){
+		if (cmd->Y > 0) set_stepper_motors_max_current(Y_AXIS, (unsigned short)cmd->Y);
+		else set_stepper_motors_max_current(Y_AXIS, 0);
+    }
+    else{
+        set_stepper_motors_max_current(Y_AXIS, max_y_motor_current);
+    }
+	if (cmd->has_Z){
+		if (cmd->Z > 0)	set_stepper_motors_max_current(Z_AXIS, (unsigned short)cmd->Z);
+		else set_stepper_motors_max_current(Z_AXIS, 0);
+    }
+    else{
+        set_stepper_motors_max_current(Z_AXIS, max_z_motor_current);
+    }
+	if (cmd->has_E){
+		if (cmd->E > 0) set_stepper_motors_max_current(E_AXIS, (unsigned short)cmd->E);
+        else set_stepper_motors_max_current(E_AXIS, 0);
+    }
+    else{
+        set_stepper_motors_max_current(E_AXIS, max_e_motor_current);
+    }
 	
 	/* M906 should initate a temprorary change
            and M500 should save the EEPROM Settings
@@ -2591,9 +2576,10 @@ void wait_extruder_target_temp(void)
            }
 	*/
 	serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF, max_x_motor_current, 
-                    max_y_motor_current,
-                    max_z_motor_current,
-                    max_e_motor_current);
+                max_y_motor_current,
+                max_z_motor_current,
+                max_e_motor_current, 
+                stepper_sense_resistance);
     }
 #endif
 

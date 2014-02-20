@@ -185,6 +185,8 @@ unsigned short max_x_motor_current = XAXIS_DEFAULT_MAX_CURRENT;	// mA
 unsigned short max_y_motor_current = YAXIS_DEFAULT_MAX_CURRENT;	// mA
 unsigned short max_z_motor_current = ZAXIS_DEFAULT_MAX_CURRENT;	// mA
 unsigned short max_e_motor_current = EAXIS_DEFAULT_MAX_CURRENT;	// mA
+
+unsigned char stepper_sense_resistance = ALLEGRO_A4982_RS; // m Ohm
 #endif
 
 #if SET_MICROSTEP > 0
@@ -972,5 +974,13 @@ void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps
             && ( millis() - WaitForI2CSendTimer < I2C_TRANSCEIVER_BUSY_TIMEOUT ) ){
         Service_I2C_Master();	// Send I2C message to device
     }
+}
+
+/**
+   \fn void set_stepper_motors_sense_resistance
+   \brief Set the current sense resistance for Allegro A4982 stepper driver
+*/
+void set_stepper_motors_sense_resistance(unsigned char r_value) {
+    stepper_sense_resistance = r_value;
 }
 #endif

@@ -32,7 +32,7 @@
 #define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
 #define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
 
-#define ALLEGRO_A4982_RS				0.10  		// Ohms
+#define ALLEGRO_A4982_RS				100  		//m Ohms
 // Voltage step = 5 * 2.5 / (2.5 + 4.7) / 256 = 0.0067817
 #define DIGIPOT_VOLTS_PER_STEP			0.0067817	// V/step
 
@@ -41,6 +41,8 @@ extern unsigned short max_x_motor_current;
 extern unsigned short max_y_motor_current;
 extern unsigned short max_z_motor_current;
 extern unsigned short max_e_motor_current;
+
+extern unsigned char stepper_sense_resistance;
 #endif
 
 #if SET_MICROSTEP > 0
@@ -87,6 +89,7 @@ void resume_normal_buf_discard_all_buf_moves(void);
 
 #if DIGIPOTS > 0
 void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps);
+void set_stepper_motors_sense_resistance(unsigned char r_value);
 #endif
 
 

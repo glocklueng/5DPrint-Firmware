@@ -49,7 +49,8 @@ uint8_t usb_serial_paritytype();
 uint8_t usb_serial_numbits();
 uint8_t usb_serial_dtr();
 uint8_t usb_serial_rts();
-
+void toggle_usb_led();
+void update_usb_led_status();
 
 // Serial output with printf()-style string formatting.  The version that works
 // with format strings in RAM is straightforward;  we add the GCC format(...)

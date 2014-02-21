@@ -605,15 +605,17 @@ void read_command()
     int16_t bytes_read = -1;
     uint8_t i;
 #endif
+    
+    toggle_usb_led();
 
     while (usb_serial_available() > 0){
 #if (DEBUG > -1)
         PreemptionFlag |= 0x0002;
 #endif
-        
         ch = usb_serial_read();	
         if (ch == ';') ignore_comments = 1;	
-        if ( !(ch < 0 || ch > 255) ){	
+        if ( !(ch < 0 || ch > 255) ){
+            update_usb_led_status();
             if ((ch == '\n' || ch == '\r') || 
                 (ch == ',' && !ignore_comments)){
                 // Newline or comma marks end of this command;  

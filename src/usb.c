@@ -270,7 +270,7 @@
 
 #define USBSTATE __attribute__ ((section (".noinit")))
 
-#define USB_LED_FLASH_INTERVAL  100 // ms
+#define USB_LED_FLASH_INTERVAL  250 // ms
 
 
 /**************************************************************************
@@ -470,16 +470,6 @@ int16_t peek_buf;
 // USB LED
 unsigned char usb_led_status = 0;
 unsigned long previous_millis_usb_led = 0;
-
-
-/**************************************************************************
- *
- *  Private Functions Prototypes - only used inside the module
- *
- **************************************************************************/
-
-void toggle_usb_led(void);
-
 
 /**************************************************************************
  *
@@ -682,7 +672,6 @@ size_t usb_serial_write(const uint8_t *buffer, uint16_t size)
     }
     // each iteration of this loop transmits a packet
     while (size) {
-        //toggle_usb_led();
         // wait for the FIFO to be ready to accept data
         timeout = UDFNUML + TRANSMIT_TIMEOUT;
         while (1) {
@@ -858,12 +847,25 @@ uint8_t usb_serial_rts(void)
  **************************************************************************/
 
 #ifdef USB_LED_PIN
-void toggle_usb_led(void){
-    if (millis() - previous_millis_usb_led > USB_LED_FLASH_INTERVAL){
-        previous_millis_usb_led = millis();
-        usb_led_status = ~usb_led_status;
-        WRITE(USB_LED_PIN, usb_led_status);
+/**
+   \fn void toggle_usb_led(void)
+   \brief Called in makibox.c to toggle usb led when data is received
+ */
+void toggle_usb_led(){
+    if (usb_led_status){
+        if (millis() - previous_millis_usb_led > USB_LED_FLASH_INTERVAL){
+            previous_millis_usb_led = millis();
+            WRITE(USB_LED_PIN, HIGH);
+            usb_led_status = 0;
+        }
+        else if (millis() - previous_millis_usb_led > USB_LED_FLASH_INTERVAL/2)
+            WRITE(USB_LED_PIN, LOW);
     }
+}
+
+void update_usb_led_status(){
+    usb_led_status = 1;
+    toggle_usb_led();
 }
 #endif
 

@@ -29,20 +29,6 @@
 #ifndef TONE_H
 #define TONE_H
 
-#define TIMER2A_CLOCK_FREQ        31250.0       // Hz
-
-// The buzzer on 5DPD8 is rated at 4kHz.
-// Frequency higher than that sounds rough, therefore upper limit is set to 4 kHz
-// Lower frequency tones are alright, lower limit is avoid overflowing the OCR2A register
-#define MAX_BUZZER_FREQUENCY      4000         // Hz
-#define MIN_BUZZER_FREQUENCY      123          // Hz
-
-#define MAX_BUZZER_PERIOD         2000         // ms
-#define MIN_BUZZER_PERIOD         0            // ms
-
-#define ENABLE_BUZZER() TIMSK2 |= (1<<OCIE2A)
-#define DISABLE_BUZZER() TIMSK2 &= ~(1<<OCIE2A)
-
 extern short int BUZZER_F;
 extern short int BUZZER_P;
 

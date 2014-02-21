@@ -35,6 +35,20 @@
 #include "tone.h"
 #include "usb.h" 
 
+// The buzzer on 5DPD8 is rated at 4kHz.
+// Frequency higher than that sounds rough, therefore upper limit is set to 4 kHz
+// Lower frequency tones are alright, lower limit is avoid overflowing the OCR2A register
+#define MAX_BUZZER_FREQUENCY      4000         // Hz
+#define MIN_BUZZER_FREQUENCY      123          // Hz
+
+#define MAX_BUZZER_PERIOD         2000         // ms
+#define MIN_BUZZER_PERIOD         0            // ms
+
+#define TIMER2A_CLOCK_FREQ        31250.0       // Hz
+
+#define ENABLE_BUZZER() TIMSK2 |= (1<<OCIE2A)
+#define DISABLE_BUZZER() TIMSK2 &= ~(1<<OCIE2A)
+
 //------------------------------------------------------------------------
 // Variable Declarations
 // For varaibles used outside this module.
@@ -106,7 +120,7 @@ void buzzer_tone(void){
 void setBuzzerFrequency(void){
     if (BUZZER_F > MAX_BUZZER_FREQUENCY) BUZZER_F = MAX_BUZZER_FREQUENCY;
     else if (BUZZER_F < MIN_BUZZER_FREQUENCY) BUZZER_F = MIN_BUZZER_FREQUENCY;
-    OCR2A = (int) (TIMER2A_CLOCK_FREQ / BUZZER_F) - 1;
+    OCR2A = (int) (TIMER2A_CLOCK_FREQ / BUZZER_F);
 }
 
 ISR(TIMER2_COMPA_vect){

@@ -214,6 +214,9 @@
 // Additional lines for autoprint
 #define TXT_M31_AUTOPRINT_ENABLED_CRLF                          "Autoprint from SD card is enabled!\n"
 #define TXT_M31_AUTOPRINT_DISABLED_CRLF                         "Autoprint from SD card is disabled!\n"
+#define TXT_START_AUTOPRINT_CRLF                                "SD card inserted, Start autoprint now!\n"
+#define TXT_END_AUTOPRINT_CRLF                                  "SD card removed, Autoprint ended!\n"
+
 // End of (LANGUAGE == 0), ENGLISH
 
 #else

@@ -30,6 +30,7 @@
 #include "makibox.h"
 #include "usb.h"
 #include "language.h"
+#include "pins_teensy.h"
 #include <string.h>
 #include <ctype.h>
 
@@ -135,7 +136,11 @@ void autoprint(){
     case 3:
         // Finish a print and waiting for card being swapped
         // Or error reported, waiting for new SD card
-        if (!sd_raw_available()) SDAutoPrintStatus = 0;
+        if (!sd_raw_available()) {
+            SDAutoPrintStatus = 0;
+            delay(1000); // For debouncing
+            serial_send(TXT_END_AUTOPRINT_CRLF);
+        }
         break;    
     default:
         SDAutoPrintStatus = 0;
@@ -152,6 +157,7 @@ void autoprint(){
 
 */
 void startSDprint(){
+    serial_send(TXT_START_AUTOPRINT_CRLF);
     sdcard_fd->pos = 0;   // Reset file position
     process_command("M24");  // Start print
 }

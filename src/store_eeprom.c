@@ -41,7 +41,6 @@
 #include "language.h"
 #include "stepper.h"
 #include "heater.h"
-#include "autoprint.h"
 
 #ifdef PIDTEMP
 //extern unsigned int PID_Kp, PID_Ki, PID_Kd;
@@ -149,10 +148,6 @@ void EEPROM_StoreSettings()
     EEPROM_write_setting(max_e_motor_current_address, &max_e_motor_current, sizeof(max_e_motor_current));
     EEPROM_write_setting(stepper_sense_resistance_address, &stepper_sense_resistance, sizeof(stepper_sense_resistance));
 #endif
-  
-#if AUTOPRINT > 0
-    EEPROM_write_setting(autoprint_enabled_address, &autoprint_enabled, sizeof(autoprint_enabled));
-#endif
 
     unsigned short checksum = EEPROM_Checksum();
     EEPROM_write_setting(EEPROM_CHECKSUM_ADDR, &checksum, sizeof(checksum));
@@ -228,11 +223,6 @@ void EEPROM_printSettings()
                 stepper_sense_resistance);
 #endif
 
-#if AUTOPRINT > 0
-    if (autoprint_enabled == 1) serial_send(TXT_M31_AUTOPRINT_ENABLED_CRLF);
-    else if (autoprint_enabled == 0) serial_send(TXT_M31_AUTOPRINT_DISABLED_CRLF);
-#endif
-
 #else
     serial_send(TXT_PRINTING_OF_EEPROM_SETTINGS_DISABLED_CRLF);
 #endif	// #ifdef PRINT_EEPROM_SETTINGS
@@ -304,10 +294,6 @@ void EEPROM_RetrieveSettings(int def, int printout)
             EEPROM_read_setting(stepper_sense_resistance_address, &stepper_sense_resistance, sizeof(stepper_sense_resistance));
 #endif
 
-#if AUTOPRINT > 0
-            EEPROM_read_setting(autoprint_enabled_address, &autoprint_enabled, sizeof(autoprint_enabled));
-#endif
-
             serial_send(TXT_STORED_SETTINGS_RETRIEVED_CRLF);
         }
     else 
@@ -348,9 +334,6 @@ void EEPROM_RetrieveSettings(int def, int printout)
             stepper_sense_resistance = ALLEGRO_A4982_RS;
 #endif
 
-#if AUTOPRINT > 0
-            autoprint_enabled = AUTOPRINT_DEFAULT_ENABLED;
-#endif
             serial_send(TXT_USING_DEFAULT_SETTINGS_CRLF);
         }
     

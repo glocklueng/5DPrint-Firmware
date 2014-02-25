@@ -2539,33 +2539,26 @@ void wait_extruder_target_temp(void)
         else set_stepper_motors_sense_resistance(ALLEGRO_A4982_RS);      
     }
 	if (cmd->has_X){
-		if (cmd->X > 0) set_stepper_motors_max_current(X_AXIS, (unsigned short)cmd->X);
-		else set_stepper_motors_max_current(X_AXIS, 0);
-    }
-    else{
-        set_stepper_motors_max_current(X_AXIS, max_x_motor_current);
+		if (cmd->X > 0) max_x_motor_current = (unsigned short)cmd->X;
+		else max_x_motor_current = 0;
     }
 	if (cmd->has_Y){
-		if (cmd->Y > 0) set_stepper_motors_max_current(Y_AXIS, (unsigned short)cmd->Y);
-		else set_stepper_motors_max_current(Y_AXIS, 0);
-    }
-    else{
-        set_stepper_motors_max_current(Y_AXIS, max_y_motor_current);
+		if (cmd->Y > 0) max_y_motor_current = (unsigned short)cmd->Y;
+		else max_y_motor_current = 0;
     }
 	if (cmd->has_Z){
-		if (cmd->Z > 0)	set_stepper_motors_max_current(Z_AXIS, (unsigned short)cmd->Z);
-		else set_stepper_motors_max_current(Z_AXIS, 0);
-    }
-    else{
-        set_stepper_motors_max_current(Z_AXIS, max_z_motor_current);
+		if (cmd->Z > 0)max_z_motor_current = (unsigned short)cmd->Z;
+		else max_z_motor_current = 0;
     }
 	if (cmd->has_E){
-		if (cmd->E > 0) set_stepper_motors_max_current(E_AXIS, (unsigned short)cmd->E);
-        else set_stepper_motors_max_current(E_AXIS, 0);
+		if (cmd->E > 0) max_e_motor_current = (unsigned short)cmd->E;
+        else max_e_motor_current = 0;
     }
-    else{
-        set_stepper_motors_max_current(E_AXIS, max_e_motor_current);
-    }
+    
+    set_stepper_motors_max_current(X_AXIS, max_x_motor_current);
+    set_stepper_motors_max_current(Y_AXIS, max_y_motor_current);
+    set_stepper_motors_max_current(Z_AXIS, max_z_motor_current);
+    set_stepper_motors_max_current(E_AXIS, max_e_motor_current);
 	
 	/* M906 should initate a temprorary change
            and M500 should save the EEPROM Settings

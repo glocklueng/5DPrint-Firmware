@@ -946,22 +946,18 @@ void set_stepper_motors_max_current(unsigned char Axis, unsigned short MilliAmps
     switch (Axis) {
     case X_AXIS:
         I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER0_ADDR, MilliAmps);
-        max_x_motor_current = MilliAmps;
         break;
 		
     case Y_AXIS:
         I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER1_ADDR, MilliAmps);
-        max_y_motor_current = MilliAmps;
         break;
 		
     case Z_AXIS:
         I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER2_ADDR, MilliAmps);
-        max_z_motor_current = MilliAmps;
         break;
 		
     case E_AXIS:
         I2C_digipots_set_wiper(I2C_DIGIPOT_VOL_WIPER3_ADDR, MilliAmps);
-        max_e_motor_current = MilliAmps;
         break;
 		
     default:

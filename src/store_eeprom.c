@@ -42,6 +42,7 @@
 #include "stepper.h"
 #include "heater.h"
 #include "autoprint.h"
+#include "i2c/Master_I2C_Comms.h"
 
 #ifdef PIDTEMP
 //extern unsigned int PID_Kp, PID_Ki, PID_Kd;
@@ -302,6 +303,7 @@ void EEPROM_RetrieveSettings(int def, int printout)
             EEPROM_read_setting(max_z_motor_current_address, &max_z_motor_current, sizeof(max_z_motor_current));
             EEPROM_read_setting(max_e_motor_current_address, &max_e_motor_current, sizeof(max_e_motor_current));
             EEPROM_read_setting(stepper_sense_resistance_address, &stepper_sense_resistance, sizeof(stepper_sense_resistance));
+            I2C_digipots_set_defaults();
 #endif
 
 #if AUTOPRINT > 0
@@ -346,6 +348,7 @@ void EEPROM_RetrieveSettings(int def, int printout)
             max_z_motor_current = ZAXIS_DEFAULT_MAX_CURRENT;
             max_e_motor_current = EAXIS_DEFAULT_MAX_CURRENT;
             stepper_sense_resistance = ALLEGRO_A4982_RS;
+            I2C_digipots_set_defaults();
 #endif
 
 #if AUTOPRINT > 0

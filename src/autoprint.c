@@ -100,6 +100,7 @@ void autoprint(){
     case 0:
         // Check whether are SD card and valid file
         if ( sd_raw_available() ){
+            delay(1000);
             sdcard_initialise();
             if (autoPrintFindFile()){
                 if (autoPrintFileCheck()){	  
@@ -157,7 +158,6 @@ void autoprint(){
 
 */
 void startSDprint(){
-    serial_send(TXT_START_AUTOPRINT_CRLF);
     sdcard_fd->pos = 0;   // Reset file position
     process_command("M24");  // Start print
 }
@@ -186,6 +186,7 @@ void finishSDprint(){
 
 */
 void autoPrintSuccess(){
+    serial_send(TXT_START_AUTOPRINT_CRLF);
 #ifdef MAKIBOX_5DPD8
     process_command("M300 F100 P1000");
 #endif
@@ -208,6 +209,7 @@ void autoPrintSuccess(){
 
 */
 void autoPrintError(){
+    serial_send(TXT_ERROR_AUTOPRINT_CRLF);
 #ifdef MAKIBOX_5DPD8
     process_command("M300 F4000 P1000");
 #endif
@@ -333,9 +335,9 @@ uint8_t autoPrintFileNameCheck(const char *long_name){
     char ch;
     int16_t pos = -1;
     char tmp_filename[64] = "";
-    strcpy(tmp_filename, long_name);
     while ((ch = long_name[++pos]) != '\0') tmp_filename[pos] = tolower(ch);
-    if (strcmp(autoprint_filename1, tmp_filename) || strcmp(autoprint_filename2, tmp_filename) ){
+
+    if (!strcmp(autoprint_filename1, tmp_filename) || !strcmp(autoprint_filename2, tmp_filename)){
         strcpy(autoprint_filename, long_name);
         //serial_send(TXT_STR, tmp_filename);
         //serial_send(TXT_STR, autoprint_filename);

@@ -216,6 +216,7 @@
 #define TXT_M31_AUTOPRINT_DISABLED_CRLF                         "Autoprint from SD card is disabled!\n"
 #define TXT_START_AUTOPRINT_CRLF                                "SD card inserted, Start autoprint now!\n"
 #define TXT_END_AUTOPRINT_CRLF                                  "SD card removed, Autoprint ended!\n"
+#define TXT_ERROR_AUTOPRINT_CRLF                                "SD card error, cannot find autoprint file\n"
 
 // End of (LANGUAGE == 0), ENGLISH
 

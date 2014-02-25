@@ -73,9 +73,10 @@ extern unsigned long minsegmenttime;
 #define stepper_sense_resistance_address			      (max_e_motor_current_address + sizeof(unsigned short))
 #define user_max_bed_heater_duty_before_full_pwr_address  (stepper_sense_resistance_address + sizeof(unsigned char))
 #define user_max_bed_heater_duty_address                  (user_max_bed_heater_duty_before_full_pwr_address + sizeof(unsigned short))
+#define autoprint_enabled_address                         (user_max_bed_heater_duty_address + sizeof(unsigned short))
 
 #define EEPROM_START_ADDR		EEPROM_OFFSET
-#define EEPROM_END_ADDR			(user_max_bed_heater_duty_address + sizeof(unsigned short))
+#define EEPROM_END_ADDR			(autoprint_enabled_address + sizeof(unsigned char))
 #define EEPROM_CHECKSUM_ADDR	EEPROM_END_ADDR
 
 extern void EEPROM_RetrieveSettings(int def, int printout);

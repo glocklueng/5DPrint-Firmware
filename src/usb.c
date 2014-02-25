@@ -762,6 +762,8 @@ void usb_serial_printf(const char *fmt, ...)
     int size;
     va_list args;
 
+    update_usb_led_status();
+
     va_start(args, fmt);
     size = vsnprintf(buf, 128, fmt, args);
     va_end(args);
@@ -778,6 +780,8 @@ void usb_serial_printf_P(PGM_P fmt, ...)
     char buf[128];
     int size;
     va_list args;
+
+    update_usb_led_status();
 
     va_start(args, fmt);
     size = vsnprintf_P(buf, 128, fmt, args);

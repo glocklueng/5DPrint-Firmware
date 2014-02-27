@@ -1,10 +1,9 @@
-
 /*
  * Copyright (c) 2006-2012 by Roland Riegel <feedback@roland-riegel.de>
  *
  * This file is free software; you can redistribute it and/or modify
- * it under the terms of either the GNU General Public License version 2
- * or the GNU Lesser General Public License version 2.1, both as
+ * it under the terms of either the GNU General Public License version 3
+ * or (at your option) any later version, both as
  * published by the Free Software Foundation.
  */
 

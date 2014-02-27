@@ -1,7 +1,7 @@
 /*
   5D Print Firmware
   ---
-  Copyright (c) 2012-2013 by Makible Limited.
+  Copyright (c) 2012-2014 by Makible Limited.
  
   This file is part of the 5D Print Firmware.
  

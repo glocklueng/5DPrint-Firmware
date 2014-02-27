@@ -3,7 +3,7 @@
    Based on Sprinter (master branch, 1 Sep 2012).
    Designed for Printrboard (Rev B) and 5D Print D8 Dirver Board.
    ---
-   Copyright (c) 2012-2013 by Makible Limited.
+   Copyright (c) 2012-2014 by Makible Limited.
  
    This file is part of the 5D Print Firmware.
  

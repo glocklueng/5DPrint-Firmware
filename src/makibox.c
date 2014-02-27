@@ -331,7 +331,7 @@ void setup()
     MCUCR |= (1 << JTD);
 
     usb_serial_begin(); 
-    serial_send(TXT_MAKIBOX_VER_STARTED_CRLF, VERSION_TEXT);
+    serial_send(TXT_5DPRINT_VER_STARTED_CRLF, VERSION_TEXT);
   
     //Initialize Dir Pins
 #if X_DIR_PIN > -1
@@ -1641,7 +1641,7 @@ void execute_mcode(struct command *cmd) {
     case 115: // M115
         serial_send(TXT_FIRMWARE_NAME_STR_CRLF);
         serial_send("00000000-0000-0000-0000-000000000000\r\n");
-        serial_send(TXT_MAKIBOX_FIRMWARE_VERSION_STR_CRLF, VERSION_TEXT);
+        serial_send(TXT_5DPRINT_FIRMWARE_VERSION_STR_CRLF, VERSION_TEXT);
         break;
 		
     case 114: // M114
@@ -1836,7 +1836,7 @@ void execute_mcode(struct command *cmd) {
         break;  
 #endif      
     case 603: // M603 - Free RAM
-        serial_send(TXT_MAKIBOX_FIRMWARE_VERSION_STR_CRLF, VERSION_TEXT);
+        serial_send(TXT_5DPRINT_FIRMWARE_VERSION_STR_CRLF, VERSION_TEXT);
         serial_send(TXT_FREE_RAM_CRLF, FreeRam1());
         break;
 	  
@@ -1884,7 +1884,7 @@ void execute_mcode(struct command *cmd) {
         break;
 	  
     case 608: // M608
-        serial_send(TXT_MAKIBOX_FIRMWARE_VERSION_STR_CRLF, VERSION_TEXT);
+        serial_send(TXT_5DPRINT_FIRMWARE_VERSION_STR_CRLF, VERSION_TEXT);
         break;
 	  
     case 610:	// M610 - Set Extruder Heater Max Current P = 0 - 100%.
@@ -1896,7 +1896,7 @@ void execute_mcode(struct command *cmd) {
             {
                 if (cmd->F == BOOTLOADER_PASSCODE)
                     {
-                        serial_send(TXT_CRLF_MAKIBOX_BOOTLOADER_CRLF);
+                        serial_send(TXT_CRLF_5DPRINT_BOOTLOADER_CRLF);
                         serial_send(TXT_ENTERING_BOOTLOADER_CRLF);
                         serial_send(TXT_EXISTING_USB_CONN_WILL_BE_DISCONNECTED_CRLF);
                         serial_send(TXT_PLEASE_DISCONNECT_N_CLOSE_HOST_SW_CRLF_CRLF);
@@ -1909,14 +1909,14 @@ void execute_mcode(struct command *cmd) {
                     }
                 else
                     {
-                        serial_send(TXT_CRLF_MAKIBOX_BOOTLOADER_CRLF);
+                        serial_send(TXT_CRLF_5DPRINT_BOOTLOADER_CRLF);
                         serial_send(TXT_CANNOT_ENTER_BOOTLOADER_INCORRECT_PASSCODE_CRLF);
                         serial_send(TXT_PLEASE_TRY_AGAIN_WITH_CORRECT_PASSCODE_CRLF);
                     }
             }
         else
             {
-                serial_send(TXT_CRLF_MAKIBOX_BOOTLOADER_CRLF);
+                serial_send(TXT_CRLF_5DPRINT_BOOTLOADER_CRLF);
                 serial_send(TXT_CANNOT_ENTER_BOOTLOADER_PASSCODE_NOT_FOUND_CRLF);
                 serial_send(TXT_PLEASE_TRY_AGAIN_WITH_CORRECT_PASSCODE_CRLF);
             }

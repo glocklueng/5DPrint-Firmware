@@ -26,8 +26,8 @@
 */
 
 #include "config.h"
-#include "sdcard/makibox_sdcard.h"
-#include "makibox.h"
+#include "sdcard/5dprint_sdcard.h"
+#include "5dprint.h"
 #include "usb.h"
 #include "language.h"
 #include "pins_teensy.h"
@@ -187,7 +187,7 @@ void finishSDprint(){
 */
 void autoPrintSuccess(){
     serial_send(TXT_START_AUTOPRINT_CRLF);
-#ifdef MAKIBOX_5DPD8
+#ifdef _5DPD8
     process_command("M300 F100 P1000");
 #endif
 #ifdef PRINTRBOARD_REVB
@@ -210,7 +210,7 @@ void autoPrintSuccess(){
 */
 void autoPrintError(){
     serial_send(TXT_ERROR_AUTOPRINT_CRLF);
-#ifdef MAKIBOX_5DPD8
+#ifdef _5DPD8
     process_command("M300 F4000 P1000");
 #endif
 #ifdef PRINTRBOARD_REVB

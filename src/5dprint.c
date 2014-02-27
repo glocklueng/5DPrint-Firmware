@@ -21,7 +21,7 @@
   along with the 5D Print Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \file makibox.c
+   \file 5dprint.c
    \brief Handles all the commands, setup routine and main loop
 */
 
@@ -138,13 +138,13 @@
 #include "board_io.h"
 #include "pins.h"
 #include "pins_teensy.h"
-#include "makibox.h"
+#include "5dprint.h"
 #include "heater.h"
 #include "usb.h"
 #include "command.h"
 #include "planner.h"
 #include "stepper.h"
-#include "sdcard/makibox_sdcard.h"
+#include "sdcard/5dprint_sdcard.h"
 #include "language.h"
 #include "tone.h"
 #include "autoprint.h"
@@ -504,7 +504,7 @@ void setup()
     DDRB &= ~(1 << DDB7);         // Configure card detect pin
     PORTB |= (1 << PINB7);        // Enable pull-up resistor
 #endif
-#ifdef MAKIBOX_5DPD8
+#ifdef _5DPD8
     DDRE &= ~(1 << DDE3);         // Configure card detect pin
     PORTE |= (1 << PINE3);        // Enable pull-up resistor
 #endif   

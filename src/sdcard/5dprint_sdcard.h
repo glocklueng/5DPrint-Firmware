@@ -20,12 +20,12 @@
   along with the 5D Print Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \file makibox_sdcard.h
-   \brief Header file for makibox_sdcard.c
+   \file 5dprint_sdcard.h
+   \brief Header file for 5dprint_sdcard.c
    
  */
-#ifndef MAKIBOX_SDCARD_H
-#define MAKIBOX_SDCARD_H
+#ifndef _5DPRINT_SDCARD_H
+#define _5DPRINT_SDCARD_H
 
 // Roland Riegel SD Card library includes
 #include "../sdcard/fat.h"
@@ -62,4 +62,4 @@ uint8_t sdcard_delete_file(const char* filename);
 	
 #endif // SDSUPPORT
 
-#endif // MAKIBOX_SDCARD_H
+#endif // _5DPRINT_SDCARD_H

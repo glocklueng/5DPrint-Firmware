@@ -26,7 +26,7 @@
    
  */
 
-#ifdef MAKIBOX_5DPD8
+#ifdef _5DPD8
 
 /****************************************************************************************
  * Makibox 5DPD8 v0.12 pin assingments (ATMEGA90USB1286)

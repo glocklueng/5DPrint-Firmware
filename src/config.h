@@ -342,7 +342,7 @@
 #ifdef PRINTRBOARD_REVB
 #define SDSUPPORT			0
 #endif
-#ifdef MAKIBOX_5DPD8
+#ifdef _5DPD8
 #define SDSUPPORT			1
 #endif
 
@@ -380,7 +380,7 @@
 #endif
 
 
-#ifdef MAKIBOX_5DPD8
+#ifdef _5DPD8
 // Set to 0 to disable Digi-Pot support
 // Set to 1 to enable Digi-Pot support
 #define DIGIPOTS			1

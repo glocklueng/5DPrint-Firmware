@@ -21,12 +21,12 @@
   along with the 5D Print Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \file makibox.h
+   \file 5dprint.h
    \brief Header file for makibox.c
    
  */
-#ifndef _MAKIBOX_H_
-#define _MAKIBOX_H_
+#ifndef _5DPRINT_H_
+#define _5DPRINT_H_
 
 // A bug in avr-gcc causes spurious warnings when printing a float value:
 //   warning: format ‘%f’ expects type ‘double’, but argument 2 has type ‘float’
@@ -64,4 +64,4 @@ void process_command(const char *cmdstr);
 extern unsigned char sdcard_print;
 #endif
 
-#endif // _MAKIBOX_H_
+#endif // _5DPRINT_H_

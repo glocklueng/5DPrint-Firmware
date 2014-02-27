@@ -20,8 +20,8 @@
   along with the 5D Print Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \file makibox_sdcard.c
-   \brief Makibox SD card handler
+   \file 5dprint_sdcard.c
+   \brief 5D Print SD card handler
    
  */
 
@@ -31,7 +31,7 @@
 
 #include <string.h>
 
-#include "../sdcard/makibox_sdcard.h"
+#include "../sdcard/5dprint_sdcard.h"
 #include "../usb.h"
 #include "../language.h"
 

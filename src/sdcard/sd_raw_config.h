@@ -116,7 +116,7 @@ extern "C"
 #define configure_pin_sck() 			DDRB |= (1 << PINB1)
 #define configure_pin_miso() 			DDRB &= ~(1 << PINB3)
 
-#ifdef MAKIBOX_5DPD8
+#ifdef _5DPD8
 #define configure_pin_ss() 		        DDRB |= (1 << PINB0)
 #define select_card() 			        PORTB &= ~(1 << PINB0)
 #define unselect_card() 		        PORTB |= (1 << PINB0)
@@ -138,7 +138,7 @@ extern "C"
 #error "no sd/mmc pin mapping available!"
 #endif
 
-#ifdef MAKIBOX_5DPD8
+#ifdef _5DPD8
 #define configure_pin_available()  DDRE &= ~(1 << DDE3)
 #define configure_pin_locked() 					// No lock or write-protect pin
 

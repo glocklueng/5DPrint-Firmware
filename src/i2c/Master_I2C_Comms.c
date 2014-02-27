@@ -209,6 +209,7 @@ void I2C_SW_Reset(void)
         (0<<TWWC);                                 
 }
 
+#if DIGIPOTS > 0
 unsigned char currentToWiperValue (unsigned short current)
 {
     unsigned char wiperValue;
@@ -218,7 +219,6 @@ unsigned char currentToWiperValue (unsigned short current)
     return wiperValue;
 }
 
-#if DIGIPOTS > 0
 void I2C_digipots_set_defaults(void)
 {
     if (!I2C_Locked)

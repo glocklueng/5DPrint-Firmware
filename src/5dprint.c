@@ -605,8 +605,10 @@ void read_command()
     int16_t bytes_read = -1;
     uint8_t i;
 #endif
-    
+
+#ifdef USB_LED_PIN
     toggle_usb_led();
+#endif
 
     while (usb_serial_available() > 0){
 #if (DEBUG > -1)
@@ -615,7 +617,9 @@ void read_command()
         ch = usb_serial_read();	
         if (ch == ';') ignore_comments = 1;	
         if ( !(ch < 0 || ch > 255) ){
+#ifdef USB_LED_PIN
             update_usb_led_status();
+#endif
             if ((ch == '\n' || ch == '\r') || 
                 (ch == ',' && !ignore_comments)){
                 // Newline or comma marks end of this command;  

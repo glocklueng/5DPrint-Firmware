@@ -762,7 +762,9 @@ void usb_serial_printf(const char *fmt, ...)
     int size;
     va_list args;
 
+#ifdef USB_LED_PIN
     update_usb_led_status();
+#endif
 
     va_start(args, fmt);
     size = vsnprintf(buf, 128, fmt, args);
@@ -781,7 +783,9 @@ void usb_serial_printf_P(PGM_P fmt, ...)
     int size;
     va_list args;
 
+#ifdef USB_LED_PIN
     update_usb_led_status();
+#endif
 
     va_start(args, fmt);
     size = vsnprintf_P(buf, 128, fmt, args);

@@ -28,7 +28,7 @@ F_CPU=16000000
 				 sdcard/byteordering.o sdcard/fat.o sdcard/partition.o \
 				 sdcard/sd_raw.o sdcard/5dprint_sdcard.o \
 				 i2c/TWI_Master.o i2c/Master_I2C_Comms.o \
-				 tone.o autoprint.o
+				 tone.o autoprint.o gpio.o
 
 
 CC=avr-gcc

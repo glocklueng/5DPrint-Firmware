@@ -149,10 +149,13 @@
 #include "tone.h"
 #include "autoprint.h"
 
+#if GPIO > 0
+#include "gpio.h"
+#endif
+
 #if DIGIPOTS > 0
 #include "i2c/Master_I2C_Comms.h"
 #endif
-
 
 #ifdef USE_ARC_FUNCTION
 #include "arc_func.h"
@@ -546,6 +549,11 @@ void setup()
     updatePID();
 #endif
   
+#if GPIO > 0
+    // Set all GPIO pins as output and drive low by default
+    setupGPIO();
+#endif
+
     //Free Ram
     serial_send(TXT_FREE_RAM_CRLF, FreeRam1());
   
@@ -1967,6 +1975,13 @@ void execute_mcode(struct command *cmd) {
 #if SET_MICROSTEP > 0
     case 907: // M907 Set microstep settings for stepper motors
         execute_m907(cmd);
+        break;
+#endif
+#ifdef GPIO
+    case 908: // M908 Set GPIO pins
+        if(cmd->has_P && cmd->has_S){
+            writeGPIO((uint8_t)cmd->P, (uint8_t)cmd->S);
+        }
         break;
 #endif
 

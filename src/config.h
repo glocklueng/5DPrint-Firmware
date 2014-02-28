@@ -377,6 +377,10 @@
 // Set to 0 to disable AUTOPRINT support
 // Set to 1 to enable AUTOPRINT support
 #define AUTOPRINT 0
+
+// Set to 0 to disable GPIO support
+// Set to 1 to enable GPIO support
+#define GPIO 0
 #endif
 
 
@@ -396,6 +400,10 @@
 // Set to 0 to disable AUTOPRINT support
 // Set to 1 to enable AUTOPRINT support
 #define AUTOPRINT 1
+
+// Set to 0 to disable GPIO support
+// Set to 1 to enable GPIO support
+#define GPIO 1
 #endif
 
 // Note that accuracy is limited by resolution of the digi-pot.

@@ -125,6 +125,7 @@
    - M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700 S100
    S is the current sense resistance
    - M907 - Set microstep settings for stepper motors. e.g. M906 X16 Y16 Z16 E16
+   - M908 - Set GPIO pins e.g. M908 P1 S1
 */
 
 #include <avr/interrupt.h>
@@ -216,7 +217,7 @@ void execute_m907(struct command *cmd);
 #define CRITICAL_SECTION_END    SREG = _sreg
 #endif //CRITICAL_SECTION_START
 
-static const char VERSION_TEXT[] = "2.20.31 / 27.2.2014";
+static const char VERSION_TEXT[] = "2.20.32 / 28.2.2014";
 
 #ifdef PIDTEMP
 unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;

@@ -6,6 +6,17 @@ Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
 --------------------------
+DATE: 	28 February 2014
+AUTHOR:	CJM LAI
+	Makible Limited	
+	www.makibox.com
+--------------------------
+Version 2.20.32
+
+Add new command M908 to control GPIO pins
+GPIO pins are configured as output and driven low by default.
+
+--------------------------
 DATE: 	27 February 2014
 AUTHOR:	CJM LAI
 	Makible Limited	

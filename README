@@ -1,4 +1,4 @@
-5D Print Firmware
+5DPrint Firmware
 ===================
 
 This is the firmware that powers the Makible printers (currently, the Makibox
@@ -11,16 +11,16 @@ version of the license and to find older versions of the GNU GPL licenses.
 
 Copyright (c) 2012-2014 by Makible Limited.
  
-This file is part of the 5D Print Firmware.
+This file is part of the 5DPrint Firmware.
  
-5D Print Firmware is free software: you can redistribute it and/or modify it 
+5DPrint Firmware is free software: you can redistribute it and/or modify it 
 under the terms of the GNU General Public License as published by the Free 
 Software Foundation, either version 3 of the License, or (at your option) any 
 later version.
  
-5D Print Firmware is distributed in the hope that it will be useful, but WITHOUT ANY 
+5DPrint Firmware is distributed in the hope that it will be useful, but WITHOUT ANY 
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with 
-the 5D Print Firmware.  If not, see <http://www.gnu.org/licenses/>.
+the 5DPrint Firmware.  If not, see <http://www.gnu.org/licenses/>.

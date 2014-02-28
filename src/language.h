@@ -1,22 +1,22 @@
 /*
-  5D Print Firmware
+  5DPrint Firmware
   ---
   Copyright (c) 2012-2014 by Makible Limited.
  
-  This file is part of the 5D Print Firmware.
+  This file is part of the 5DPrint Firmware.
  
-  5D Print Firmware is free software: you can redistribute it and/or modify
+  5DPrint Firmware is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
  
-  The 5D Print Firmware is distributed in the hope that it will be useful,
+  The 5DPrint Firmware is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
  
   You should have received a copy of the GNU General Public License
-  along with the 5D Print Firmware.  If not, see <http://www.gnu.org/licenses/>.
+  along with the 5DPrint Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
    \file language.h
@@ -66,7 +66,7 @@
 #define TXT_PID_SETTINGS_CRLF_M301_P_I_D_CRLF					"PID settings:\r\n  M301 P%d I%d D%d\r\n"
 
 // Serial
-#define TXT_5DPRINT_VER_STARTED_CRLF							"/" "/ 5D Print %s started.\r\n"
+#define TXT_5DPRINT_VER_STARTED_CRLF							"/" "/ 5DPrint %s started.\r\n"
 #define TXT_OK_T_AT_DUTY_CRLF									"ok T:%f @:%d\r\n"									// *** Host / System Text String
 #define TXT_OK_T_INT											"ok T:%d"											// *** Host / System Text String
 #define TXT_OK_SEQNUM_Q_MS_EXECUTE_CRLF							"ok %ld Q%d (%lums execute)\r\n"					// *** Host / System Text String
@@ -208,8 +208,8 @@
 #define TXT_RS_SEQNUM_INCORRECT_CHECKSUM_SHOULD_BE_CRLF			"rs %ld (incorrect checksum - should be %u)\r\n"	// *** Host / System Text String
 #define TXT_RS_SEQNUM_COMMAND_CODE_MISSING_CRLF					"rs %ld (command code missing): %s\r\n"				// *** Host / System Text String
 #define TXT_RS_SEQNUM_COMMAND_CODE_OUT_OF_RANGE_CRLF			"rs %ld (command code out of range)\r\n"			// *** Host / System Text String
-#define TXT_FIRMWARE_NAME_STR_CRLF								"FIRMWARE_NAME: 5D Print PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel EXTRUDER_COUNT:1\r\n"
-#define TXT_5DPRINT_FIRMWARE_VERSION_STR_CRLF					"/" "/ 5D Print Firmware Version: %s\r\n"
+#define TXT_FIRMWARE_NAME_STR_CRLF								"FIRMWARE_NAME: 5DPrint PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel EXTRUDER_COUNT:1\r\n"
+#define TXT_5DPRINT_FIRMWARE_VERSION_STR_CRLF					"/" "/ 5DPrint Firmware Version: %s\r\n"
 #define TXT_LAST_TIMER1_COMPA_VECT_ISR_EXE_TIME_LU_US_CRLF		"/" "/ Last TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n"
 #define TXT_MIN_TIMER1_COMPA_VECT_ISR_EXE_TIME_LU_US_CRLF		"/" "/ MIN TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n"
 #define TXT_MAX_TIMER1_COMPA_VECT_ISR_EXE_TIME_LU_US_CRLF		"/" "/ MAX TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n"
@@ -220,7 +220,7 @@
 #define TXT_AVERAGE_CPU_LOAD_INT_PERCENT_CRLF					"/" "/ Average CPU Load: 	%d %%\r\n"
 #define TXT_CPU_LOADING_INFO_NOT_AVAIL_IN_THIS_VER_CRLF			"/"	"/ CPU loading info not available in this version of firmware.\r\n"
 #define TXT_PEAK_N_AVERAGE_CPU_LOAD_VALUES_RESET_CRLF			"/"	"/ Peak and Average CPU Load Values Reset.\r\n"
-#define TXT_CRLF_5DPRINT_BOOTLOADER_CRLF						"\r\n/" "/ 5D Print Bootloader\r\n"
+#define TXT_CRLF_5DPRINT_BOOTLOADER_CRLF						"\r\n/" "/ 5DPrint Bootloader\r\n"
 #define TXT_ENTERING_BOOTLOADER_CRLF							"/" "/ ENTERING BOOTLOADER...\r\n"
 #define TXT_CANNOT_ENTER_BOOTLOADER_INCORRECT_PASSCODE_CRLF		"/" "/ *** CAN NOT Enter Bootloader - Incorrect Pass Code!\r\n"
 #define TXT_PLEASE_TRY_AGAIN_WITH_CORRECT_PASSCODE_CRLF			"/" "/ Please try again with correct pass code.\r\n\r\n"

@@ -1978,7 +1978,7 @@ void execute_mcode(struct command *cmd) {
         execute_m907(cmd);
         break;
 #endif
-#ifdef GPIO
+#if GPIO > 0
     case 908: // M908 Set GPIO pins
         if(cmd->has_P && cmd->has_S){
             writeGPIO((uint8_t)cmd->P, (uint8_t)cmd->S);

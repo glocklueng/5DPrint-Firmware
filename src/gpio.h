@@ -21,5 +21,7 @@
   along with the 5DPrint Firmware.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if GPIO > 0
 void setupGPIO();
 void writeGPIO(uint8_t pin, uint8_t value);
+#endif

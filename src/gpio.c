@@ -26,6 +26,7 @@
 #include "gpio.h"
 #include "config.h"       
 
+#if GPIO > 0
 /**
    \fn void setupGPIO()
    \brief Set up GPIO pins as output and driving them low
@@ -101,3 +102,5 @@ void writeGPIO(uint8_t pin, uint8_t value){
         break;
     }
 }
+
+#endif 

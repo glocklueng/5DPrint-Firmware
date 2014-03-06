@@ -209,7 +209,13 @@
 #define TXT_RS_SEQNUM_COMMAND_CODE_MISSING_CRLF					"rs %ld (command code missing): %s\r\n"				// *** Host / System Text String
 #define TXT_RS_SEQNUM_COMMAND_CODE_OUT_OF_RANGE_CRLF			"rs %ld (command code out of range)\r\n"			// *** Host / System Text String
 #define TXT_FIRMWARE_NAME_STR_CRLF								"FIRMWARE_NAME: 5DPrint PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel EXTRUDER_COUNT:1\r\n"
-#define TXT_5DPRINT_FIRMWARE_VERSION_STR_CRLF					"/" "/ 5DPrint Firmware Version: %s\r\n"
+
+#ifdef PRINTRBOARD_REVB
+#define TXT_5DPRINT_FIRMWARE_VERSION_STR_CRLF					"/" "/ 5DPrint Firmware Version: %s\r\n// Printrboard Rev. B\r\n"
+#elif  _5DPD8
+#define TXT_5DPRINT_FIRMWARE_VERSION_STR_CRLF					"/" "/ 5DPrint Firmware Version: %s\r\n// 5DPrintr D8 Driver Board\r\n"
+#endif
+
 #define TXT_LAST_TIMER1_COMPA_VECT_ISR_EXE_TIME_LU_US_CRLF		"/" "/ Last TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n"
 #define TXT_MIN_TIMER1_COMPA_VECT_ISR_EXE_TIME_LU_US_CRLF		"/" "/ MIN TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n"
 #define TXT_MAX_TIMER1_COMPA_VECT_ISR_EXE_TIME_LU_US_CRLF		"/" "/ MAX TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n"

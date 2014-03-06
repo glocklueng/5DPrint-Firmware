@@ -6,6 +6,17 @@ Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
 --------------------------
+DATE: 	6 March 2014
+AUTHOR:	CJM LAI
+	Makible Limited	
+	www.makibox.com
+--------------------------
+Version 2.20.33
+
+- Enable microstep resolution to be changed
+- Add hardware information when version is printed
+
+--------------------------
 DATE: 	28 February 2014
 AUTHOR:	CJM LAI
 	Makible Limited	

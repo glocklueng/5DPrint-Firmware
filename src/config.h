@@ -339,13 +339,7 @@
 
 // Set to 0 to disable SD Card support
 // Set to 1 to enable SD Card support
-#ifdef PRINTRBOARD_REVB
-#define SDSUPPORT			0
-#endif
-#ifdef _5DPD8
 #define SDSUPPORT			1
-#endif
-
 
 #if SDSUPPORT < 1
 #undef 	CFG_BLOCK_BUFFER_SIZE
@@ -356,9 +350,9 @@
 
 // Set to 0 to disable AUTOPRINT support
 // Set to 1 to enable AUTOPRINT support
+#define AUTOPRINT 1
 // If AUTOPRINT is enabled, 
 // then, SDSUPPORT must also be enabled
-// #define AUTOPRINT 1 
 #define AUTOPRINT_DEFAULT_ENABLED 1
 
 #ifdef PRINTRBOARD_REVB
@@ -373,10 +367,6 @@
 // Set to 0 to disable Buzzer support
 // Set to 1 to enable Buzzer support
 #define BUZZER_SUPPORT      0
-
-// Set to 0 to disable AUTOPRINT support
-// Set to 1 to enable AUTOPRINT support
-#define AUTOPRINT 0
 
 // Set to 0 to disable GPIO support
 // Set to 1 to enable GPIO support
@@ -396,10 +386,6 @@
 // Set to 0 to disable Buzzer support
 // Set to 1 to enable Buzzer support
 #define BUZZER_SUPPORT      1
-
-// Set to 0 to disable AUTOPRINT support
-// Set to 1 to enable AUTOPRINT support
-#define AUTOPRINT 1
 
 // Set to 0 to disable GPIO support
 // Set to 1 to enable GPIO support

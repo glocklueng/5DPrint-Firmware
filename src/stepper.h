@@ -35,6 +35,8 @@
 #define ALLEGRO_A4982_RS				100  		//m Ohms
 // Voltage step = 5 * 2.5 / (2.5 + 4.7) / 256 = 0.0067817
 #define DIGIPOT_VOLTS_PER_STEP			0.0067817	// V/step
+#define MAX_MOTOR_CURRENT 2000
+#define MIN_MOTOR_CURRENT 0
 
 #if DIGIPOTS > 0
 extern unsigned short max_x_motor_current;

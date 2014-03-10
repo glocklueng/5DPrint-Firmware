@@ -206,6 +206,7 @@ void wait_bed_target_temp(void);
 void set_extruder_heater_max_current(struct command *cmd);
 
 #if DIGIPOTS > 0
+unsigned short set_motor_current(float current);
 void execute_m906(struct command *cmd);
 #endif
 #if SET_MICROSTEP > 0
@@ -2552,49 +2553,40 @@ void wait_extruder_target_temp(void)
 
 
 #if DIGIPOTS > 0
-    // M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
+    /**
+       \fn unsigned short set_motor_current(float current)
+       \brief check motor current is between MIN_MOTOR_CURRENT and MAX_MOTOR_CURRENT
+     */
+    unsigned short  set_motor_current(float current){
+        if (current >= MIN_MOTOR_CURRENT && current <= MAX_MOTOR_CURRENT) return (unsigned short) current;
+        if (current > MAX_MOTOR_CURRENT) return MAX_MOTOR_CURRENT;
+		return MIN_MOTOR_CURRENT;
+    }
+
+    /**
+       \fn void execute_m906(struct command *cmd)
+       \brief M906 - Set current limits for stepper motors e.g. M906 X1700 Y1700 Z1700 E1700
+    */
     void execute_m906(struct command *cmd){
-    if (cmd->has_S){
-		if (cmd->S == 100 || cmd->S == 120) set_stepper_motors_sense_resistance((unsigned char)cmd->S);
-        else set_stepper_motors_sense_resistance(ALLEGRO_A4982_RS);      
-    }
-	if (cmd->has_X){
-		if (cmd->X > 0) max_x_motor_current = (unsigned short)cmd->X;
-		else max_x_motor_current = 0;
-    }
-	if (cmd->has_Y){
-		if (cmd->Y > 0) max_y_motor_current = (unsigned short)cmd->Y;
-		else max_y_motor_current = 0;
-    }
-	if (cmd->has_Z){
-		if (cmd->Z > 0)max_z_motor_current = (unsigned short)cmd->Z;
-		else max_z_motor_current = 0;
-    }
-	if (cmd->has_E){
-		if (cmd->E > 0) max_e_motor_current = (unsigned short)cmd->E;
-        else max_e_motor_current = 0;
-    }
+        if (cmd->has_S){
+            if (cmd->S == 100 || cmd->S == 120) set_stepper_motors_sense_resistance((unsigned char)cmd->S);
+            else set_stepper_motors_sense_resistance(ALLEGRO_A4982_RS);      
+        }
+        if (cmd->has_X) max_x_motor_current = set_motor_current(cmd->X);
+        if (cmd->has_Y) max_y_motor_current = set_motor_current(cmd->Y);
+        if (cmd->has_Z) max_z_motor_current = set_motor_current(cmd->Z);
+        if (cmd->has_E) max_e_motor_current = set_motor_current(cmd->E);
     
-    set_stepper_motors_max_current(X_AXIS, max_x_motor_current);
-    set_stepper_motors_max_current(Y_AXIS, max_y_motor_current);
-    set_stepper_motors_max_current(Z_AXIS, max_z_motor_current);
-    set_stepper_motors_max_current(E_AXIS, max_e_motor_current);
-	
-	/* M906 should initate a temprorary change
-           and M500 should save the EEPROM Settings
-          
-           if ( (cmd->has_X) || (cmd->has_Y) || (cmd->has_Z) || (cmd->has_E) )
-           {
-           EEPROM_StoreSettings();
-           serial_send(TXT_NEW_STEPPER_MOTOR_MAX_CURRENTS_SET_CRLF);
-           serial_send(TXT_CRLF);
-           }
-	*/
-	serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF, max_x_motor_current, 
-                max_y_motor_current,
-                max_z_motor_current,
-                max_e_motor_current, 
-                stepper_sense_resistance);
+        set_stepper_motors_max_current(X_AXIS, max_x_motor_current);
+        set_stepper_motors_max_current(Y_AXIS, max_y_motor_current);
+        set_stepper_motors_max_current(Z_AXIS, max_z_motor_current);
+        set_stepper_motors_max_current(E_AXIS, max_e_motor_current);
+
+        serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF, max_x_motor_current, 
+                    max_y_motor_current,
+                    max_z_motor_current,
+                    max_e_motor_current, 
+                    stepper_sense_resistance);
     }
 #endif
 

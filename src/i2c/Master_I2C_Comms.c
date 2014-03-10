@@ -212,11 +212,11 @@ void I2C_SW_Reset(void)
 #if DIGIPOTS > 0
 unsigned char currentToWiperValue (unsigned short current)
 {
-    unsigned char wiperValue;
-    wiperValue = (unsigned char) (( (current/1000.0) * 8 * (stepper_sense_resistance/1000.0) ) 
+    unsigned short wiperValue;
+    wiperValue = (unsigned short) (( (current/1000.0) * 8 * (stepper_sense_resistance/1000.0) ) 
                                   / DIGIPOT_VOLTS_PER_STEP);
-    if (wiperValue > 0xFF) wiperValue  = 0xFF;
-    return wiperValue;
+    if (wiperValue > 0xFF) wiperValue = 0xFF;
+    return (unsigned char) wiperValue;
 }
 
 void I2C_digipots_set_defaults(void)

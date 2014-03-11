@@ -6,6 +6,16 @@ Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
 --------------------------
+DATE: 	11 March 2014
+AUTHOR:	CJM LAI
+	Makible Limited	
+	www.makibox.com
+--------------------------
+Version 2.20.34
+
+- Limit motor current to 2A in M906 command
+
+--------------------------
 DATE: 	6 March 2014
 AUTHOR:	CJM LAI
 	Makible Limited	

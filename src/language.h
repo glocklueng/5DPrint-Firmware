@@ -213,7 +213,7 @@
 #ifdef PRINTRBOARD_REVB
 #define TXT_5DPRINT_FIRMWARE_VERSION_STR_CRLF					"/" "/ 5DPrint Firmware Version: %s\r\n// Printrboard Rev. B\r\n"
 #elif  _5DPD8
-#define TXT_5DPRINT_FIRMWARE_VERSION_STR_CRLF					"/" "/ 5DPrint Firmware Version: %s\r\n// 5DPrintr D8 Driver Board\r\n"
+#define TXT_5DPRINT_FIRMWARE_VERSION_STR_CRLF					"/" "/ 5DPrint Firmware Version: %s\r\n// 5DPrint D8 Driver Board\r\n"
 #endif
 
 #define TXT_LAST_TIMER1_COMPA_VECT_ISR_EXE_TIME_LU_US_CRLF		"/" "/ Last TIMER1_COMPA_vect ISR Execution Time:  %lu us\r\n"

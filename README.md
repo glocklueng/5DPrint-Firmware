@@ -24,3 +24,15 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with 
 the 5DPrint Firmware.  If not, see <http://www.gnu.org/licenses/>.
+
+5DPrint D8 Build
+===================
+```
+make clean && make
+```
+
+Printrboard Rev B Build
+===================
+```
+make clean && make HARDWARE=PRINTRBOARD_REVB
+```

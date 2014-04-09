@@ -18,6 +18,13 @@
  # 
  # You should have received a copy of the GNU General Public License
  # along with the 5DPrint Firmware.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ # Firmware is compatible with the following hardware (default build is for #1)
+ # 1. 5DPrint D8 Driver Board
+ # 2. Printrboard Rev. B
+ #
+ # To build for PrinterBoard, use the following command:
+ # 		make HARDWARE=PRINTRBOARD_REVB
 
 MCU=at90usb1286
 F_CPU=16000000
@@ -30,16 +37,9 @@ F_CPU=16000000
 				 i2c/TWI_Master.o i2c/Master_I2C_Comms.o \
 				 tone.o autoprint.o gpio.o
 
-
 CC=avr-gcc
 OBJCOPY=avr-objcopy
-
-# push this defination to all files
-# Firmware is compatible with the following hardware
-# 1. 5DPrint D8 Driver Board
-# 2. Printrboard Rev. B
-HARDWARE = _5DPD8
-# HARDWARE = PRINTRBOARD_REVB
+HARDWARE=_5DPD8
 
 CPPFLAGS       = -mmcu=$(MCU) -DF_CPU=$(F_CPU)L -Os \
                  -ffunction-sections -fdata-sections -g \

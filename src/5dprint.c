@@ -2311,35 +2311,32 @@ FORCE_INLINE void kill()
 }
 
 
-void manage_inactivity(unsigned char debug) 
-{ 
+void manage_inactivity(unsigned char debug){ 
     manage_heater();
   
-    if( (millis()-previous_millis_cmd) >  max_inactive_time )
-        {
-            if(max_inactive_time)
-                {
+    if( (millis()-previous_millis_cmd) >  max_inactive_time ) {
+            if(max_inactive_time) {
                     kill();
                     serial_send(TXT_HEATERS_AND_MOTORS_DISABLED_DUE_INACTIVITY_CRLF);
                     previous_millis_cmd = millis();
-                }
-        }
+            }
+    }
   
-    if( (millis()-previous_millis_g_cmd) >  stepper_inactive_time ) if(stepper_inactive_time) 
-                                                                        { 
+    if( (millis()-previous_millis_g_cmd) >  stepper_inactive_time ) {
+        if(stepper_inactive_time) { 
 #if (DEBUG > -1)
-                                                                            PreemptionFlag |= 0x0004;
+            PreemptionFlag |= 0x0004;
 #endif
-	
-                                                                            disable_x(); 
-                                                                            disable_y(); 
-                                                                            disable_z(); 
-                                                                            disable_e();
-	
-                                                                            serial_send(TXT_STEPPER_MOTORS_AUTO_DISABLED_DUE_TO_INACTIVITY_CRLF);
-                                                                            previous_millis_g_cmd = millis();
-                                                                        }
-    check_axes_activity();
+            disable_x(); 
+            disable_y(); 
+            disable_z(); 
+            disable_e();
+            
+            serial_send(TXT_STEPPER_MOTORS_AUTO_DISABLED_DUE_TO_INACTIVITY_CRLF);
+            previous_millis_g_cmd = millis();
+        }
+        check_axes_activity();
+    }
 }
 
 #if (MINIMUM_FAN_START_SPEED > 0)

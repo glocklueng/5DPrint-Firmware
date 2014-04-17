@@ -1805,7 +1805,7 @@ void execute_mcode(struct command *cmd) {
         if (cmd->has_S) PIDAT_TEMP_INPUT = (int)cmd->S;
         else PIDAT_TEMP_INPUT = 200;
 
-        if (cmd->has_C) PIDAT_CYCLE_INPUT = (int)cmd->C;
+        if (cmd->has_P) PIDAT_CYCLE_INPUT = (int)cmd->P;
         else PIDAT_CYCLE_INPUT = 5;
 
         if (cmd->has_F) PIDAT_MODE_INPUT = (int)cmd->F;

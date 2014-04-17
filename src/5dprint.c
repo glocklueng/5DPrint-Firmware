@@ -228,6 +228,12 @@ unsigned int PID_Kp = PID_PGAIN, PID_Ki = PID_IGAIN, PID_Kd = PID_DGAIN;
 unsigned int bed_PID_Kp = BED_PID_PGAIN, bed_PID_Ki = BED_PID_IGAIN, bed_PID_Kd = BED_PID_DGAIN;
 #endif
 
+#ifdef PID_AUTOTUNE
+int PIDAT_MODE_INPUT=200;
+int PIDAT_TEMP_INPUT=5;
+int PIDAT_CYCLE_INPUT=0;
+#endif
+
 // X, Y, Z and E max acceleration in mm/s^2 for printing moves or retracts
 long  max_acceleration_units_per_sq_second[4] = _MAX_ACCELERATION_UNITS_PER_SQ_SECOND;
 
@@ -1796,8 +1802,16 @@ void execute_mcode(struct command *cmd) {
 	  
 #ifdef PID_AUTOTUNE
     case 303: // M303 PID autotune
-        if (cmd->has_S)
-            PID_autotune((int)(cmd->S));
+        if (cmd->has_S) PIDAT_TEMP_INPUT = (int)cmd->S;
+        else PIDAT_TEMP_INPUT = 200;
+
+        if (cmd->has_C) PIDAT_CYCLE_INPUT = (int)cmd->C;
+        else PIDAT_CYCLE_INPUT = 5;
+
+        if (cmd->has_F) PIDAT_MODE_INPUT = (int)cmd->F;
+        else PIDAT_MODE_INPUT = 0;
+
+        PID_autotune(PIDAT_TEMP_INPUT, PIDAT_CYCLE_INPUT, PIDAT_MODE_INPUT);
         break;
 #endif
 #ifdef BED_PIDTEMP

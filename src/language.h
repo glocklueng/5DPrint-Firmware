@@ -52,8 +52,8 @@
 
 // PID Control
 #define TXT_PID_AUTOTUNE_START_CRLF								"PID Autotune start\r\n"
-#define TXT_BIAS_MIN_MAX										" bias: %ld d: %ld min: %f max: %f"
-#define TXT_KU_TU_CRLF				 							" Ku: %f Tu: %f\r\n"
+#define TXT_BIAS_MIN_MAX										" bias: %s d: %s min: %s max: %s"
+#define TXT_KU_TU_CRLF				 							" Ku: %s Tu: %s\r\n"
 #define TXT_CLASSIC_PID_CRLF									" Clasic PID \r\n"
 #define TXT_SOME_OVERSHOOT_CRLF									" Some overshoot \r\n"
 #define TXT_NO_OVERSHOOT_CRLF									" No overshoot \r\n"
@@ -68,7 +68,7 @@
 
 // Serial
 #define TXT_5DPRINT_VER_STARTED_CRLF							"/" "/ 5DPrint %s started.\r\n"
-#define TXT_OK_T_AT_DUTY_CRLF									"ok T:%f @:%d\r\n"									// *** Host / System Text String
+#define TXT_OK_T_AT_DUTY_CRLF									"ok T:%s @:%d\r\n"									// *** Host / System Text String
 #define TXT_OK_T_INT											"ok T:%d"											// *** Host / System Text String
 #define TXT_OK_SEQNUM_Q_MS_EXECUTE_CRLF							"ok %ld Q%d (%lums execute)\r\n"					// *** Host / System Text String
 #define TXT_GO_SEQNUM_EXECUTING_CRLF							"go %ld (executing %c%d)\r\n"						// *** Host / System Text String

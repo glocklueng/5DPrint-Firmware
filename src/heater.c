@@ -217,6 +217,12 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
   
     float PIDAT_Ku, PIDAT_Tu;
     float PIDAT_Kp, PIDAT_Ki, PIDAT_Kd;
+
+    // Temp strings for serial send
+    char PIDAT_tmp1_str[10];
+    char PIDAT_tmp2_str[10];
+    char PIDAT_tmp3_str[10];
+    char PIDAT_tmp4_str[10];
   
 #define PIDAT_TIME_FACTOR ((HEATER_CHECK_INTERVAL*256.0) / 1000.0)
   
@@ -284,13 +290,27 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
                         if(PIDAT_bias > (HEATER_CURRENT/2.0)) PIDAT_d = (HEATER_CURRENT - 1) - PIDAT_bias;
                         else PIDAT_d = PIDAT_bias;
                         
-                        serial_send(TXT_BIAS_MIN_MAX, PIDAT_bias, PIDAT_d, PIDAT_min, PIDAT_max);
+                        dtostrf(PIDAT_bias, 3, 5, PIDAT_tmp1_str);
+                        dtostrf(PIDAT_d, 3, 5, PIDAT_tmp2_str);
+                        dtostrf(PIDAT_min, 3, 5, PIDAT_tmp3_str);
+                        dtostrf(PIDAT_max, 3, 5, PIDAT_tmp4_str);                        
+
+                        serial_send(TXT_BIAS_MIN_MAX, 
+                                    PIDAT_tmp1_str,
+                                    PIDAT_tmp2_str, 
+                                    PIDAT_tmp3_str, 
+                                    PIDAT_tmp4_str);
                         
                         if(PIDAT_cycles > 2){
                             PIDAT_Ku = (4.0*PIDAT_d)/(3.14159*(PIDAT_max-PIDAT_min));
                             PIDAT_Tu = ((float)(PIDAT_t_low + PIDAT_t_high)/1000.0);
                             
-                            serial_send(TXT_KU_TU_CRLF, PIDAT_Ku, PIDAT_Tu);
+                            dtostrf(PIDAT_Ku, 3, 5, PIDAT_tmp1_str);                        
+                            dtostrf(PIDAT_Tu, 3, 5, PIDAT_tmp2_str);                                                                            
+
+                            serial_send(TXT_KU_TU_CRLF, 
+                                        PIDAT_tmp1_str, 
+                                        PIDAT_tmp2_str);
                             
                             if (control_type == 3 || control_type == 0){
                                 /* Classic PID */
@@ -341,7 +361,8 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
         
         if(millis() - PIDAT_temp_millis > 2000){
             PIDAT_temp_millis = millis();
-            serial_send(TXT_OK_T_AT_DUTY_CRLF, PIDAT_input, (unsigned char)PIDAT_PWM_val*1);
+            dtostrf(PIDAT_input, 3, 5, PIDAT_tmp1_str);
+            serial_send(TXT_OK_T_AT_DUTY_CRLF, PIDAT_tmp1_str, (unsigned char)PIDAT_PWM_val*1);
         }
         
         if(((millis() - PIDAT_t1) + (millis() - PIDAT_t2)) > (10L*60L*1000L*2L)){

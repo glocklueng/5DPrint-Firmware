@@ -129,7 +129,7 @@ extern unsigned long watchmillis;
 
 
 #ifdef PID_AUTOTUNE
-void PID_autotune(int PIDAT_test_temp);
+void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type);
 #endif
 
 

@@ -1427,6 +1427,7 @@ void execute_mcode(struct command *cmd) {
         }
         if (autoprint_enabled) serial_send(TXT_M31_AUTOPRINT_ENABLED_CRLF);
         else serial_send(TXT_M31_AUTOPRINT_DISABLED_CRLF);
+        break;
 #endif //AUTOPRINT	
     case 104: // M104 - Set Extruder Temperature
 #ifdef CHAIN_OF_COMMAND

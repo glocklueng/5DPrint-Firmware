@@ -1776,6 +1776,7 @@ void execute_mcode(struct command *cmd) {
         if(cmd->has_I) PID_Ki = (unsigned int)cmd->I;
         if(cmd->has_D) PID_Kd = (unsigned int)cmd->D;
         updatePID();
+        serial_send(TXT_PID_SETTINGS_CRLF_M301_P_I_D_CRLF, PID_Kp, PID_Ki, PID_Kd);
         serial_send(TXT_PID_SETTINGS_CHANGED_NOT_SAVED_TO_MEM_CRLF);
         break;
 #endif //PIDTEMP      

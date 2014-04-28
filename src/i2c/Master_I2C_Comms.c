@@ -25,8 +25,6 @@
    
  */
 
-#if DIGIPOTS > 0
-
 #include <avr/io.h>
 
 #include "../i2c/TWI_Master.h"
@@ -34,6 +32,8 @@
 #include "../config.h"
 #include "../pins_teensy.h"
 #include "../stepper.h"
+
+#if DIGIPOTS > 0
 
 #define TWI_GEN_CALL         0x00  // The General Call address is 0
 

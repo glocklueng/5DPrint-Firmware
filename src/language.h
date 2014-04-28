@@ -112,6 +112,7 @@
 #define TXT_EXISTING_EXTRUDER_MAX_CURRENT_INT_PERCENT_CRLF		"/"	"/ Existing Extruder Heater Max Current: %d%%\r\n"
 #define TXT_SETTING_EXTRUDER_MAX_CURRENT_INT_PERCENT_CRLF		"/"	"/ Setting Extruder Heater Max Current: %d%%\r\n"
 #define TXT_MAX_BED_HEATER_DUTY_SETTINGS_CRLF_M305_CRLF		    "Max Bed Heater Duty Cycle settings (M305):\r\n before full power: %u%% \r\n after full power: %u%% \r\n"
+#define TXT_M350_S_D_CRLF                                       "Max Bed Heater Duty Cycle setting:\r\n  M350 S%d D%d\r\n"
 
 // Motor
 #define TXT_X_MIN_STR											"x_min:%s"
@@ -191,6 +192,7 @@
 // Digipot Settings
 #define TXT_NEW_STEPPER_MOTOR_MAX_CURRENTS_SET_CRLF				"-- New stepper motor maximum currents have been set.\r\n"
 #define TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF			"-- Max Motor Currents:\r\n-- M906 X=%dmA, Y=%dmA, Z=%dmA, E=%dmA\n Current Sense Resistance=%dmOhm\r\n"
+#define TXT_M906_X_Y_Z_E_S_CRLF                                 "Max Motor Current Setting:\r\n  M906 X%d Y%d Z%d E%d S%d\r\n"
 
 // Microstepping Setting
 #define TXT_MAX_MOTOR_CURRENTS_CRLF_M907_X_Y_Z_E_CRLF			"-- Microstep resolution:\r\n-- M907 X=%d Y=%d Z=%d E=%d\r\n"
@@ -201,6 +203,7 @@
 #define TXT_START_AUTOPRINT_CRLF                                "SD card inserted, Start autoprint now!\n"
 #define TXT_END_AUTOPRINT_CRLF                                  "SD card removed, Autoprint ended!\n"
 #define TXT_ERROR_AUTOPRINT_CRLF                                "SD card error, cannot find autoprint file\n"
+#define TXT_M31_E_CRLF                                          "Autoprint setting:\r\n  M31 E%d\r\n"
 
 // Debug Information
 #define TXT_STEPPER_TIMER_INIT_CRLF								"/" "/ Stepper Timer init\r\n"

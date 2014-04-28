@@ -216,13 +216,13 @@ void EEPROM_printSettings()
 #endif
 
 #ifdef BED_PIDTEMP
-    serial_send(TXT_MAX_BED_HEATER_DUTY_SETTINGS_CRLF_M305_CRLF,
-                user_max_bed_heater_duty_before_full_pwr*100/BED_HEATER_CURRENT,
-                user_max_bed_heater_duty*100/BED_HEATER_CURRENT);     
+    serial_send(TXT_M350_S_D_CRLF, 1, user_max_bed_heater_duty_before_full_pwr*100/BED_HEATER_CURRENT);
+    serial_send(TXT_M350_S_D_CRLF, 2, user_max_bed_heater_duty*100/BED_HEATER_CURRENT);
 #endif
 	
 #if DIGIPOTS > 0
-    serial_send(TXT_MAX_MOTOR_CURRENTS_CRLF_M906_X_Y_Z_E_CRLF, max_x_motor_current, 
+    serial_send(TXT_M906_X_Y_Z_E_S_CRLF, 
+                max_x_motor_current, 
                 max_y_motor_current,
                 max_z_motor_current,
                 max_e_motor_current, 
@@ -230,8 +230,7 @@ void EEPROM_printSettings()
 #endif
 
 #if AUTOPRINT > 0
-    if (autoprint_enabled == 1) serial_send(TXT_M31_AUTOPRINT_ENABLED_CRLF);
-    else if (autoprint_enabled == 0) serial_send(TXT_M31_AUTOPRINT_DISABLED_CRLF);
+    serial_send(TXT_M31_E_CRLF, autoprint_enabled);
 #endif
 
 #else

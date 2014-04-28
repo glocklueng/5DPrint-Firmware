@@ -1,31 +1,36 @@
-5DPrint Firmware
-===================
+## 5DPrint Firmware
 
-This is the firmware that powers the Makible printers (currently, the Makibox
-A6).  It is based on the Sprinter firmware for RepRap-derivative controllers,
-which is itself based on the Tonokips firmware.
+5DPrint Firmware is the primary firmware that runs on the Makibox 3D printer, which uses the 5DPrint  D8 Controller Board and the Printrboard Rev B. It is mainly derived from Sprinter and has a GPL v3 License. 
 
-Licensed under the GNU GPLv3.
-See the LICENSE file or visit http://www.gnu.org/licenses/ for the latest 
-version of the license and to find older versions of the GNU GPL licenses.
+## Features
 
-Copyright (c) 2012-2014 by Makible Limited.
- 
-This file is part of the 5DPrint Firmware.
- 
-5DPrint Firmware is free software: you can redistribute it and/or modify it 
-under the terms of the GNU General Public License as published by the Free 
-Software Foundation, either version 3 of the License, or (at your option) any 
-later version.
- 
-5DPrint Firmware is distributed in the hope that it will be useful, but WITHOUT ANY 
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
-PARTICULAR PURPOSE. See the GNU General Public License for more details.
+Movement
 
-You should have received a copy of the GNU General Public License along with 
-the 5DPrint Firmware.  If not, see <http://www.gnu.org/licenses/>.
+* Look ahead 
+* Arc support
+* Interrupt-based movement with real linear acceleration
+* On-the-fly microstep resolution support
+* Current limit support on stepper motor drivers
 
-5DPrint D8 Build
+Heating
+
+* Support 1 hot end and 1 hot bed
+* Heating Power reporting
+* Heating Power limitation on hot bed
+* Interrupt-based temperature protection
+
+Misc
+
+* SD Card support
+* SD Card Autoprint support
+* EEPROM storage of settiings
+* Fan support
+
+For more information, please refer to the [Wiki page](https://bitbucket.org/makible/5dprint-firmware/wiki/Home).
+
+## Compile notes
+
+5DPrint D8 Controller Board Build
 ===================
 ```
 make clean && make

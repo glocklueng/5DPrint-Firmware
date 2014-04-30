@@ -68,7 +68,7 @@
  */
 #include <avr/interrupt.h>
 #include <util/twi.h>
-#include "../i2c/TWI_Master.h"
+#include "TWI_Master.h"
 
 static unsigned char TWI_buf[ TWI_BUFFER_SIZE ];    // Transceiver buffer
 static unsigned char TWI_msgSize;                   // Number of bytes to be transmitted.

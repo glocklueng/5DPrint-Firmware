@@ -39,7 +39,7 @@
 #include "heater.h"
 
 #if DIGIPOTS > 0
-#include "i2c/Master_I2C_Comms.h"
+#include "Master_I2C_Comms.h"
 #include "store_eeprom.h"
 #endif
 

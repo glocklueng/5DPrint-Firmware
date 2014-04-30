@@ -145,7 +145,7 @@
 #include "command.h"
 #include "planner.h"
 #include "stepper.h"
-#include "sdcard/5dprint_sdcard.h"
+#include "5dprint_sdcard.h"
 #include "language.h"
 #include "tone.h"
 #include "autoprint.h"
@@ -155,7 +155,7 @@
 #endif
 
 #if DIGIPOTS > 0
-#include "i2c/Master_I2C_Comms.h"
+#include "Master_I2C_Comms.h"
 #endif
 
 #ifdef USE_ARC_FUNCTION

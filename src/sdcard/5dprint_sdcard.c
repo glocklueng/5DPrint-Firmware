@@ -31,9 +31,9 @@
 
 #include <string.h>
 
-#include "../sdcard/5dprint_sdcard.h"
-#include "../usb.h"
-#include "../language.h"
+#include "5dprint_sdcard.h"
+#include "usb.h"
+#include "language.h"
 
 
 static struct partition_struct* sdcard_partition;

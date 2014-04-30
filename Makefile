@@ -30,12 +30,12 @@ MCU=at90usb1286
 F_CPU=16000000
 
 
-5DPRINT_OBJS   = arc_func.o heater.o main.o 5dprint.o pins_teensy.o \
-                 planner.o stepper.o store_eeprom.o usb.o \
+5DPRINT_OBJS   = motor/arc_func.o heater/heater.o main.o 5dprint.o pins/pins_teensy.o \
+                 motor/planner.o motor/stepper.o other/store_eeprom.o comm/usb.o \
 				 sdcard/byteordering.o sdcard/fat.o sdcard/partition.o \
 				 sdcard/sd_raw.o sdcard/5dprint_sdcard.o \
-				 i2c/TWI_Master.o i2c/Master_I2C_Comms.o \
-				 tone.o autoprint.o gpio.o
+				 comm/TWI_Master.o comm/Master_I2C_Comms.o \
+				 other/tone.o sdcard/autoprint.o other/gpio.o
 
 CC=avr-gcc
 OBJCOPY=avr-objcopy
@@ -44,13 +44,13 @@ HARDWARE=_5DPD8
 CPPFLAGS       = -mmcu=$(MCU) -DF_CPU=$(F_CPU)L -Os \
                  -ffunction-sections -fdata-sections -g \
                  -Wall -Wformat=2 -Werror \
-		 -D$(HARDWARE)
+				 -D$(HARDWARE)		
 CFLAGS         = -std=gnu99
 LDFLAGS        = -mmcu=$(MCU) -Wl,-Map=5dprint.map,--gc-sections -Os
-
+INCLUDES       = -I"src/comm/" -I"src/heater/" -I"src/motor" -I"src/pins" -I"src/other" -I"src/" -I"src/sdcard"
 
 %.o: %.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 
 5DPRINT_OBJS:=$(addprefix src/, $(5DPRINT_OBJS))

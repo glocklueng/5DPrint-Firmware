@@ -42,7 +42,7 @@
 #include "stepper.h"
 #include "heater.h"
 #include "autoprint.h"
-#include "i2c/Master_I2C_Comms.h"
+#include "Master_I2C_Comms.h"
 
 #ifdef PIDTEMP
 //extern unsigned int PID_Kp, PID_Ki, PID_Kd;

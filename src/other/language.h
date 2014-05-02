@@ -53,7 +53,7 @@
 // PID Control
 #define TXT_PID_AUTOTUNE_START_CRLF								"PID Autotune start\r\n"
 #define TXT_PID_AUTOTUNE_CYCLE_INFO_CRLF                        "PID Autotune Cycle: %d \r\n"
-#define TXT_BIAS_MIN_MAX_CRLF									" bias: %s d: %s min: %s max: %s \r\n"
+#define TXT_BIAS_MIN_MAX_CRLF									" bias: %d d: %d min: %s max: %s \r\n"
 #define TXT_KU_TU_CRLF				 							" Ku: %s Tu: %s\r\n"
 #define TXT_CLASSIC_PID_CRLF									" Clasic PID \r\n"
 #define TXT_SOME_OVERSHOOT_CRLF									" Some overshoot \r\n"

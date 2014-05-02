@@ -194,7 +194,7 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
     int PIDAT_input_help = 0;
     unsigned char PIDAT_count_input = 0;
     
-    float PIDAT_min = 0.0;
+    float PIDAT_min = 10000.0;
     float PIDAT_max = 0.0;
  
     unsigned char PIDAT_PWM_val = HEATER_CURRENT;
@@ -221,13 +221,10 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
     // Temp strings for serial send
     char PIDAT_tmp1_str[10];
     char PIDAT_tmp2_str[10];
-    char PIDAT_tmp3_str[10];
-    char PIDAT_tmp4_str[10];
   
 #define PIDAT_TIME_FACTOR ((HEATER_CHECK_INTERVAL*256.0) / 1000.0)
   
     serial_send(TXT_PID_AUTOTUNE_START_CRLF);
-
     target_temp = PIDAT_test_temp;
   
 #ifdef BED_USES_THERMISTOR
@@ -246,16 +243,8 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
             PIDAT_count_input++;
 #endif
         }        
-        
-        // Initialize the min/max values to the first PIDAT_input value we get.
-        if (PIDAT_cycle_cnt == 1){
-            PIDAT_input = (float)PIDAT_input_help / (float)PIDAT_count_input;
-            PIDAT_min = PIDAT_input;
-            PIDAT_max = PIDAT_input;
-        }        
-    
-        if(PIDAT_cycle_cnt >= 10 ){
-      
+ 
+        if(PIDAT_cycle_cnt >= 10){      
             PIDAT_cycle_cnt = 0;
             
             PIDAT_input = (float)PIDAT_input_help / (float)PIDAT_count_input;
@@ -266,7 +255,7 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
             PIDAT_min=fmin(PIDAT_min,PIDAT_input);
             
             if(PIDAT_heating && PIDAT_input > PIDAT_test_temp){
-                if(millis() - PIDAT_t2 > 5000){ 
+                if(millis() - PIDAT_t2 > 5000){
                     PIDAT_heating = 0;
                     PIDAT_PWM_val = (PIDAT_bias - PIDAT_d);
                     PIDAT_t1 = millis();
@@ -290,58 +279,54 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
                         if(PIDAT_bias > (HEATER_CURRENT/2.0)) PIDAT_d = (HEATER_CURRENT - 1) - PIDAT_bias;
                         else PIDAT_d = PIDAT_bias;
                         
-                        dtostrf(PIDAT_bias, 3, 5, PIDAT_tmp1_str);
-                        dtostrf(PIDAT_d, 3, 5, PIDAT_tmp2_str);
-                        dtostrf(PIDAT_min, 3, 5, PIDAT_tmp3_str);
-                        dtostrf(PIDAT_max, 3, 5, PIDAT_tmp4_str);                        
-
+                        dtostrf(PIDAT_min, 3, 5, PIDAT_tmp1_str);
+                        dtostrf(PIDAT_max, 3, 5, PIDAT_tmp2_str);                        
                         serial_send(TXT_BIAS_MIN_MAX_CRLF, 
+                                    (unsigned int)PIDAT_bias,
+                                    (unsigned int)PIDAT_d, 
                                     PIDAT_tmp1_str,
-                                    PIDAT_tmp2_str, 
-                                    PIDAT_tmp3_str, 
-                                    PIDAT_tmp4_str);
+                                    PIDAT_tmp2_str);
                         
                         if(PIDAT_cycles > 2){
-                            PIDAT_Ku = (4.0*PIDAT_d)/(3.14159*(PIDAT_max-PIDAT_min));
+                            PIDAT_Ku = (4.0*PIDAT_d)/(3.14159*(PIDAT_max-PIDAT_min)/2.0);
                             PIDAT_Tu = ((float)(PIDAT_t_low + PIDAT_t_high)/1000.0);
                             
                             dtostrf(PIDAT_Ku, 3, 5, PIDAT_tmp1_str);                        
-                            dtostrf(PIDAT_Tu, 3, 5, PIDAT_tmp2_str);                                                                            
-
+                            dtostrf(PIDAT_Tu, 3, 5, PIDAT_tmp2_str);                                                                           
                             serial_send(TXT_KU_TU_CRLF, 
                                         PIDAT_tmp1_str, 
                                         PIDAT_tmp2_str);
-                            
+
+                            /* Classic PID */
                             if (control_type == 3 || control_type == 0){
-                                /* Classic PID */
-                                PIDAT_Kp = 0.60*PIDAT_Ku;
-                                PIDAT_Ki = 2.0*PIDAT_Kp/(float)(PIDAT_Tu);
+                                PIDAT_Kp = 0.6*PIDAT_Ku;
+                                PIDAT_Ki = 2.0*PIDAT_Kp/PIDAT_Tu;
                                 PIDAT_Kd = PIDAT_Kp*PIDAT_Tu/8.0;
                                 serial_send(TXT_CLASSIC_PID_CRLF);
                                 serial_send(TXT_PID_SETTINGS_CRLF_M301_P_I_D_CRLF, 
-                                            (unsigned int) (PIDAT_Kp*256),
+                                            (unsigned int)(PIDAT_Kp*256),
                                             (unsigned int)(PIDAT_Ki*PIDAT_TIME_FACTOR),
                                             (unsigned int)(PIDAT_Kd*PIDAT_TIME_FACTOR));
                             }
+                            /* Some overshoot */
                             if (control_type == 3 || control_type == 1){
-                                /* Some overshoot */
-                                PIDAT_Kp = 0.30*PIDAT_Ku;
-                                PIDAT_Ki = PIDAT_Kp/(float)PIDAT_Tu;
+                                PIDAT_Kp = 0.33*PIDAT_Ku;
+                                PIDAT_Ki = 2.0*PIDAT_Kp/PIDAT_Tu;
                                 PIDAT_Kd = PIDAT_Kp*PIDAT_Tu/3.0;
                                 serial_send(TXT_SOME_OVERSHOOT_CRLF);
                                 serial_send(TXT_PID_SETTINGS_CRLF_M301_P_I_D_CRLF, 
-                                            (unsigned int) (PIDAT_Kp*256),
+                                            (unsigned int)(PIDAT_Kp*256),
                                             (unsigned int)(PIDAT_Ki*PIDAT_TIME_FACTOR),
                                             (unsigned int)(PIDAT_Kd*PIDAT_TIME_FACTOR));
                             }
+                            /* No overshoot */
                             if (control_type == 3 || control_type == 2){                                
-                                /* No overshoot */
-                                PIDAT_Kp = 0.20*PIDAT_Ku;
-                                PIDAT_Ki = 2*PIDAT_Kp/PIDAT_Tu;
+                                PIDAT_Kp = 0.2*PIDAT_Ku;
+                                PIDAT_Ki = 2.0*PIDAT_Kp/PIDAT_Tu;
                                 PIDAT_Kd = PIDAT_Kp*PIDAT_Tu/3;
                                 serial_send(TXT_NO_OVERSHOOT_CRLF);
                                 serial_send(TXT_PID_SETTINGS_CRLF_M301_P_I_D_CRLF, 
-                                            (unsigned int) (PIDAT_Kp*256),
+                                            (unsigned int)(PIDAT_Kp*256),
                                             (unsigned int)(PIDAT_Ki*PIDAT_TIME_FACTOR),
                                             (unsigned int)(PIDAT_Kd*PIDAT_TIME_FACTOR));
                             }                            
@@ -352,7 +337,6 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
                     PIDAT_min = PIDAT_test_temp;
                 }
             } 
-            
             setHeaterPWMDuty(HEATER_0_PIN, PIDAT_PWM_val);
         }
         

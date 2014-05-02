@@ -139,6 +139,7 @@ void heater_protection();
    \brief 
  */
 ISR(TIMER1_COMPC_vect){
+    manage_heater();
     heater_protection();
 }
 
@@ -223,6 +224,8 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
   
 #define PIDAT_TIME_FACTOR ((HEATER_CHECK_INTERVAL*256.0) / 1000.0)
   
+    TIMSK1 &= ~(1 << OCIE1C);   // disable timer 1C output compare match interrupt
+
     serial_send(TXT_PID_AUTOTUNE_START_CRLF);
     target_temp = PIDAT_test_temp;
   
@@ -344,7 +347,7 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
         if((PIDAT_input > (PIDAT_test_temp + 55)) || (PIDAT_input > 255)){
             serial_send(TXT_PID_AUTOTUNE_FAILED_TEMP_HIGH_CRLF);
             target_temp = 0;
-            return;
+            break;
         }
         
         if(millis() - PIDAT_temp_millis > 2000){
@@ -355,14 +358,16 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
         
         if(((millis() - PIDAT_t1) + (millis() - PIDAT_t2)) > (10L*60L*1000L*2L)){
             serial_send(TXT_PID_AUTOTUNE_FAILED_TIMEOUT_CRLF);
-            return;
+            break;
         }
         
         if(PIDAT_cycles > ncycles){
             serial_send(TXT_PID_AUTOTUNE_FINISHED_CRLF);
-            return;
+            break;
         }
+        heater_protection();
     }
+    TIMSK1 |= (1 << OCIE1C);   // enable timer 1C output compare match interrupt
 }
 #endif  
 //---------------- END AUTOTUNE PID ------------------------------

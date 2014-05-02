@@ -594,7 +594,6 @@ void loop()
     read_command();
 
     // Manage the heater and fan.
-    manage_heater();
     manage_inactivity(1);
 #if (MINIMUM_FAN_START_SPEED > 0)
     manage_fan_start_speed();
@@ -2329,6 +2328,8 @@ FORCE_INLINE void kill()
 
 
 void manage_inactivity(unsigned char debug){ 
+    manage_heater();
+
     if( (millis()-previous_millis_cmd) >  max_inactive_time ) {
             if(max_inactive_time) {
                     kill();

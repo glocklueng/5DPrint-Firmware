@@ -256,7 +256,7 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
             if(PIDAT_heating && PIDAT_input > PIDAT_test_temp){
                 if(millis() - PIDAT_t2 > 5000){
                     PIDAT_heating = 0;
-                    PIDAT_PWM_val = (PIDAT_bias - PIDAT_d);
+                    PIDAT_PWM_val = PIDAT_bias - PIDAT_d;
                     PIDAT_t1 = millis();
                     PIDAT_t_high = PIDAT_t1 - PIDAT_t2;
                     PIDAT_max = PIDAT_test_temp;
@@ -369,177 +369,149 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
    \fn void updatePID()
    \brief 
  */
-void updatePID()
-{
-    if (PIDTEMP)
-	{
-            temp_iState_min = (int)( (256L * -PID_INTEGRAL_DRIVE_MAX) / (float)(PID_Ki) );
-            temp_iState_max = (int)( (256L * PID_INTEGRAL_DRIVE_MAX) / (float)(PID_Ki) );
+void updatePID(){
+    if (PIDTEMP){
+        temp_iState_min = (int)( (256L * -PID_INTEGRAL_DRIVE_MAX) / (float)(PID_Ki) );
+        temp_iState_max = (int)( (256L * PID_INTEGRAL_DRIVE_MAX) / (float)(PID_Ki) );
 	}
-
-    if (BED_PIDTEMP)
-	{
-            temp_bed_iState_min = (int)( (256L * -BED_PID_INTEGRAL_DRIVE_MAX) / (float)(bed_PID_Ki) );
-            temp_bed_iState_max = (int)( (256L * BED_PID_INTEGRAL_DRIVE_MAX) / (float)(bed_PID_Ki) );
+    
+    if (BED_PIDTEMP){
+        temp_bed_iState_min = (int)( (256L * -BED_PID_INTEGRAL_DRIVE_MAX) / (float)(bed_PID_Ki) );
+        temp_bed_iState_max = (int)( (256L * BED_PID_INTEGRAL_DRIVE_MAX) / (float)(bed_PID_Ki) );
 	}
 }
 /**
    \fn void manage_heater()
    \brief Called in the interrupt service routine
  */
-void manage_heater()
-{
+void manage_heater(){
     int current_temp = 0;
- 
+    
     service_TemperatureMonitor();
- 
-    if ( (TEMP_0_PIN > -1) 
-         && (millis() - previous_millis_heater >= HEATER_CHECK_INTERVAL) )
-        {
+    
+    if ( (TEMP_0_PIN > -1) && (millis() - previous_millis_heater >= HEATER_CHECK_INTERVAL) ){
 #if (DEBUG > -1)
-            PreemptionFlag |= 0x0008;
+        PreemptionFlag |= 0x0008;
 #endif
-	
-            previous_millis_heater = millis();
-  
+        
+        previous_millis_heater = millis();
+        
 #ifdef HEATER_USES_THERMISTOR
-            current_raw = analogRead(TEMP_0_PIN); 
-            // When using thermistor, when the heater is colder than targer temp, we get a higher analog reading than target, 
-            // this switches it up so that the reading appears lower than target for the control logic.
-            current_raw = 1023 - current_raw;
-	
-            current_temp = analog2temp(current_raw);
+        current_raw = analogRead(TEMP_0_PIN); 
+        // When using thermistor, when the heater is colder than targer temp, we get a higher analog reading than target, 
+        // this switches it up so that the reading appears lower than target for the control logic.
+        current_raw = 1023 - current_raw;
+        
+        current_temp = analog2temp(current_raw);
 #endif
-
-            //MIN / MAX save to display the jitter of Heaterbarrel
-            if(current_raw > current_raw_maxval)
-                current_raw_maxval = current_raw;
-
-            if(current_raw < current_raw_minval)
-                current_raw_minval = current_raw;
- 
+        
+        //MIN / MAX save to display the jitter of Heaterbarrel
+        if(current_raw > current_raw_maxval)
+            current_raw_maxval = current_raw;
+        
+        if(current_raw < current_raw_minval)
+            current_raw_minval = current_raw;
+        
 #ifdef SMOOTHING
-            if (!nma) nma = SMOOTHFACTOR * current_raw;
-            nma = (nma + current_raw) - ( nma / (float)(SMOOTHFACTOR) );
-            current_raw = nma / (float)(SMOOTHFACTOR);
+        if (!nma) nma = SMOOTHFACTOR * current_raw;
+        nma = (nma + current_raw) - ( nma / (float)(SMOOTHFACTOR) );
+        current_raw = nma / (float)(SMOOTHFACTOR);
 #endif
-
+        
 #ifdef WATCHPERIOD
-            if ( (watchmillis > 0) && (millis() - watchmillis > WATCHPERIOD) )
-                {
-                    if( watch_temp >= current_temp )
-                        {
-                            target_temp = target_raw = 0;
-                            WRITE(HEATER_0_PIN,LOW);
-
-                            setHeaterPWMDuty(HEATER_0_PIN, 0);
-                        }
-                    else
-                        {
-                            watchmillis = 0;
-                        }
-                }
+        if ( (watchmillis > 0) && (millis() - watchmillis > WATCHPERIOD) ){
+            if( watch_temp >= current_temp ){
+                target_temp = target_raw = 0;
+                WRITE(HEATER_0_PIN,LOW);
+                
+                setHeaterPWMDuty(HEATER_0_PIN, 0);
+            }
+            else
+                    watchmillis = 0;
+        }
 #endif
-  
-            //If tmp is lower then MINTEMP stop the Heater
-            //or it os better to deaktivate the uutput PIN or PWM ?
+        
+        //If tmp is lower then MINTEMP stop the Heater
+        //or it os better to deaktivate the uutput PIN or PWM ?
 #ifdef MINTEMP
-            //minttemp = temp2analogh(MINTEMP);
-            if(current_temp <= MINTEMP)
-		target_temp = target_raw = 0;
+        //minttemp = temp2analogh(MINTEMP);
+        if(current_temp <= MINTEMP)
+            target_temp = target_raw = 0;
 #endif
   
 #ifdef MAXTEMP
-            //maxttemp = temp2analogh(MAXTEMP);
-            if(current_temp >= MAXTEMP)
-                {
-                    target_temp = target_raw = 0;
-                }
+        //maxttemp = temp2analogh(MAXTEMP);
+        if(current_temp >= MAXTEMP)
+            target_temp = target_raw = 0;
 #endif
-
-	
-            if (PIDTEMP)
-                {
-                    // Only allow extruder heater to be turned on if bed temperature has reached 
-                    // 80% of target. This is to try and limit the max power drawn from the power 
-                    // supply.
-                    if ( ( analog2tempBed(current_bed_raw) > MIN_BED_TEMP_FOR_HOTEND_FULL_PWR )
-                         && ( analog2tempBed(target_bed_raw) > BEDMINTEMP ) )
-                        {
-                            max_heater_duty = user_max_heater_duty;
-                        }
-                    else if ( analog2tempBed(target_bed_raw) < BEDMINTEMP )
-                        {
-                            max_heater_duty = user_max_heater_duty;
-                        }
-                    else
-                        {
-                            max_heater_duty = user_max_heater_duty / 3.0;
-                        }
-	  
-                    service_ExtruderHeaterPIDControl(current_temp, target_temp);
-                }
-            else // !PIDTEMP
-                {
-                    service_ExtruderHeaterSimpleControl(current_raw, target_raw);
-                }
+        
+        
+        if (PIDTEMP){
+            // Only allow extruder heater to be turned on if bed temperature has reached 
+            // 80% of target. This is to try and limit the max power drawn from the power 
+            // supply.
+            if ( ( analog2tempBed(current_bed_raw) > MIN_BED_TEMP_FOR_HOTEND_FULL_PWR )
+                 && ( analog2tempBed(target_bed_raw) > BEDMINTEMP ) )
+                max_heater_duty = user_max_heater_duty;
+            else if ( analog2tempBed(target_bed_raw) < BEDMINTEMP )
+                max_heater_duty = user_max_heater_duty;
+            else
+                max_heater_duty = user_max_heater_duty / 3.0;
+            
+            service_ExtruderHeaterPIDControl(current_temp, target_temp);
+        }
+        else // !PIDTEMP
+            service_ExtruderHeaterSimpleControl(current_raw, target_raw);
         }		// end if ( (TEMP_0_PIN > -1)
     //	&& (millis() - previous_millis_heater >= HEATER_CHECK_INTERVAL) )
     
   
-    if ( (TEMP_1_PIN > -1) 
-         && (millis() - previous_millis_bed_heater >= BED_CHECK_INTERVAL) )
-        {
+    if ( (TEMP_1_PIN > -1) && (millis() - previous_millis_bed_heater >= BED_CHECK_INTERVAL) ){
 #if (DEBUG > -1)
-            PreemptionFlag |= 0x0010;
+        PreemptionFlag |= 0x0010;
 #endif
-	
-            previous_millis_bed_heater = millis();
-	
-            //If tmp is lower then MINTEMP stop the Heater
-            //or it os better to deaktivate the uutput PIN or PWM ?
+        
+        previous_millis_bed_heater = millis();
+        
+        //If tmp is lower then MINTEMP stop the Heater
+        //or it os better to deaktivate the uutput PIN or PWM ?
 #ifdef BEDMINTEMP
-            minttemp = temp2analogBed(BEDMINTEMP);
-            if(current_bed_raw <= minttemp)
-		{
-                    target_bed_raw = 0;
-		}
+        minttemp = temp2analogBed(BEDMINTEMP);
+        if(current_bed_raw <= minttemp)
+            target_bed_raw = 0;
 #endif // #ifdef MINTEMP
-  
+        
 #ifdef BEDMAXTEMP
-            maxttemp = temp2analogBed(BEDMAXTEMP);
-            if(current_bed_raw >= maxttemp)
-		{
-                    target_bed_raw = 0;
-		}
+        maxttemp = temp2analogBed(BEDMAXTEMP);
+        if(current_bed_raw >= maxttemp)
+            target_bed_raw = 0;
 #endif // #ifdef MAXTEMP
   
 #ifdef BED_USES_THERMISTOR
-            current_bed_raw = analogRead(TEMP_1_PIN);   
-	  
-            // If using thermistor, when the heater is colder than targer temp, we get a higher analog reading than target, 
-            // this switches it up so that the reading appears lower than target for the control logic.
-            current_bed_raw = 1023 - current_bed_raw;
+        current_bed_raw = analogRead(TEMP_1_PIN);   
+        
+        // If using thermistor, when the heater is colder than targer temp, we get a higher analog reading than target, 
+        // this switches it up so that the reading appears lower than target for the control logic.
+        current_bed_raw = 1023 - current_bed_raw;
 #endif // #ifdef BED_USES_THERMISTOR
-	  
-            // PID Control for HOT BED
-            if (BED_PIDTEMP > -1){
-                    // Only allow bed heater to be run at full power if its temperature is 
-                    // greater than MIN_BED_TEMP_FOR_HOTBED_FULL_PWR. This is to limit the 
-                    // max current drawn by the bed
-                    if ( ( analog2tempBed(current_bed_raw) > MIN_BED_TEMP_FOR_HOTBED_FULL_PWR )
-                         && ( analog2tempBed(target_bed_raw) > BEDMINTEMP ) )
-                            max_bed_heater_duty = user_max_bed_heater_duty;
-                    else if ( analog2tempBed(target_bed_raw) < BEDMINTEMP )
-                            max_bed_heater_duty = user_max_bed_heater_duty_before_full_pwr;
-                    else max_bed_heater_duty = user_max_bed_heater_duty_before_full_pwr;
-		
-                    service_BedHeaterPIDControl(analog2tempBed(current_bed_raw), 
-                                                analog2tempBed(target_bed_raw));
-            } 
-            else service_BedHeaterSimpleControl(current_bed_raw, target_bed_raw);
-        }		//end if (TEMP_1_PIN == -1)
-  
+        
+        // PID Control for HOT BED
+        if (BED_PIDTEMP > -1){
+            // Only allow bed heater to be run at full power if its temperature is 
+            // greater than MIN_BED_TEMP_FOR_HOTBED_FULL_PWR. This is to limit the 
+            // max current drawn by the bed
+            if ( ( analog2tempBed(current_bed_raw) > MIN_BED_TEMP_FOR_HOTBED_FULL_PWR )
+                 && ( analog2tempBed(target_bed_raw) > BEDMINTEMP ) )
+                max_bed_heater_duty = user_max_bed_heater_duty;
+            else if ( analog2tempBed(target_bed_raw) < BEDMINTEMP )
+                max_bed_heater_duty = user_max_bed_heater_duty_before_full_pwr;
+            else max_bed_heater_duty = user_max_bed_heater_duty_before_full_pwr;
+            
+            service_BedHeaterPIDControl(analog2tempBed(current_bed_raw), 
+                                        analog2tempBed(target_bed_raw));
+        } 
+        else service_BedHeaterSimpleControl(current_bed_raw, target_bed_raw);
+    }		//end if (TEMP_1_PIN == -1)
 }
 
 /**
@@ -580,18 +552,16 @@ int temp2analog_thermistor(int celsius, const short table[][2], int numtemps)
     int raw = 0;
     unsigned char i;
     
-    for (i=1; i<numtemps; i++)
-        {
-            if ( table[i][1] < celsius )
-                {
-                    raw = table[i-1][0] + 
-                        ( celsius - table[i-1][1] ) * 
-                        ( table[i][0] - table[i-1][0] ) /
-                        (float)( table[i][1] - table[i-1][1] );
-      
-                    break;
-                }
+    for (i=1; i<numtemps; i++){
+        if ( table[i][1] < celsius ){
+            raw = table[i-1][0] + 
+                ( celsius - table[i-1][1] ) * 
+                ( table[i][0] - table[i-1][0] ) /
+                (float)( table[i][1] - table[i-1][1] );
+            
+            break;
         }
+    }
 
     // Overflow: Set to last value in the table
     if (i == numtemps) raw = table[i-1][0];
@@ -611,22 +581,20 @@ int analog2temp_thermistor(int raw,const short table[][2], int numtemps) {
     
     raw = 1023 - raw;
 
-    for (i=1; i<numtemps; i++)
-        {
-            if ( table[i][0] > raw )
-                {
-                    celsius  = table[i-1][1] + 
-                        ( raw - table[i-1][0] ) * 
-                        ( table[i][1] - table[i-1][1] ) /
-                        (float)( table[i][0] - table[i-1][0] );
-
-                    break;
-                }
+    for (i=1; i<numtemps; i++){
+        if ( table[i][0] > raw ){
+            celsius  = table[i-1][1] + 
+                ( raw - table[i-1][0] ) * 
+                ( table[i][1] - table[i-1][1] ) /
+                (float)( table[i][0] - table[i-1][0] );
+            
+            break;
         }
-
+    }
+    
     // Overflow: Set to last value in the table
     if (i == numtemps) celsius = table[i-1][1];
-
+    
     return celsius;
 }
 #endif
@@ -644,49 +612,30 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
     pTerm = ((long)PID_Kp * error) >> 8;
     heater_duty = pTerm;
 
-    if( abs(error) < PID_FUNCTIONAL_RANGE )
-	{
-            temp_iState += error;
-            if (temp_iState < temp_iState_min)
-		{
-                    temp_iState = temp_iState_min;
-		}
+    if( abs(error) < PID_FUNCTIONAL_RANGE ){
+        temp_iState += error;
+        if (temp_iState < temp_iState_min)
+            temp_iState = temp_iState_min;
 		
-            if (temp_iState > temp_iState_max)
-		{
+        if (temp_iState > temp_iState_max)
                     temp_iState = temp_iState_max;
-		}
-	
-            iTerm = ((long)PID_Ki * temp_iState) >> 8;
-            heater_duty += iTerm;
+        
+        iTerm = ((long)PID_Ki * temp_iState) >> 8;
+        heater_duty += iTerm;
 		
-            dTerm = ((long)PID_Kd * delta_temp) >> 8;
-            heater_duty -= dTerm;
+        dTerm = ((long)PID_Kd * delta_temp) >> 8;
+        heater_duty -= dTerm;
 	}
-    else
-	{
-            temp_iState = 0;
-	}
-
+    else temp_iState = 0;
 	
-    if (heater_duty < 0)
-	{
-            heater_duty = 0;
-	}
+    if (heater_duty < 0) heater_duty = 0;
 	
-    if (heater_duty > max_heater_duty)
-	{
-            heater_duty = max_heater_duty;
-	}
+    if (heater_duty > max_heater_duty) heater_duty = max_heater_duty;
 
-    if(target_temp != 0)
-	{
-            setHeaterPWMDuty(HEATER_0_PIN, heater_duty);
-	}
-    else
-	{
-            heater_duty = 0;
-            setHeaterPWMDuty(HEATER_0_PIN, heater_duty);
+    if(target_temp != 0) setHeaterPWMDuty(HEATER_0_PIN, heater_duty);
+    else{
+        heater_duty = 0;
+        setHeaterPWMDuty(HEATER_0_PIN, heater_duty);
 	}
 }
 
@@ -694,26 +643,21 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
    \fn void service_ExtruderHeaterSimpleControl(int current_raw, int target_raw)
    \brief 
  */
-void service_ExtruderHeaterSimpleControl(int current_raw, int target_raw)
-{
-    if(current_raw >= target_raw)
-        {
+void service_ExtruderHeaterSimpleControl(int current_raw, int target_raw){
+    if(current_raw >= target_raw){
+        WRITE(HEATER_0_PIN,LOW);
+        heater_duty = 0;
+    }
+    else{
+        if(target_raw != 0){
+            WRITE(HEATER_0_PIN,HIGH);
+            heater_duty = 100;
+        }
+        else{
             WRITE(HEATER_0_PIN,LOW);
             heater_duty = 0;
-        }
-    else 
-        {
-            if(target_raw != 0)
-                {
-                    WRITE(HEATER_0_PIN,HIGH);
-                    heater_duty = 100;
-                }
-            else
-		{
-                    WRITE(HEATER_0_PIN,LOW);
-                    heater_duty = 0;
 		}
-        }
+    }
 }
 
 /**
@@ -729,50 +673,31 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
     bed_pTerm = ((long)bed_PID_Kp * bed_error) >> 8;
     bed_heater_duty = bed_pTerm;
   
-    if( abs(bed_error) < BED_PID_FUNCTIONAL_RANGE )
-	{
-            temp_bed_iState += bed_error;
+    if( abs(bed_error) < BED_PID_FUNCTIONAL_RANGE ){
+        temp_bed_iState += bed_error;
 		
-            if (temp_bed_iState < temp_bed_iState_min)
-		{
-                    temp_bed_iState = temp_bed_iState_min;
-		}
+        if (temp_bed_iState < temp_bed_iState_min)
+            temp_bed_iState = temp_bed_iState_min;
 		
-            if (temp_bed_iState > temp_bed_iState_max)
-		{
-                    temp_bed_iState = temp_bed_iState_max;
-		}
+        if (temp_bed_iState > temp_bed_iState_max)
+            temp_bed_iState = temp_bed_iState_max;
 		  
-            bed_iTerm = ((long)bed_PID_Ki * temp_bed_iState) >> 8;
-            bed_heater_duty += bed_iTerm;
+        bed_iTerm = ((long)bed_PID_Ki * temp_bed_iState) >> 8;
+        bed_heater_duty += bed_iTerm;
 		
-            bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) >> 8;
-            bed_heater_duty -= bed_dTerm;
+        bed_dTerm = ((long)bed_PID_Kd * delta_bed_temp) >> 8;
+        bed_heater_duty -= bed_dTerm;
 	}
-    else
-	{
-            temp_bed_iState = 0;
-	}
-	  
+    else temp_bed_iState = 0;  
 	
-    if (bed_heater_duty < 0)
-	{
-            bed_heater_duty = 0;
-	}
+    if (bed_heater_duty < 0) bed_heater_duty = 0;
 	
-    if (bed_heater_duty > max_bed_heater_duty)
-	{
-            bed_heater_duty = max_bed_heater_duty;
-	}
+    if (bed_heater_duty > max_bed_heater_duty) bed_heater_duty = max_bed_heater_duty;
 
-    if(target_bed_temp != 0)
-	{
-            setHeaterPWMDuty(HEATER_1_PIN, bed_heater_duty);
-	}
-    else
-	{
-            bed_heater_duty = 0;
-            setHeaterPWMDuty(HEATER_1_PIN, bed_heater_duty);
+    if(target_bed_temp != 0) setHeaterPWMDuty(HEATER_1_PIN, bed_heater_duty);
+    else{
+        bed_heater_duty = 0;
+        setHeaterPWMDuty(HEATER_1_PIN, bed_heater_duty);
 	}
 }
 
@@ -783,19 +708,17 @@ void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp)
 void service_BedHeaterSimpleControl(int current_bed_raw, int target_bed_raw)
 {
 #ifdef MINTEMP
-    if(current_bed_raw >= target_bed_raw || current_bed_raw < minttemp)
+    if(current_bed_raw >= target_bed_raw || current_bed_raw < minttemp){
 #else
-        if(current_bed_raw >= target_bed_raw)
+        if(current_bed_raw >= target_bed_raw){
 #endif // #ifdef MINTEMP
-            {
-                WRITE(HEATER_1_PIN,LOW);
-                bed_heater_duty = 0;
-            }
-        else 
-            {
-                WRITE(HEATER_1_PIN,HIGH);
-                bed_heater_duty = 100;
-            }
+            WRITE(HEATER_1_PIN,LOW);
+            bed_heater_duty = 0;
+        }
+        else{
+            WRITE(HEATER_1_PIN,HIGH);
+            bed_heater_duty = 100;
+        }
 }
 
 /**
@@ -807,91 +730,62 @@ void service_TemperatureMonitor(void)
     int hotendtC = 0, bedtempC = 0;
   
     //Temperature Monitor for repetier
-    if((millis() - previous_millis_monitor) > 250 )
-        {
-            previous_millis_monitor = millis();
-
-            if(manage_monitor <= 1)
-                {
-                    serial_send(TXT_MTEMP, millis());
-                    if(manage_monitor<1)
-                        {
-                            serial_send(TXT_INT_INT, analog2temp(current_raw), target_temp);
-                            if (PIDTEMP > -1)
-                                {
-                                    serial_send(TXT_INT_CRLF, heater_duty);
-                                }
-                            else
-                                {
-                                    if (HEATER_0_PIN > -1)
-                                        {
-                                            if(READ(HEATER_0_PIN))
-                                                {
-                                                    serial_send(TXT_255_CRLF);
-                                                }
-                                            else
-                                                {
-                                                    serial_send(TXT_0_CRLF);
-                                                }
-                                        }
-                                    else
-                                        {
-                                            serial_send(TXT_0_CRLF);
-                                        }
-                                }
-                        }
-                    else  // if not (manage_monitor<1)
-                        {
-                            serial_send(TXT_INT_INT, analog2tempBed(current_bed_raw), 
-                                        analog2tempBed(target_bed_raw));
-                            if (HEATER_1_PIN > -1)
-                                {
-                                    if(READ(HEATER_1_PIN))
-                                        {
-                                            serial_send(TXT_255_CRLF);
-                                        }
-                                    else
-                                        {
-                                            serial_send(TXT_0_CRLF);
-                                        }
-                                }
-                            else
-                                {
-                                    serial_send(TXT_0_CRLF);
-                                } 
-                        }		// end if(manage_monitor<1)
-                }	// end if(manage_monitor <= 1)
-  
-        }	// end if((millis() - previous_millis_monitor) > 250 )
+    if((millis() - previous_millis_monitor) > 250 ){
+        previous_millis_monitor = millis();
+        
+        if(manage_monitor <= 1){
+            serial_send(TXT_MTEMP, millis());
+            if(manage_monitor<1){
+                serial_send(TXT_INT_INT, analog2temp(current_raw), target_temp);
+                if (PIDTEMP > -1)
+                    serial_send(TXT_INT_CRLF, heater_duty);
+                else{
+                    if (HEATER_0_PIN > -1){
+                        if(READ(HEATER_0_PIN)) serial_send(TXT_255_CRLF);
+                        else serial_send(TXT_0_CRLF);
+                    }
+                    else serial_send(TXT_0_CRLF);
+                }
+            }
+            else{  // if not (manage_monitor<1)
+                serial_send(TXT_INT_INT, analog2tempBed(current_bed_raw), 
+                                analog2tempBed(target_bed_raw));
+                if (HEATER_1_PIN > -1){
+                    if(READ(HEATER_1_PIN)) serial_send(TXT_255_CRLF);
+                    else serial_send(TXT_0_CRLF);
+                }
+                else serial_send(TXT_0_CRLF);
+            }		// end if(manage_monitor<1)
+        }	// end if(manage_monitor <= 1)
+        
+    }	// end if((millis() - previous_millis_monitor) > 250 )
     // END Temperature Monitor for repetier
 	
 	
-    if (periodic_temp_report)
-        {
-            if( (millis() - previous_millis_periodic_temp_report) > (periodic_temp_report * 1000) )
-                {
-                    previous_millis_periodic_temp_report = millis();
-		
+    if (periodic_temp_report){
+        if( (millis() - previous_millis_periodic_temp_report) > (periodic_temp_report * 1000) ){
+            previous_millis_periodic_temp_report = millis();
+            
 #if (TEMP_0_PIN > -1)
-                    hotendtC = analog2temp(current_raw);
+            hotendtC = analog2temp(current_raw);
 #endif
 #if TEMP_1_PIN > -1
-                    bedtempC = analog2tempBed(current_bed_raw);
+            bedtempC = analog2tempBed(current_bed_raw);
 #endif
-		
-                    serial_send(TXT_DASH_DASH_T_INT, hotendtC);
+            
+            serial_send(TXT_DASH_DASH_T_INT, hotendtC);
 #ifdef PIDTEMP
-                    serial_send(TXT_D_INT_PERCENT, (int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ));
+            serial_send(TXT_D_INT_PERCENT, (int)( (heater_duty * 100) / (float)(HEATER_CURRENT) ));
 #endif
 #if TEMP_1_PIN > -1
-                    serial_send(TXT_B_INT, bedtempC);
+            serial_send(TXT_B_INT, bedtempC);
 #endif
 #ifdef BED_PIDTEMP
-                    serial_send(TXT_D_INT_PERCENT, (int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
+            serial_send(TXT_D_INT_PERCENT, (int)( (bed_heater_duty * 100) / (float)(BED_HEATER_CURRENT) ));
 #endif
-                    serial_send(TXT_CRLF);
-                } // if( (millis() - previous_millis_periodic_temp_report) > (periodic_temp_report * 1000) )
-        } // if (periodic_temp_report)
+            serial_send(TXT_CRLF);
+        } // if( (millis() - previous_millis_periodic_temp_report) > (periodic_temp_report * 1000) )
+    } // if (periodic_temp_report)
 }
 
 
@@ -903,15 +797,9 @@ void service_TemperatureMonitor(void)
  */
 void setHeaterPWMDuty(uint8_t pin, int val)
 {
-    if (val < 0)
-	{
-            val = 0;
-	}
+    if (val < 0) val = 0;
 	
-    if ( (unsigned int)val > ICR3)
-	{
-            val = ICR3;
-	}
+    if ( (unsigned int)val > ICR3) val = ICR3;
 	
     switch (pin)
 	{
@@ -941,17 +829,10 @@ void setHeaterPWMDuty(uint8_t pin, int val)
    \brief Sets the PWM duty of the fan.
    \param  val Value Between 0 and ICR3 (250 at present), val = 125 -> 50% duty
 */
-void setFanPWMDuty(int val)
-{
-    if (val < 0)
-	{
-            val = 0;
-	}
+void setFanPWMDuty(int val){
+    if (val < 0) val = 0;
 	
-    if ( (unsigned int)val > ICR3)
-	{
-            val = ICR3;
-	}
+    if ( (unsigned int)val > ICR3) val = ICR3;
 	
     OCR3A = val;
     TCCR3A |= (1<<COM3A1);

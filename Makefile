@@ -1,6 +1,6 @@
  # 5DPrint Firmware
  # Based on Sprinter (master branch, 1 Sep 2012).
- # Designed for Printrboard (Rev B) and 5DPrint D8 Driver Board.
+ # Designed for Printrboard (Rev B) and 5DPrint D8 Controller Board.
  # ---
  # Copyright (c) 2012-2013 by Makible Limited.
  # 
@@ -20,7 +20,7 @@
  # along with the 5DPrint Firmware.  If not, see <http://www.gnu.org/licenses/>.
  #
  # Firmware is compatible with the following hardware (default build is for #1)
- # 1. 5DPrint D8 Driver Board
+ # 1. 5DPrint D8 Controller Board
  # 2. Printrboard Rev. B
  #
  # To build for PrinterBoard, use the following command:

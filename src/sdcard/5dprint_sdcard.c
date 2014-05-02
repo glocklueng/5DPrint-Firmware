@@ -1,6 +1,6 @@
 /*
   5DPrint Firmware
-  Designed for Printrboard (Rev B) and 5DPrint D8 Driver Board.
+  Designed for Printrboard (Rev B) and 5DPrint D8 Controller Board.
   ---
   Copyright (c) 2012-2014 by Makible Limited.
  

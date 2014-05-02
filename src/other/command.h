@@ -1,7 +1,7 @@
 /* command.h - host commands 
    5DPrint Firmware
    Based on Sprinter (master branch, 1 Sep 2012).
-   Designed for Printrboard (Rev B) and 5DPrint D8 Dirver Board.
+   Designed for Printrboard (Rev B) and 5DPrint D8 Controller Board.
    ---
    Copyright (c) 2012-2014 by Makible Limited.
  

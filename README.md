@@ -7,24 +7,29 @@
 Movement
 
 * Look ahead 
-* Arc support
+* Arc support (G2-G3)
 * Interrupt-based movement with real linear acceleration
-* On-the-fly microstep resolution support
-* Current limit support on stepper motor drivers
+* On-the-fly microstep resolution support (M907)
+* Current limit support on stepper motor drivers (M906)
 
 Heating
 
 * Support 1 hot end and 1 hot bed
+* Periodic temperature report (M203)
 * Heating Power reporting
-* Heating Power limitation on hot bed
-* Interrupt-based temperature protection
+* Heating Power limitation on hot bed (M305)
+* Interrupt-based temperature protection 
+* PID Autotune (M303)
 
 Misc
 
 * SD Card support
-* SD Card Autoprint support
-* EEPROM storage of settiings
+* SD Card Autoprint support (M31)
+* EEPROM storage of settiings (M500-M503)
 * Fan support
+* GPIO pin support for 5DPrint D8 Controller Board (M908)
+* Buzzer support (M300)
+* Software jump to bootloader mode (M852)
 
 For more information, please refer to the [Wiki page](https://bitbucket.org/makible/5dprint-firmware/wiki/Home).
 

@@ -278,6 +278,8 @@ void PID_autotune(int PIDAT_test_temp, int ncycles, int control_type){
                         if(PIDAT_bias > (HEATER_CURRENT/2.0)) PIDAT_d = (HEATER_CURRENT - 1) - PIDAT_bias;
                         else PIDAT_d = PIDAT_bias;
                         
+                        serial_send(TXT_PID_AUTOTUNE_CYCLE_INFO_CRLF, PIDAT_cycles);
+                        
                         dtostrf(PIDAT_min, 3, 5, PIDAT_tmp1_str);
                         dtostrf(PIDAT_max, 3, 5, PIDAT_tmp2_str);                        
                         serial_send(TXT_BIAS_MIN_MAX_CRLF, 

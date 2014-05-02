@@ -52,7 +52,7 @@
 
 // PID Control
 #define TXT_PID_AUTOTUNE_START_CRLF								"PID Autotune start\r\n"
-#define TXT_PID_AUTOTUNE_CYCLE_INFO_CRLF                        "PID Autotune Cycle: %d \r\n"
+#define TXT_PID_AUTOTUNE_CYCLE_INFO_CRLF                        "** PID Autotune Cycle: %d \r\n **"
 #define TXT_BIAS_MIN_MAX_CRLF									" bias: %d d: %d min: %s max: %s \r\n"
 #define TXT_KU_TU_CRLF				 							" Ku: %s Tu: %s\r\n"
 #define TXT_CLASSIC_PID_CRLF									" Clasic PID \r\n"
@@ -62,7 +62,7 @@
 #define TXT_PID_AUTOTUNE_FAILED_TIMEOUT_CRLF					"PID Autotune failed! timeout\r\n"
 #define TXT_PID_AUTOTUNE_FINISHED_CRLF							"PID Autotune finished ! Place the Kp, Ki and Kd constants in the configuration.h\r\n"
 #define TXT_PID_SETTINGS_CHANGED_NOT_SAVED_TO_MEM_CRLF			"-- PID settings changed (but not saved to memory).\r\n"
-#define TXT_PID_SETTINGS_CRLF_M301_P_I_D_CRLF					"PID settings:\r\n  M301 P%d I%d D%d\r\n"
+#define TXT_PID_SETTINGS_CRLF_M301_P_I_D_CRLF					" PID settings:\r\n  M301 P%d I%d D%d\r\n"
 
 // Serial
 #define TXT_5DPRINT_VER_STARTED_CRLF							"/" "/ 5DPrint %s started.\r\n"

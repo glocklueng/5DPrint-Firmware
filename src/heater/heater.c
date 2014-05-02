@@ -128,7 +128,7 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp);
 void service_BedHeaterPIDControl(int current_bed_temp, int target_bed_temp);
 void service_ExtruderHeaterSimpleControl(int current_raw, int target_raw);
 void service_BedHeaterSimpleControl(int current_bed_raw, int target_bed_raw);
-
+void heater_protection();
 
 //------------------------------------------------------------------------
 // Setup Timers and PWM for Heater and FAN
@@ -138,9 +138,8 @@ void service_BedHeaterSimpleControl(int current_bed_raw, int target_bed_raw);
    \fn ISR(TIMER1_COMPC_vect)
    \brief 
  */
-ISR(TIMER1_COMPC_vect)
-{
-    manage_heater();
+ISR(TIMER1_COMPC_vect){
+    heater_protection();
 }
 
 /**
@@ -541,20 +540,33 @@ void manage_heater()
             else service_BedHeaterSimpleControl(current_bed_raw, target_bed_raw);
         }		//end if (TEMP_1_PIN == -1)
   
-  
-    // Safety check to try and catch case when bed and extruder heater connectors 
-    // have been swapped around accidentally.
-    if ( ( analog2tempBed(current_bed_raw) >= MAXTEMP ) 
-         || ( current_temp >= MAXTEMP ) )
-        {
-            if ( (target_bed_raw != 0) || (target_temp != 0) )
-                {
-                    target_bed_raw = 0;				// Switch off bed heater
-                    target_temp = target_raw = 0;	// Switch off extruder heater
-                    serial_send(TXT_ALL_HEATERS_DISABLED_SAFETY_TEMP_EXCEEDED_CRLF);
-                    serial_send(TXT_CHECK_HEATER_AND_THERMISTOR_CONNS_ARE_CORRECT_CRLF);
-                }
+}
+
+/**
+   \fn void heater_protection()
+   \brief Protect the heating elements from overheating
+   This is called in manage_heater function and the interrupt
+   
+   Safety check to try and catch case when bed and extruder heater connectors 
+   have been swapped around accidentally.
+ */
+void heater_protection(){
+    if ( ( analog2tempBed(current_bed_raw) >= BEDMAXTEMP ) || ( analog2temp(current_raw) >= MAXTEMP ) ){
+        if ( (target_bed_raw != 0) || (target_temp != 0) ){
+            // Switch off extruder heater
+            target_temp = 0;
+            target_raw = 0;
+            setHeaterPWMDuty(HEATER_0_PIN, 0);
+
+            // Switch off bed heater
+            //target_bed_temp = 0;
+            target_bed_raw = 0;
+            setHeaterPWMDuty(HEATER_1_PIN, 0);
+           
+            serial_send(TXT_ALL_HEATERS_DISABLED_SAFETY_TEMP_EXCEEDED_CRLF);
+            serial_send(TXT_CHECK_HEATER_AND_THERMISTOR_CONNS_ARE_CORRECT_CRLF);
         }
+    }
 }
 
 

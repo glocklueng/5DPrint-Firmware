@@ -238,7 +238,7 @@
 
 // M303 - PID relay autotune S<temperature> sets the target temperature. 
 // (default target temperature = 150C)
-//#define PID_AUTOTUNE
+#define PID_AUTOTUNE
 
 // If the temperature difference between the target temperature and the current temperature
 // is more then PID_FUNCTIONAL_RANGE then the PID will operate with proportional control only.

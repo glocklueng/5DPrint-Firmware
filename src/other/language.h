@@ -60,7 +60,7 @@
 #define TXT_NO_OVERSHOOT_CRLF									" No overshoot -- "
 #define TXT_PID_AUTOTUNE_FAILED_TEMP_HIGH_CRLF					"PID Autotune failed! Temperature to high\r\n"
 #define TXT_PID_AUTOTUNE_FAILED_TIMEOUT_CRLF					"PID Autotune failed! timeout\r\n"
-#define TXT_PID_AUTOTUNE_FINISHED_CRLF							"PID Autotune finished ! Place the Kp, Ki and Kd constants in the configuration.h\r\n"
+#define TXT_PID_AUTOTUNE_FINISHED_CRLF							"PID Autotune finished !\r\nPlace the above command in console to change the PID settings.\r\n"
 #define TXT_PID_SETTINGS_CHANGED_NOT_SAVED_TO_MEM_CRLF			"-- PID settings changed (but not saved to memory).\r\n"
 #define TXT_PID_SETTINGS_CRLF_M301_P_I_D_CRLF					" PID settings:\r\n  M301 P%d I%d D%d\r\n"
 

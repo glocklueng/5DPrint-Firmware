@@ -1804,16 +1804,31 @@ void execute_mcode(struct command *cmd) {
 	  
 #ifdef PID_AUTOTUNE
     case 303: // M303 PID autotune
-        if (cmd->has_S) PIDAT_TEMP_INPUT = (int)cmd->S;
+        if (cmd->has_S){
+            if (cmd->S >270 || cmd->S < 0){
+                serial_send(TXT_INVALID_INPUT_CRLF);
+                break;
+            }
+            PIDAT_TEMP_INPUT = (int)cmd->S;
+        }
         else PIDAT_TEMP_INPUT = 200;
 
-        if (cmd->has_P) {
-            if (cmd->P >2) PIDAT_CYCLE_INPUT = (int)cmd->P;
-            else PIDAT_CYCLE_INPUT = 3;
+        if (cmd->has_P){
+            if (cmd->P < 3) {
+                serial_send(TXT_INVALID_INPUT_CRLF);
+                break;
+            }
+            PIDAT_CYCLE_INPUT = (int)cmd->P;
         }
         else PIDAT_CYCLE_INPUT = 5;
 
-        if (cmd->has_F) PIDAT_MODE_INPUT = (int)cmd->F;
+        if (cmd->has_F){
+            if (cmd->F > 3 || cmd->F < 0){
+                serial_send(TXT_INVALID_INPUT_CRLF);
+                break;
+            }
+            PIDAT_MODE_INPUT = (int)cmd->F;
+        }
         else PIDAT_MODE_INPUT = 0;
 
         PID_autotune(PIDAT_TEMP_INPUT, PIDAT_CYCLE_INPUT, PIDAT_MODE_INPUT);

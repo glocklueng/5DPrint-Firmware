@@ -88,6 +88,7 @@
 #define TXT_STOP_PRINT_POWER_OFF_PRINTER_DISCONNECT_CRLF		"/" "/ *** STOP PRINT!!! - Power Off Printer - Disconnect and close host software.\r\n"
 #define TXT_FIRMWARE_WILL_CONTINUE_OP_AFTER_30_SECS_CRLF		"\r\n/" "/ *** Firmware will continue operation after 30 seconds...\r\n"
 #define TXT_CONTINUING_CRLF										"/" "/ *** Continuing...\r\n"
+#define TXT_INVALID_INPUT_CRLF                                  "Invalid input parameters.\r\n"
 
 // Tempearture
 #define TXT_MTEMP												"MTEMP:%lu"

@@ -48,6 +48,7 @@ struct command {
     uint16_t has_S : 1;
     uint16_t has_T : 1;
     uint16_t has_D : 1;
+    uint16_t has_C : 1;
     uint16_t has_String : 1;
     float X;
     float Y;
@@ -60,6 +61,7 @@ struct command {
     int32_t S;
     int32_t T;
     int32_t D;
+    int32_t C;
     char String[92];
 };
 

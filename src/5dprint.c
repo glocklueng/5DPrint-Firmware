@@ -953,6 +953,7 @@ void process_command(const char *cmdstr)
     cmd.has_S = parse_int(cmdstr, 'S', &cmd.S);
     cmd.has_T = parse_int(cmdstr, 'T', &cmd.T);
     cmd.has_D = parse_int(cmdstr, 'D', &cmd.D);
+    cmd.has_C = parse_int(cmdstr, 'C', &cmd.C);
     cmd.has_String = parse_string(&cmdstr[find_word(cmdstr, cmd.type)], ' ', &cmd.String[0]);
 
     // Dispatch command.
@@ -1813,12 +1814,12 @@ void execute_mcode(struct command *cmd) {
         }
         else PIDAT_TEMP_INPUT = 200;
 
-        if (cmd->has_P){
-            if (cmd->P < 3) {
+        if (cmd->has_C){
+            if (cmd->C < 3) {
                 serial_send(TXT_INVALID_INPUT_CRLF);
                 break;
             }
-            PIDAT_CYCLE_INPUT = (int)cmd->P;
+            PIDAT_CYCLE_INPUT = (int)cmd->C;
         }
         else PIDAT_CYCLE_INPUT = 5;
 

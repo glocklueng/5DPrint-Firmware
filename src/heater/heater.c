@@ -67,6 +67,11 @@ int heater_duty = 0;
 int max_heater_duty = HEATER_CURRENT, user_max_heater_duty = HEATER_CURRENT;
 int temp_iState_min = (int)( 256L * -PID_INTEGRAL_DRIVE_MAX / (float)(PID_IGAIN) );
 int temp_iState_max = (int)( 256L * PID_INTEGRAL_DRIVE_MAX / (float)(PID_IGAIN) );
+
+// Extra terms for derivative control
+long dTerm_prev_millis = 0;
+long prev_dTerm = 0;
+long long_dTerm = 0;
 #endif
 
 #ifdef BED_PIDTEMP
@@ -139,7 +144,6 @@ void heater_protection();
    \brief 
  */
 ISR(TIMER1_COMPC_vect){
-    manage_heater();
     heater_protection();
 }
 
@@ -498,6 +502,8 @@ void manage_heater(){
         } 
         else service_BedHeaterSimpleControl(current_bed_raw, target_bed_raw);
     }		//end if (TEMP_1_PIN == -1)
+
+    heater_protection();
 }
 
 /**
@@ -592,37 +598,49 @@ int analog2temp_thermistor(int raw,const short table[][2], int numtemps) {
 void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
 {
     error = target_temp - current_temp;
-    int delta_temp = current_temp - prev_temp;
 
-    prev_temp = current_temp;
+    // Proportional term
     pTerm = ((long)PID_Kp * error) >> 8;
-    heater_duty = pTerm;
 
+    // Integral term
     if( abs(error) < PID_FUNCTIONAL_RANGE ){
         temp_iState += error;
-        if (temp_iState < temp_iState_min)
-            temp_iState = temp_iState_min;
-		
-        if (temp_iState > temp_iState_max)
-                    temp_iState = temp_iState_max;
-        
+        if (temp_iState < temp_iState_min) temp_iState = temp_iState_min;		
+        if (temp_iState > temp_iState_max) temp_iState = temp_iState_max;
         iTerm = ((long)PID_Ki * temp_iState) >> 8;
-        heater_duty += iTerm;
-		
-        dTerm = ((long)PID_Kd * delta_temp) >> 8;
-        heater_duty -= dTerm;
 	}
-    else temp_iState = 0;
-	
-    if (heater_duty < 0) heater_duty = 0;
-	
-    if (heater_duty > max_heater_duty) heater_duty = max_heater_duty;
-
-    if(target_temp != 0) setHeaterPWMDuty(HEATER_0_PIN, heater_duty);
     else{
-        heater_duty = 0;
-        setHeaterPWMDuty(HEATER_0_PIN, heater_duty);
-	}
+        temp_iState = 0;
+        iTerm = 0;
+    }
+
+    // Derivative term
+    if (millis() - dTerm_prev_millis > 2000){
+        int delta_temp = prev_temp - current_temp;
+
+        long_dTerm  = (long) PID_Kd * 10 * delta_temp;   
+        prev_dTerm = long_dTerm;
+        dTerm = ((long)(0.1 * long_dTerm + 0.9 * prev_dTerm)) >> 8;
+        
+        prev_temp = current_temp;
+        prev_dTerm = dTerm;
+        dTerm_prev_millis = millis();
+    }
+    
+    heater_duty = pTerm + iTerm + dTerm;
+
+    if (heater_duty < 0) heater_duty = 0;
+    if (heater_duty > max_heater_duty) heater_duty = max_heater_duty;
+    if(target_temp == 0) heater_duty = 0;
+
+    setHeaterPWMDuty(HEATER_0_PIN, heater_duty);    
+    /*
+    serial_send("P Term: %i \r\n", pTerm);
+    serial_send("I Term: %i \r\n", iTerm);
+    serial_send("D Term: %i \r\n", dTerm);
+    //serial_send("Delta Temp: %i \r\n", delta_temp);
+    serial_send("Heater Duty: %i \r\n", heater_duty);
+    */
 }
 
 /**

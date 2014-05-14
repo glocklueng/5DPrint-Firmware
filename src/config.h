@@ -242,10 +242,10 @@
 
 // If the temperature difference between the target temperature and the current temperature
 // is more then PID_FUNCTIONAL_RANGE then the PID will operate with proportional control only.
-#define PID_FUNCTIONAL_RANGE	12 
+#define PID_FUNCTIONAL_RANGE	10 // 12
 
 //PID Controler Settings
-#define PID_INTEGRAL_DRIVE_MAX	110 	// too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
+#define PID_INTEGRAL_DRIVE_MAX	50   	//110  // too big, and heater will lag after changing temperature, too small and it might not compensate enough for long-term errors
 #define PID_PGAIN 				6000 	//2000 //256 is 1.0  // value of X means that error of 1 degree is changing PWM duty by X, probably no need to go over 25
 #define PID_IGAIN 				30   	//256 is 1.0 
 #define PID_DGAIN 				2000	//256 is 1.0  // value of X means that around reached setpoint, each degree change over one measurement (half second) adjusts PWM by X units to compensate

@@ -412,12 +412,11 @@ void manage_heater(){
         if ( (watchmillis > 0) && (millis() - watchmillis > WATCHPERIOD) ){
             if( watch_temp >= current_temp ){
                 target_temp = target_raw = 0;
-                WRITE(HEATER_0_PIN,LOW);
-                
+                WRITE(HEATER_0_PIN,LOW);                
                 setHeaterPWMDuty(HEATER_0_PIN, 0);
+                serial_send(TXT_WATCH_PERIOD_CRLF);
             }
-            else
-                    watchmillis = 0;
+            else watchmillis = 0;
         }
 #endif
         
@@ -425,16 +424,13 @@ void manage_heater(){
         //or it os better to deaktivate the uutput PIN or PWM ?
 #ifdef MINTEMP
         //minttemp = temp2analogh(MINTEMP);
-        if(current_temp <= MINTEMP)
-            target_temp = target_raw = 0;
+        if(current_temp <= MINTEMP) target_temp = target_raw = 0;
 #endif
   
 #ifdef MAXTEMP
         //maxttemp = temp2analogh(MAXTEMP);
-        if(current_temp >= MAXTEMP)
-            target_temp = target_raw = 0;
+        if(current_temp >= MAXTEMP) target_temp = target_raw = 0;
 #endif
-        
         
         if (PIDTEMP){
             // Only allow extruder heater to be turned on if bed temperature has reached 

@@ -112,6 +112,8 @@
 #define TXT_SETTING_EXTRUDER_MAX_CURRENT_INT_PERCENT_CRLF		"/"	"/ Setting Extruder Heater Max Current: %d%%\r\n"
 #define TXT_MAX_BED_HEATER_DUTY_SETTINGS_CRLF_M305_CRLF		    "Max Bed Heater Duty Cycle settings (M305):\r\n before full power: %u%% \r\n after full power: %u%% \r\n"
 #define TXT_M350_S_D_CRLF                                       "Max Bed Heater Duty Cycle setting:\r\n  M350 S%d D%d\r\n"
+#define TXT_WATCH_PERIOD_CRLF                                   "The hot end has been disabled longer than watch period\r\n"
+
 
 // Motor
 #define TXT_X_MIN_STR											"x_min:%s"

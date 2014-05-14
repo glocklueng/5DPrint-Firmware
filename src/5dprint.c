@@ -2517,9 +2517,10 @@ void wait_extruder_target_temp(void)
                     serial_send(TXT_CONTINUING_CRLF);
                     break;
                 }
+            manage_heater();
 	}
     }
-
+    
 
     /***************************************************
      * wait_bed_target_temp(void)
@@ -2528,16 +2529,14 @@ void wait_extruder_target_temp(void)
      * temperature (defined by target_temp variable).
      *
      ****************************************************/
-    void wait_bed_target_temp(void)
-    {
+    void wait_bed_target_temp(void){
 	unsigned long timer = millis();
 	unsigned long bed_timeout = millis();
 	
 	serial_send(TXT_CRLF_TARGET_TEMP_DEGC, analog2tempBed(target_bed_raw));
 	serial_send(TXT_CRLF_WAITING_FOR_HOTBED_HEATER_TO_REACH_TARGET_CRLF);
 
-	while(current_bed_raw < target_bed_raw) 
-            {
+	while(current_bed_raw < target_bed_raw){
                 if( (millis()-timer) > 1000 ) //Print Temp Reading every 1 second while heating up.
                     {
                         serial_send(TXT_T_D_B_D_CRLF, analog2temp(current_raw), 
@@ -2565,7 +2564,8 @@ void wait_extruder_target_temp(void)
                         serial_send(TXT_CHECK_HOTBED_THERMISTOR_CONNECTIONS);
                         break;
                     }
-            }
+                manage_heater();
+    }
     }
 
 

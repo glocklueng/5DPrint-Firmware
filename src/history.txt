@@ -6,6 +6,28 @@ Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
 --------------------------
+DATE: 	16 May 2014
+AUTHOR:	CJM LAI
+	Makible Limited
+	www.makibox.com
+--------------------------
+Version 2.20.41
+
+- Update PID Temperature control on hot end
+
+  The derivative term was sampling too often and therefore, cannot detect significant
+  change in temperature. The derivative term was always smaller than 1, meaning
+  whatever value your PID_Kd is, it will not affect the PID control. Therefore, 
+  the derivative control is changed to sample every 2 seconds and a low pass filter
+  is added.
+  
+  Also, the functional range for integral action is reduced to 10 to reduce integral 
+  windup.
+
+- Update PID Autotune (M303) for continuous sampling as the original low pass filter 
+  introduces a lag in the autotune sequence
+
+--------------------------
 DATE: 	02 May 2014
 AUTHOR:	CJM LAI
 	Makible Limited

@@ -17,8 +17,9 @@ Heating
 * Support 1 hot end and 1 hot bed
 * Periodic temperature report (M203)
 * Heating Power reporting
-* Heating Power limitation on hot bed (M305)
+* Two stage heating power limitation on hot bed (M305)
 * Interrupt-based temperature protection 
+* PID Temperature control
 * PID Autotune (M303)
 
 Misc
@@ -30,6 +31,7 @@ Misc
 * GPIO pin support for 5DPrint D8 Controller Board (M908)
 * Buzzer support (M300)
 * Software jump to bootloader mode (M852)
+* USB communication LED
 
 For more information, please refer to the [Wiki page](https://bitbucket.org/makible/5dprint-firmware/wiki/Home).
 

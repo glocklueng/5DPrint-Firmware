@@ -614,9 +614,9 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
     if (millis() - dTerm_prev_millis > 2000){
         int delta_temp = prev_temp - current_temp;
 
-        long_dTerm  = (long) PID_Kd * 10 * delta_temp;   
+        long_dTerm  = (long) PID_Kd * delta_temp;   
         prev_dTerm = long_dTerm;
-        dTerm = ((long)(0.1 * long_dTerm + 0.9 * prev_dTerm)) >> 8;
+        dTerm = ((long)(0.3 * long_dTerm + 0.7 * prev_dTerm)) >> 8;
         
         prev_temp = current_temp;
         prev_dTerm = dTerm;
@@ -630,13 +630,6 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
     if(target_temp == 0) heater_duty = 0;
 
     setHeaterPWMDuty(HEATER_0_PIN, heater_duty);    
-    /*
-    serial_send("P Term: %i \r\n", pTerm);
-    serial_send("I Term: %i \r\n", iTerm);
-    serial_send("D Term: %i \r\n", dTerm);
-    //serial_send("Delta Temp: %i \r\n", delta_temp);
-    serial_send("Heater Duty: %i \r\n", heater_duty);
-    */
 }
 
 /**

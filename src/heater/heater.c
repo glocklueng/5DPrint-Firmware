@@ -614,9 +614,9 @@ void service_ExtruderHeaterPIDControl(int current_temp, int target_temp)
     if (millis() - dTerm_prev_millis > 2000){
         int delta_temp = prev_temp - current_temp;
 
-        long_dTerm  = (long) PID_Kd * delta_temp;   
+        long_dTerm  = (long) PID_Kd * 5 * delta_temp;   
         prev_dTerm = long_dTerm;
-        dTerm = ((long)(0.3 * long_dTerm + 0.7 * prev_dTerm)) >> 8;
+        dTerm = ((long)(0.1 * long_dTerm + 0.9 * prev_dTerm)) >> 8;
         
         prev_temp = current_temp;
         prev_dTerm = dTerm;

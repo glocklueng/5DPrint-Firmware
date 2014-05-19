@@ -6,6 +6,17 @@ Please add most recent change logs / history to the top of the list.
 Save as plain text file so that no special tools are required to view this file.
 
 --------------------------
+DATE: 	19 May 2014
+AUTHOR:	CJM LAI
+	Makible Limited
+	www.makibox.com
+--------------------------
+Version 2.20.42
+
+The derivative control for the hot end is updated to give a better performance.
+A multiplier of 5 is added and the low pass filter parameters are adjusted.
+
+--------------------------
 DATE: 	16 May 2014
 AUTHOR:	CJM LAI
 	Makible Limited
